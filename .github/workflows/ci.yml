@@ -62,6 +62,22 @@ jobs:
       - name: Test
         run: dotnet run --project src/McOperator.Tests/ -c Release
 
+  integration-test:
+    name: Integration Tests
+    needs: [changes, build-and-test]
+    if: needs.changes.outputs.operator == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "10.x"
+
+      - name: Run integration tests
+        run: dotnet run --project src/McOperator.IntegrationTests/ -c Release
+
   lint-chart:
     name: Lint Helm Chart
     needs: changes
