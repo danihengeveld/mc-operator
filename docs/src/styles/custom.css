@@ -1,0 +1,5 @@
+/* mc-operator docs – minimal custom overrides on top of Starlight defaults */
+
+:root {
+  --sl-font: "Inter", system-ui, sans-serif;
+}

@@ -1,0 +1,33 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: mc-operator-mutators
+  annotations:
+    # If using cert-manager, add:
+    # cert-manager.io/inject-ca-from: mc-operator-system/mc-operator-webhook-cert
+webhooks:
+- name: mutate.minecraftserver.minecraft.hengeveld.dev.v1alpha1
+  admissionReviewVersions:
+  - v1
+  clientConfig:
+    # caBundle is managed by the operator at runtime or cert-manager
+    caBundle: ""
+    service:
+      name: mc-operator
+      namespace: mc-operator-system
+      path: /mutate/minecraftserver
+      port: 443
+  matchPolicy: Exact
+  rules:
+  - apiGroups:
+    - minecraft.hengeveld.dev
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - minecraftservers
+  sideEffects: None
+  failurePolicy: Fail
+  timeoutSeconds: 10

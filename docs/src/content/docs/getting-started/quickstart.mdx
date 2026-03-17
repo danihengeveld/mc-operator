@@ -1,0 +1,97 @@
+---
+title: Quickstart
+description: Get a Minecraft server running on Kubernetes in minutes with mc-operator.
+sidebar:
+  order: 2
+---
+
+import { Steps, Aside, Code } from '@astrojs/starlight/components';
+
+This guide gets you from zero to a running Minecraft server on Kubernetes in under five minutes. It assumes you have a working Kubernetes cluster and `kubectl` configured.
+
+<Aside type="tip">
+For local development, [kind](https://kind.sigs.k8s.io/), [k3d](https://k3d.io/), or Docker Desktop Kubernetes work well.
+</Aside>
+
+<Steps>
+
+1. **Install the CRD**
+
+   Apply the `MinecraftServer` Custom Resource Definition to your cluster:
+
+   ```bash
+   kubectl apply -f https://raw.githubusercontent.com/danihengeveld/mc-operator/main/manifests/crd/minecraftservers.yaml
+   ```
+
+2. **Install the operator with Helm**
+
+   ```bash
+   helm install mc-operator oci://ghcr.io/danihengeveld/charts/mc-operator \
+     --version 1.0.0 \
+     --namespace mc-operator-system \
+     --create-namespace
+   ```
+
+   Wait for the operator to be ready:
+
+   ```bash
+   kubectl rollout status deployment/mc-operator -n mc-operator-system
+   ```
+
+3. **Create a namespace for your servers**
+
+   ```bash
+   kubectl create namespace minecraft
+   ```
+
+4. **Deploy a Paper server**
+
+   ```bash
+   cat <<EOF | kubectl apply -f -
+   apiVersion: minecraft.hengeveld.dev/v1alpha1
+   kind: MinecraftServer
+   metadata:
+     name: my-server
+     namespace: minecraft
+   spec:
+     acceptEula: true
+     server:
+       type: Paper
+       version: "1.20.4"
+     jvm:
+       initialMemory: "1G"
+       maxMemory: "2G"
+     resources:
+       cpuRequest: "500m"
+       memoryRequest: "2Gi"
+       memoryLimit: "2Gi"
+     storage:
+       size: "10Gi"
+   EOF
+   ```
+
+5. **Watch the server provision**
+
+   ```bash
+   kubectl get minecraftservers -n minecraft -w
+   ```
+
+   You will see the phase progress through `Pending → Provisioning → Running`. The first startup takes a few minutes as the server jar is downloaded.
+
+6. **Connect to your server**
+
+   For a ClusterIP service (the default), use `kubectl port-forward` to test connectivity:
+
+   ```bash
+   kubectl port-forward svc/my-server 25565:25565 -n minecraft
+   ```
+
+   Open Minecraft, add a server at `localhost:25565`, and connect.
+
+</Steps>
+
+## Next steps
+
+- [Read the full CRD reference](/mc-operator/reference/crd/) to explore all configuration options.
+- [See example configurations](/mc-operator/reference/examples/) for common server setups.
+- [Set up production webhooks](/mc-operator/getting-started/installation/#webhooks-setup) for full admission control.

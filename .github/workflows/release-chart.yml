@@ -1,0 +1,98 @@
+name: Release – Helm Chart
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+concurrency:
+  group: release-chart-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  REGISTRY: ghcr.io
+  CHART_PATH: charts/mc-operator
+  # OCI registry path for chart: oci://ghcr.io/danihengeveld/charts
+  OCI_REGISTRY: ghcr.io/danihengeveld/charts
+
+jobs:
+  release-chart:
+    name: Package & Publish Helm Chart
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # to create GitHub Release
+      packages: write  # to push OCI chart to GHCR
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Full history needed to generate clean release notes
+          fetch-depth: 0
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
+
+      # Derive the chart version from the git tag (strip leading 'v')
+      - name: Resolve chart version from tag
+        id: version
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Chart version: ${VERSION}"
+
+      # Patch Chart.yaml version and appVersion to match the git tag
+      - name: Update Chart.yaml version
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          sed -i "s/^version:.*/version: ${VERSION}/" "${CHART_PATH}/Chart.yaml"
+          sed -i "s/^appVersion:.*/appVersion: \"${VERSION}\"/" "${CHART_PATH}/Chart.yaml"
+
+      - name: Lint chart
+        run: helm lint ${{ env.CHART_PATH }} --strict
+
+      - name: Package chart
+        run: |
+          helm package ${{ env.CHART_PATH }} --destination /tmp/chart-packages
+
+      # Publish the chart as an OCI artifact to GHCR.
+      # Consumers install with:
+      #   helm install mc-operator oci://ghcr.io/danihengeveld/charts/mc-operator --version <ver>
+      - name: Log in to GHCR
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | \
+            helm registry login ghcr.io --username ${{ github.actor }} --password-stdin
+
+      - name: Push chart to OCI registry
+        run: |
+          helm push /tmp/chart-packages/mc-operator-${{ steps.version.outputs.version }}.tgz \
+            oci://${{ env.OCI_REGISTRY }}
+
+      - name: Log out from registry
+        if: always()
+        run: helm registry logout ghcr.io
+
+      # Create a GitHub Release with the chart package attached
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: "mc-operator ${{ github.ref_name }}"
+          generate_release_notes: true
+          files: /tmp/chart-packages/mc-operator-${{ steps.version.outputs.version }}.tgz
+          body: |
+            ## Installation
+
+            ### Helm (OCI — recommended)
+            ```bash
+            helm install mc-operator oci://ghcr.io/danihengeveld/charts/mc-operator \
+              --version ${{ steps.version.outputs.version }} \
+              --namespace mc-operator-system \
+              --create-namespace
+            ```
+
+            ### Container Image
+            ```
+            ghcr.io/danihengeveld/mc-operator:${{ steps.version.outputs.version }}
+            ```
+
+            See the [documentation](https://hengeveld.dev/mc-operator) for full installation instructions.

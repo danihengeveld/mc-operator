@@ -1,0 +1,184 @@
+---
+title: Running in Production
+description: Production deployment patterns, security, high availability, and operational guidance for mc-operator.
+sidebar:
+  order: 2
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+## Security hardening
+
+### Container security
+
+The mc-operator container image is built on [Ubuntu Noble Chiseled](https://ubuntu.com/blog/ubuntu-chiseled-and-dotnet) — an ultra-minimal, distroless-style image with:
+
+- No shell, no package manager, no curl/wget
+- Minimal attack surface: only the ASP.NET Core runtime and direct dependencies
+- Non-root execution by default (built-in `app` user, UID 1654)
+
+The Helm chart enforces the security context at the pod level:
+
+```yaml
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1001
+  fsGroup: 1001
+```
+
+### RBAC
+
+The operator requires cluster-scoped RBAC to watch `MinecraftServer` resources across namespaces and manage `apps/statefulsets`. The Helm chart creates a `ClusterRole` with exactly the permissions needed — nothing more. Review `charts/mc-operator/templates/clusterrole.yaml` for the exact grants.
+
+### Webhook TLS
+
+In production, **always** use cert-manager to provision and rotate webhook TLS certificates. See the [Installation guide](/mc-operator/getting-started/installation/#webhooks-setup) for the recommended cert-manager setup.
+
+## High availability
+
+### Multiple operator replicas
+
+The operator supports running multiple replicas using built-in Kubernetes leader election:
+
+```yaml
+# values-prod.yaml
+replicaCount: 2
+leaderElection:
+  enabled: true
+```
+
+Only one replica is the active leader at any time. Passive replicas take over within seconds of leader failure. There is no warm cache to warm up — the operator is stateless between reconciles.
+
+### Operator reliability
+
+The operator uses a 5-minute requeue on success (drift detection) and a 30-second requeue on error. This means:
+- Spec changes are applied within seconds
+- Transient errors (e.g. Kubernetes API throttling) self-heal quickly
+- Continuous reconciliation catches out-of-band changes to child resources
+
+## Monitoring
+
+The operator does not yet export Prometheus metrics directly. You can monitor the operator through:
+
+- **Pod logs**: The operator logs reconcile cycles, errors, and phase transitions.
+- **Kubernetes events**: Check `kubectl get events -n mc-operator-system`.
+- **MinecraftServer status**: `kubectl get mcs -n minecraft` shows Phase and Ready columns.
+
+```bash
+# Watch all servers across all namespaces
+kubectl get minecraftservers -A -w
+
+# Inspect a specific server's status
+kubectl describe minecraftserver paper-survival -n minecraft
+```
+
+## Backups
+
+mc-operator does not implement automated backups in v1. Recommended approaches:
+
+### PVC snapshots with Velero
+
+[Velero](https://velero.io/) can take VolumeSnapshot-backed PVC backups on a schedule:
+
+```bash
+velero backup create minecraft-backup \
+  --include-namespaces minecraft \
+  --snapshot-volumes=true
+```
+
+### Manual backup via kubectl cp
+
+For a running server, you can copy world data out while the server is paused:
+
+```bash
+# Pause the server first
+kubectl patch mcs paper-survival -n minecraft \
+  --type merge -p '{"spec": {"replicas": 0}}'
+
+# Copy world data
+kubectl exec -n minecraft data-paper-survival-0 -c minecraft -- \
+  tar czf - /data > backup-$(date +%Y%m%d).tar.gz
+  
+# Resume
+kubectl patch mcs paper-survival -n minecraft \
+  --type merge -p '{"spec": {"replicas": 1}}'
+```
+
+<Aside type="tip">
+Always pause the server before taking world backups to avoid world corruption from in-flight writes.
+</Aside>
+
+## Resource sizing guidelines
+
+| Players | CPU Request | Memory Request | JVM Heap |
+|---------|-------------|----------------|----------|
+| 1–5 | 250m | 1.5Gi | 1G max |
+| 5–20 | 500m | 2.5Gi | 2G max |
+| 20–50 | 1–2 | 5Gi | 4G max |
+| 50+ | 2–4 | 8Gi+ | 6–8G max |
+
+These are rough guidelines. Profile your specific server (plugins, world size, chunk loading patterns) for accurate sizing.
+
+## Storage class selection
+
+Use a high-throughput, low-latency StorageClass for Minecraft world data. World I/O is write-heavy (chunk saving):
+
+```yaml
+storage:
+  storageClassName: "premium-rwo"   # Cloud-provider SSD class
+  size: "30Gi"
+```
+
+Common StorageClass names:
+- **GKE**: `premium-rwo` (SSD persistent disk)
+- **EKS**: `gp3` (with the EBS CSI driver)
+- **AKS**: `managed-premium` (Azure Premium SSD)
+- **On-prem**: Depends on your CSI driver (Longhorn, Rook-Ceph, etc.)
+
+## Namespace strategy
+
+Deploy each server environment to its own namespace:
+
+```bash
+kubectl create namespace minecraft-production
+kubectl create namespace minecraft-staging
+```
+
+This provides:
+- Clear resource isolation
+- Namespace-scoped RBAC if needed
+- Easy cost attribution via namespace labels
+
+## Upgrade strategy
+
+### Upgrading the operator
+
+```bash
+helm upgrade mc-operator oci://ghcr.io/danihengeveld/charts/mc-operator \
+  --version <new-version> \
+  --namespace mc-operator-system
+```
+
+Operator upgrades do not affect running Minecraft servers. The reconciler is non-destructive by default — it updates child resources only when the spec changes.
+
+### Upgrading the CRD
+
+CRD upgrades may include schema changes. Always apply the new CRD before upgrading the operator:
+
+```bash
+kubectl apply -f https://raw.githubusercontent.com/danihengeveld/mc-operator/v<version>/manifests/crd/minecraftservers.yaml
+helm upgrade mc-operator ...
+```
+
+### Updating Minecraft server versions
+
+```bash
+kubectl patch minecraftserver paper-survival -n minecraft \
+  --type merge -p '{"spec": {"server": {"version": "1.21.0"}}}'
+```
+
+The operator reconciles the StatefulSet with the new `VERSION` environment variable. The pod restarts and the `itzg/minecraft-server` image downloads the new version.
+
+<Aside type="caution">
+Always back up world data before upgrading Minecraft versions. Some updates include chunk format changes that are irreversible.
+</Aside>

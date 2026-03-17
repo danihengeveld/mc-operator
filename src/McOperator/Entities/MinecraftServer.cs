@@ -9,7 +9,7 @@ namespace McOperator.Entities;
 /// <summary>
 /// Represents a Minecraft server deployment managed by the operator.
 /// </summary>
-[KubernetesEntity(Group = "minecraft.operator.io", ApiVersion = "v1alpha1", Kind = "MinecraftServer", PluralName = "minecraftservers")]
+[KubernetesEntity(Group = "minecraft.hengeveld.dev", ApiVersion = "v1alpha1", Kind = "MinecraftServer", PluralName = "minecraftservers")]
 [KubernetesEntityShortNames("mcs")]
 [GenericAdditionalPrinterColumn(".status.phase", "Phase", "string", Description = "Server phase")]
 [GenericAdditionalPrinterColumn(".spec.server.version", "Version", "string", Description = "Minecraft version")]

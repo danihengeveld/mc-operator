@@ -1,0 +1,89 @@
+version: 2
+
+updates:
+  # ── GitHub Actions ────────────────────────────────────────────────────────
+  # Keep all workflow actions up to date. Pinning actions to SHA is not
+  # required here since we use trusted GitHub-published actions.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: Europe/Amsterdam
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+    labels:
+      - dependencies
+      - github-actions
+
+  # ── NuGet (.NET) ─────────────────────────────────────────────────────────
+  # Covers all projects under src/. Central Package Management means
+  # Directory.Packages.props is the single source of truth for versions.
+  - package-ecosystem: nuget
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: Europe/Amsterdam
+    groups:
+      kubeops:
+        patterns:
+          - "KubeOps.*"
+      tunit:
+        patterns:
+          - "TUnit*"
+      dotnet:
+        patterns:
+          - "Microsoft.*"
+          - "System.*"
+    labels:
+      - dependencies
+      - dotnet
+
+  # ── Docker base images ────────────────────────────────────────────────────
+  # Tracks updates to SDK and runtime base images in the Dockerfile.
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: Europe/Amsterdam
+    groups:
+      docker-base:
+        patterns:
+          - "mcr.microsoft.com/dotnet/*"
+    labels:
+      - dependencies
+      - docker
+
+  # ── npm (docs site) ───────────────────────────────────────────────────────
+  # Tracks Astro, Starlight, and other docs tooling dependencies.
+  - package-ecosystem: npm
+    directory: /docs
+    schedule:
+      interval: weekly
+      day: tuesday
+      time: "09:00"
+      timezone: Europe/Amsterdam
+    groups:
+      astro:
+        patterns:
+          - "astro"
+          - "@astrojs/*"
+      starlight:
+        patterns:
+          - "@astrojs/starlight"
+      docs-deps:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - "astro"
+          - "@astrojs/*"
+    labels:
+      - dependencies
+      - docs

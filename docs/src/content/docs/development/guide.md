@@ -1,0 +1,163 @@
+---
+title: Development Guide
+description: Setting up a local development environment for contributing to mc-operator.
+sidebar:
+  order: 1
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+## Prerequisites
+
+| Tool | Version | Notes |
+|------|---------|-------|
+| .NET SDK | 10.0+ | [Download](https://dotnet.microsoft.com/download) |
+| Docker | Any recent | For building images |
+| kubectl | Cluster-matching | [Download](https://kubernetes.io/docs/tasks/tools/) |
+| Helm | 3.14+ | For chart work |
+| A Kubernetes cluster | 1.25+ | kind/k3d/Docker Desktop work well |
+
+Optional but useful:
+- [kind](https://kind.sigs.k8s.io/) or [k3d](https://k3d.io/) for a local cluster
+- [k9s](https://k9scli.io/) for cluster introspection
+- A C# IDE (Rider, Visual Studio, VS Code with C# Dev Kit)
+
+## Repository setup
+
+```bash
+git clone https://github.com/danihengeveld/mc-operator.git
+cd mc-operator
+
+# Restore .NET tool chain
+dotnet tool restore
+
+# Restore NuGet packages
+dotnet restore mc-operator.slnx
+```
+
+## Running tests
+
+Tests use [TUnit](https://tunit.dev/) and run via `dotnet run`:
+
+```bash
+# Run all tests
+dotnet run --project src/McOperator.Tests/
+
+# Run a specific test class
+dotnet run --project src/McOperator.Tests/ -- \
+  --treenode-filter "*/*/ValidationWebhookTests/*"
+```
+
+Tests cover:
+- Webhook validation logic (`ValidationWebhookTests`)
+- Memory parsing helpers (`MemoryParsingTests`)
+- StatefulSet builder output (`StatefulSetBuilderTests`)
+- Service builder output (`ServiceBuilderTests`)
+- ConfigMap builder output (`ConfigMapBuilderTests`)
+
+## Running the operator locally
+
+The operator runs as a standard ASP.NET Core application and uses the active kubeconfig to connect to Kubernetes:
+
+```bash
+# Apply the CRD to your local cluster
+kubectl apply -f manifests/crd/minecraftservers.yaml
+
+# Apply RBAC
+kubectl apply -f manifests/rbac/
+
+# Run the operator (watches the current kubeconfig context)
+dotnet run --project src/McOperator/ -- --environment Development
+```
+
+<Aside type="note">
+Admission webhooks require TLS. For local development without webhooks, use a cluster that skips webhook registration, or configure the operator with `webhooks.enabled=false`.
+</Aside>
+
+## Building the Docker image
+
+```bash
+docker build -t ghcr.io/danihengeveld/mc-operator:dev .
+
+# Test the image
+docker run --rm ghcr.io/danihengeveld/mc-operator:dev --help
+```
+
+## Regenerating CRDs and manifests
+
+After changing the CRD entity classes, regenerate the YAML manifests:
+
+```bash
+# Install KubeOps CLI (if not already installed)
+dotnet tool restore
+
+# Regenerate all manifests
+dotnet kubeops generate operator "mc-operator" \
+  src/McOperator/McOperator.csproj \
+  --out manifests/ \
+  --docker-image "ghcr.io/danihengeveld/mc-operator" \
+  --docker-image-tag "latest"
+```
+
+Always review generated changes before committing — the generator may produce diffs in formatting or ordering that are worth cleaning up.
+
+## Project structure
+
+```
+src/
+├── McOperator/
+│   ├── Builders/                # StatefulSetBuilder, ServiceBuilder, ConfigMapBuilder
+│   ├── Controllers/             # MinecraftServerController (reconciler)
+│   ├── Entities/                # MinecraftServer, MinecraftServerSpec, MinecraftServerStatus
+│   ├── Extensions/              # MinecraftServerExtensions (owner reference helper)
+│   ├── Finalizers/              # MinecraftServerFinalizer (PVC cleanup)
+│   ├── Webhooks/                # MinecraftServerValidationWebhook, MinecraftServerMutationWebhook
+│   └── Program.cs               # Startup and DI registration
+└── McOperator.Tests/
+    ├── ConfigMapBuilderTests.cs
+    ├── MemoryParsingTests.cs
+    ├── ServiceBuilderTests.cs
+    ├── StatefulSetBuilderTests.cs
+    └── ValidationWebhookTests.cs
+```
+
+## Coding conventions
+
+- **Language**: C# 13 with nullable reference types enabled
+- **Framework**: .NET 10, ASP.NET Core minimal hosting
+- **Tests**: TUnit (`[Test]`, `[Arguments]`, `await Assert.That(...)`)
+- **Formatting**: Standard C# conventions; see `.editorconfig` at the repo root
+- **Packages**: All NuGet versions centralized in `Directory.Packages.props`
+- **Build props**: All shared MSBuild properties in `Directory.Build.props`
+
+## Adding a new spec field
+
+1. Add the field to the relevant class in `src/McOperator/Entities/MinecraftServerSpec.cs`
+2. If it maps to an environment variable, add it in `StatefulSetBuilder.cs`
+3. If it needs validation, add it in `MinecraftServerValidationWebhook.cs`
+4. If it has a default, add it in `MinecraftServerMutationWebhook.cs`
+5. Add/update tests
+6. Regenerate CRD YAML
+7. Update the CRD reference docs
+
+## Common tasks
+
+### Inspect the effective spec after mutation
+
+```bash
+kubectl get minecraftserver <name> -n minecraft -o yaml
+```
+
+The mutating webhook runs before the resource is stored, so the stored spec reflects all applied defaults.
+
+### Check webhook call logs
+
+The operator logs all webhook invocations at `Information` level. Look for `ValidationWebhook` or `MutationWebhook` in the operator pod logs.
+
+### Debug reconcile loops
+
+```bash
+kubectl logs -n mc-operator-system -l app.kubernetes.io/name=mc-operator -f
+```
+
+Look for lines containing `Reconciling` to trace individual reconcile cycles.

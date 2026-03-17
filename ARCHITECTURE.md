@@ -4,7 +4,7 @@ This document captures the key design decisions made for the v1 of the Minecraft
 
 ## Overview
 
-`mc-operator` is a Kubernetes Operator built with .NET 10 and [KubeOps 10](https://github.com/buehler/dotnet-operator-sdk). It manages `MinecraftServer` custom resources, which each represent a fully configured Minecraft server deployment and all of its supporting Kubernetes resources.
+`mc-operator` is a Kubernetes Operator built with .NET 10, maintained under the [hengeveld.dev](https://hengeveld.dev) umbrella and [KubeOps 10](https://github.com/buehler/dotnet-operator-sdk). It manages `MinecraftServer` custom resources, which each represent a fully configured Minecraft server deployment and all of its supporting Kubernetes resources.
 
 ---
 
@@ -63,9 +63,9 @@ This decision prioritizes **safety over convenience**. The operational cost of a
 
 ---
 
-## Decision 4: CRD API Version (v1alpha1)
+## Decision 4: CRD API Group and Version
 
-**Choice: `minecraft.operator.io/v1alpha1`**
+**Choice: `minecraft.hengeveld.dev/v1alpha1`**
 
 Although this is "v1 of the software," the API version is `v1alpha1` because:
 - The spec may evolve as we learn from production usage
@@ -169,30 +169,38 @@ Minecraft servers are not horizontally scalable in the traditional sense. Multi-
 
 ```
 mc-operator/
-├── src/
-│   ├── McOperator/                    # Main operator project
-│   │   ├── Builders/                  # Resource builders (StatefulSet, Service, ConfigMap)
-│   │   ├── Controllers/               # Reconciliation controller
-│   │   ├── Entities/                  # CRD entity types (spec, status)
-│   │   ├── Extensions/                # Extension methods
-│   │   ├── Finalizers/                # PVC cleanup finalizer
-│   │   ├── Webhooks/                  # Validating/mutating webhooks
-│   │   └── Program.cs                 # Entry point and DI registration
-│   └── McOperator.Tests/              # Unit tests
-│       ├── ValidationWebhookTests.cs
-│       ├── StatefulSetBuilderTests.cs
-│       ├── ServiceBuilderTests.cs
-│       ├── ConfigMapBuilderTests.cs
-│       └── MemoryParsingTests.cs
-├── config/
-│   ├── crd/                           # CRD manifests (generated)
-│   ├── rbac/                          # ClusterRole/ClusterRoleBinding (generated)
-│   ├── operator/                      # Operator Deployment, Service, webhooks (generated)
-│   └── examples/                      # Example MinecraftServer CRs
-├── deploy/
-│   └── helm/mc-operator/              # Helm chart
-├── Dockerfile                         # Multi-stage production Dockerfile
-├── mc-operator.slnx                    # .NET solution file
-├── README.md
-└── ARCHITECTURE.md                    # This file
+├── .github/
+│   ├── dependabot.yml          # Automated dependency updates
+│   └── workflows/
+│       ├── ci.yml              # Build + test on push/PR
+│       ├── release-image.yml   # Publish container image on tag
+│       └── release-chart.yml   # Package and publish Helm chart on tag
+├── charts/
+│   └── mc-operator/            # Helm chart (OCI-published to GHCR)
+│       ├── Chart.yaml
+│       ├── templates/
+│       └── values.yaml
+├── docs/                       # Astro Starlight documentation site
+│   └── src/content/docs/       # All documentation pages
+├── examples/                   # Example MinecraftServer manifests
+├── manifests/
+│   ├── crd/                    # CustomResourceDefinition YAML
+│   ├── rbac/                   # ClusterRole + ClusterRoleBinding
+│   └── operator/               # Deployment, Service, webhooks (Kustomize)
+└── src/
+    ├── McOperator/             # .NET 10 operator application
+    │   ├── Builders/           # Resource builders (StatefulSet, Service, ConfigMap)
+    │   ├── Controllers/        # Reconciliation controller
+    │   ├── Entities/           # CRD entity types (spec, status)
+    │   ├── Extensions/         # Extension methods
+    │   ├── Finalizers/         # PVC cleanup finalizer
+    │   ├── Webhooks/           # Validating/mutating webhooks
+    │   └── Program.cs          # Entry point and DI registration
+    └── McOperator.Tests/       # TUnit unit tests
+        ├── ValidationWebhookTests.cs
+        ├── StatefulSetBuilderTests.cs
+        ├── ServiceBuilderTests.cs
+        ├── ConfigMapBuilderTests.cs
+        └── MemoryParsingTests.cs
 ```
+

@@ -105,7 +105,7 @@ public static class ConfigMapBuilder
             ["app.kubernetes.io/name"] = "minecraft-server",
             ["app.kubernetes.io/instance"] = server.Name(),
             ["app.kubernetes.io/managed-by"] = "mc-operator",
-            ["minecraft.operator.io/server-name"] = server.Name(),
-            ["minecraft.operator.io/config"] = "true",
+            ["minecraft.hengeveld.dev/server-name"] = server.Name(),
+            ["minecraft.hengeveld.dev/config"] = "true",
         };
 }

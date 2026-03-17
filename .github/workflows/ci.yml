@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "Directory.Build.props"
+      - "Directory.Packages.props"
+      - "NuGet.config"
+      - "Dockerfile"
+      - ".github/workflows/ci.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "Directory.Build.props"
+      - "Directory.Packages.props"
+      - "NuGet.config"
+      - "Dockerfile"
+      - ".github/workflows/ci.yml"
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.x"
+
+      - name: Restore
+        run: dotnet restore mc-operator.slnx
+
+      - name: Build
+        run: dotnet build mc-operator.slnx --no-restore -c Release
+
+      - name: Test
+        run: dotnet run --project src/McOperator.Tests/ -c Release
+
+  lint-chart:
+    name: Lint Helm Chart
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
+
+      - name: Lint chart
+        run: helm lint charts/mc-operator --strict
