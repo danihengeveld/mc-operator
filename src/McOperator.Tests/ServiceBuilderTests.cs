@@ -107,7 +107,8 @@ public class ServiceBuilderTests
         });
         var svc = ServiceBuilder.Build(server);
 
-        await Assert.That(svc.Metadata.Annotations.ContainsKey("service.beta.kubernetes.io/aws-load-balancer-type")).IsTrue();
+        await Assert.That(svc.Metadata.Annotations.ContainsKey("service.beta.kubernetes.io/aws-load-balancer-type"))
+            .IsTrue();
     }
 
     [Test]

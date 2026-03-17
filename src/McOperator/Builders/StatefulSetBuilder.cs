@@ -216,7 +216,7 @@ public static class StatefulSetBuilder
             Env("VERSION", spec.Server.Version),
 
             // JVM memory settings
-            Env("MEMORY", ""),  // disable the itzg/minecraft-server combined MEMORY env
+            Env("MEMORY", ""), // disable the itzg/minecraft-server combined MEMORY env
             Env("JVM_OPTS", BuildJvmOpts(spec.Jvm)),
             Env("JVM_XX_OPTS", ""),
 

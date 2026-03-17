@@ -1,6 +1,7 @@
 <Project>
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,5 +14,7 @@
     <!-- Test packages -->
     <PackageVersion Include="TUnit" Version="1.19.74" />
     <PackageVersion Include="TUnit.Mocks" Version="1.19.74" />
+
+    <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.201" />
   </ItemGroup>
 </Project>

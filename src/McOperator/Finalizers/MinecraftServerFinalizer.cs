@@ -28,7 +28,8 @@ public class MinecraftServerFinalizer : IEntityFinalizer<MinecraftServer>
     /// <summary>
     /// Called when a MinecraftServer is being deleted and this finalizer is attached.
     /// </summary>
-    public async Task<ReconciliationResult<MinecraftServer>> FinalizeAsync(MinecraftServer server, CancellationToken cancellationToken)
+    public async Task<ReconciliationResult<MinecraftServer>> FinalizeAsync(MinecraftServer server,
+        CancellationToken cancellationToken)
     {
         _logger.LogInformation(
             "Finalizing MinecraftServer {Namespace}/{Name}",

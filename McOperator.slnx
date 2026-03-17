@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/McOperator.Tests/McOperator.Tests.csproj" />
+    <Project Path="src/McOperator/McOperator.csproj" />
+  </Folder>
+  <Folder Name="/solution/">
+    <File Path="Directory.Build.props"/>
+    <File Path="Directory.Packages.props"/>
+    <File Path="NuGet.config"/>
+    <File Path="Dockerfile"/>
+  </Folder>
+</Solution>

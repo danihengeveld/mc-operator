@@ -14,8 +14,7 @@ sources:
   - https://github.com/danihengeveld/mc-operator
 maintainers:
   - name: danihengeveld
-    email: dani@hengeveld.dev
-    url: https://hengeveld.dev
+    url: https://dani.hengeveld.dev
 annotations:
   artifacthub.io/category: integration-delivery
   artifacthub.io/license: MIT

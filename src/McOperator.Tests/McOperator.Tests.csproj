@@ -1,18 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
     <RootNamespace>McOperator.Tests</RootNamespace>
-    <!--
-      TUnit.Mocks.Generated is produced by a Roslyn source generator.
-      Disabling the auto implicit using avoids a compile error when no mocks
-      are defined yet; add explicit 'using TUnit.Mocks.Generated;' if needed.
-    -->
-    <TUnitMockImplicitUsings>disable</TUnitMockImplicitUsings>
+    <AssemblyName>McOperator.Tests</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="TUnit" />
-    <PackageReference Include="TUnit.Mocks" />
   </ItemGroup>
 
   <ItemGroup>

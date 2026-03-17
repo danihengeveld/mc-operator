@@ -37,10 +37,10 @@ jobs:
           dotnet-version: "10.x"
 
       - name: Restore
-        run: dotnet restore mc-operator.slnx
+        run: dotnet restore McOperator.slnx
 
       - name: Build
-        run: dotnet build mc-operator.slnx --no-restore -c Release
+        run: dotnet build McOperator.slnx --no-restore -c Release
 
       - name: Test
         run: dotnet run --project src/McOperator.Tests/ -c Release

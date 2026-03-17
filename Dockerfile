@@ -3,11 +3,9 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /build
 
 # Restore dependencies in a separate layer for caching
-COPY mc-operator.slnx ./
 COPY Directory.Build.props Directory.Packages.props NuGet.config ./
-COPY src/McOperator/McOperator.csproj src/McOperator/
-COPY src/McOperator.Tests/McOperator.Tests.csproj src/McOperator.Tests/
-RUN dotnet restore mc-operator.slnx
+COPY src/McOperator/McOperator.csproj src/McOperator/packages.lock.json src/McOperator/
+RUN dotnet restore src/McOperator/McOperator.csproj --locked-mode
 
 # Build and publish
 COPY src/ src/

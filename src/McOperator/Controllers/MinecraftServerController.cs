@@ -67,7 +67,8 @@ public class MinecraftServerController : IEntityController<MinecraftServer>
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to reconcile MinecraftServer {Namespace}/{Name}", server.Namespace(), server.Name());
+            _logger.LogError(ex, "Failed to reconcile MinecraftServer {Namespace}/{Name}", server.Namespace(),
+                server.Name());
             await UpdatePhase(server, MinecraftServerPhase.Failed, ex.Message, cancellationToken);
             return ReconciliationResult<MinecraftServer>.Failure(server, ex.Message, ex, TimeSpan.FromSeconds(30));
         }
@@ -220,6 +221,7 @@ public class MinecraftServerController : IEntityController<MinecraftServer>
             {
                 port = nodePort.Value;
             }
+
             host = "<node-ip>";
         }
         else
@@ -273,7 +275,8 @@ public class MinecraftServerController : IEntityController<MinecraftServer>
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Failed to update status for MinecraftServer {Namespace}/{Name}", server.Namespace(), server.Name());
+            _logger.LogWarning(ex, "Failed to update status for MinecraftServer {Namespace}/{Name}", server.Namespace(),
+                server.Name());
         }
     }
 

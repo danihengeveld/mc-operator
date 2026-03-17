@@ -17,7 +17,8 @@ public class MinecraftServerMutationWebhook : MutationWebhook<MinecraftServer>
         return ApplyDefaults(this, server);
     }
 
-    public override MutationResult<MinecraftServer> Update(MinecraftServer newServer, MinecraftServer oldServer, bool dryRun)
+    public override MutationResult<MinecraftServer> Update(MinecraftServer newServer, MinecraftServer oldServer,
+        bool dryRun)
     {
         return ApplyDefaults(this, newServer);
     }
