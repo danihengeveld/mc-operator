@@ -45,6 +45,7 @@ svc.pem
 docs/node_modules/
 docs/dist/
 docs/.astro/
+docs/package-lock.json
 
 # Helm (packaged charts — produced at release time)
 *.tgz

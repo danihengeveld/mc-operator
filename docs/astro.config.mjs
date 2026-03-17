@@ -12,9 +12,13 @@ export default defineConfig({
         dark: "./src/assets/logo-dark.svg",
         replacesTitle: false,
       },
-      social: {
-        github: "https://github.com/danihengeveld/mc-operator",
-      },
+      social: [
+        {
+          icon: "github",
+          label: "GitHub",
+          href: "https://github.com/danihengeveld/mc-operator",
+        },
+      ],
       editLink: {
         baseUrl:
           "https://github.com/danihengeveld/mc-operator/edit/main/docs/",
