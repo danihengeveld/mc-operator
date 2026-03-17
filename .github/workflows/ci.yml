@@ -9,6 +9,8 @@ on:
       - "Directory.Packages.props"
       - "NuGet.config"
       - "Dockerfile"
+      - "charts/**"
+      - "docs/**"
       - ".github/workflows/ci.yml"
   pull_request:
     branches: [main]
@@ -18,6 +20,8 @@ on:
       - "Directory.Packages.props"
       - "NuGet.config"
       - "Dockerfile"
+      - "charts/**"
+      - "docs/**"
       - ".github/workflows/ci.yml"
 
 concurrency:
@@ -56,3 +60,21 @@ jobs:
 
       - name: Lint chart
         run: helm lint charts/mc-operator --strict
+
+  build-docs:
+    name: Build Docs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        working-directory: docs
+        run: bun install
+
+      - name: Build docs
+        working-directory: docs
+        run: bun run build
+

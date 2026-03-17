@@ -1,68 +1,94 @@
 ---
 title: Release Process
-description: How mc-operator is versioned, built, and released.
+description: How mc-operator is versioned, built, and released — with independent image and chart versioning.
 sidebar:
   order: 3
 ---
 
-## Versioning
+import { Aside } from '@astrojs/starlight/components';
 
-mc-operator uses [Semantic Versioning](https://semver.org/):
+## Independent versioning
 
-- `MAJOR.MINOR.PATCH`
-- **PATCH**: bug fixes, no breaking changes, no new features
-- **MINOR**: new features, backwards-compatible changes
-- **MAJOR**: breaking changes (CRD schema changes that require migration, API group changes, incompatible behaviour)
+The **operator image** and **Helm chart** are versioned and released independently. They each have their own tag namespace:
 
-The API is currently at `v1alpha1`. Breaking changes to the CRD schema may occur in minor releases until the API graduates to `v1beta1`.
+| Artefact | Tag pattern | Example |
+|----------|------------|---------|
+| Container image | `operator/vMAJOR.MINOR.PATCH` | `operator/v1.2.3` |
+| Helm chart | `chart/vMAJOR.MINOR.PATCH` | `chart/v1.2.3` |
+
+This means a chart bug-fix does not trigger a new image build, and an operator patch does not force a chart version bump.
+
+## Versioning policy
+
+Both artefacts follow [Semantic Versioning](https://semver.org/):
+
+| Bump | When |
+|------|------|
+| **PATCH** | Bug fixes, no behaviour changes |
+| **MINOR** | New backwards-compatible features |
+| **MAJOR** | Breaking changes (CRD schema changes, API group changes) |
+
+The Helm chart carries an `appVersion` in `Chart.yaml` that records the **minimum compatible operator version** the chart targets. Chart `version` and `appVersion` evolve independently.
 
 ## Release artefacts
 
-Each tagged release produces:
+### Operator image releases (`operator/v*`)
 
-| Artefact | Location | Description |
-|----------|----------|-------------|
-| Container image | `ghcr.io/danihengeveld/mc-operator:<version>` | Multi-arch (amd64, arm64) |
-| Helm chart | `oci://ghcr.io/danihengeveld/charts/mc-operator:<version>` | OCI-based Helm chart |
-| GitHub Release | [Releases page](https://github.com/danihengeveld/mc-operator/releases) | Release notes + chart tarball |
+Triggered by pushing a tag matching `operator/v*.*.*`. Produces:
+
+| Artefact | Location |
+|----------|----------|
+| Container image | `ghcr.io/danihengeveld/mc-operator:<version>` |
+| SBOM + SLSA provenance | Attached to image in GHCR |
+| GitHub Release | Under the `operator/v*` tag |
+
+Image tags produced for `operator/v1.2.3`:
+
+| Tag | Purpose |
+|-----|---------|
+| `1.2.3` | Exact version — pin this in production |
+| `1.2` | Stable minor channel |
+| `1` | Stable major channel |
+| `sha-<short>` | Commit traceability |
+
+### Helm chart releases (`chart/v*`)
+
+Triggered by pushing a tag matching `chart/v*.*.*`. Produces:
+
+| Artefact | Location |
+|----------|----------|
+| OCI chart | `oci://ghcr.io/danihengeveld/charts/mc-operator:<version>` |
+| Chart tarball (`.tgz`) | Attached to the GitHub Release |
+| GitHub Release | Under the `chart/v*` tag |
 
 ## How to create a release
 
-1. Ensure all changes are merged to `main` and CI passes.
+See [RELEASING.md](https://github.com/danihengeveld/mc-operator/blob/main/RELEASING.md) in the repository root for the full step-by-step procedure, including:
 
-2. Create and push a version tag:
+- Pre-release checklist
+- How to tag and push each artefact
+- Post-release verification commands
+- Rollback guidance
 
-   ```bash
-   git tag -a v1.1.0 -m "Release v1.1.0"
-   git push origin v1.1.0
-   ```
+Quick reference:
 
-3. The tag triggers two workflows automatically:
-   - **`release-image.yml`**: builds and pushes the container image to GHCR with semver, major, minor, and SHA tags
-   - **`release-chart.yml`**: packages and pushes the Helm chart to GHCR OCI and creates a GitHub Release with release notes and the chart tarball
+```bash
+# Operator image release
+git tag -a operator/v1.2.3 -m "Operator release 1.2.3"
+git push origin operator/v1.2.3
 
-4. Review the GitHub Release page and edit the notes if needed.
-
-## Image tags
-
-The release pipeline produces the following image tags for a `v1.2.3` release:
-
-| Tag | Example | Purpose |
-|-----|---------|---------|
-| Full semver | `1.2.3` | Exact version pin |
-| Minor | `1.2` | Stable minor channel |
-| Major | `1` | Stable major channel |
-| SHA | `sha-a1b2c3d` | Traceability to exact commit |
-
-The `latest` tag is **not** published to avoid accidental unintentional upgrades in production.
+# Helm chart release
+git tag -a chart/v1.2.3 -m "Helm chart release 1.2.3"
+git push origin chart/v1.2.3
+```
 
 ## Container image signing and provenance
 
 The release pipeline generates:
 - **SBOM** (Software Bill of Materials) attached as an OCI artifact
-- **SLSA provenance** attestation via `actions/attest-build-provenance`
+- **SLSA provenance** via `actions/attest-build-provenance`
 
-Verify attestations with:
+Verify attestations:
 
 ```bash
 gh attestation verify \
@@ -70,15 +96,7 @@ gh attestation verify \
   --repo danihengeveld/mc-operator
 ```
 
-## Helm chart release
+## Changelog
 
-Charts are published to GHCR as OCI artifacts. Install any version:
+All user-visible changes are documented in [CHANGELOG.md](https://github.com/danihengeveld/mc-operator/blob/main/CHANGELOG.md), following the [Keep a Changelog](https://keepachangelog.com/) format. Update the changelog before every release.
 
-```bash
-helm install mc-operator oci://ghcr.io/danihengeveld/charts/mc-operator \
-  --version 1.2.3 \
-  --namespace mc-operator-system \
-  --create-namespace
-```
-
-The chart `version` and `appVersion` are automatically set to match the git tag during the release workflow.

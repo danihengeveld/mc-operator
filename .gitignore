@@ -40,7 +40,8 @@ svc.pem
 # Logs
 *.log
 
-# docs (Astro Starlight)
+# docs (Astro Starlight — Bun-managed)
+# bun.lock IS committed; node_modules and build output are not
 docs/node_modules/
 docs/dist/
 docs/.astro/

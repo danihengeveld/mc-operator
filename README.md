@@ -13,12 +13,12 @@ mc-operator/
 ├── .github/
 │   ├── dependabot.yml          # Automated dependency updates
 │   └── workflows/
-│       ├── ci.yml              # Build + test on push/PR
-│       ├── release-image.yml   # Publish container image on tag
-│       └── release-chart.yml   # Package and publish Helm chart on tag
+│       ├── ci.yml              # Build + test + docs on push/PR
+│       ├── release-image.yml   # Publish image on operator/v* tags
+│       └── release-chart.yml   # Publish Helm chart on chart/v* tags
 ├── charts/
 │   └── mc-operator/            # Helm chart (OCI-published to GHCR)
-├── docs/                       # Astro Starlight documentation site
+├── docs/                       # Astro Starlight site (Bun)
 │                               # Deployed to hengeveld.dev/mc-operator
 ├── examples/                   # Example MinecraftServer manifests
 ├── manifests/
@@ -71,6 +71,17 @@ ghcr.io/danihengeveld/mc-operator:<version>
 
 Built on [Ubuntu Noble Chiseled](https://ubuntu.com/blog/ubuntu-chiseled-and-dotnet) — minimal, non-root, no shell. Published for `linux/amd64` and `linux/arm64`.
 
+## Releases
+
+The operator image and Helm chart are **released independently**:
+
+| Artefact | Tag | Example |
+|----------|-----|---------|
+| Operator image | `operator/vX.Y.Z` | `operator/v1.0.0` |
+| Helm chart | `chart/vX.Y.Z` | `chart/v1.0.0` |
+
+See [RELEASING.md](RELEASING.md) for the full release procedure and [CHANGELOG.md](CHANGELOG.md) for history.
+
 ## Documentation
 
 Full documentation at **[hengeveld.dev/mc-operator](https://hengeveld.dev/mc-operator)**, including:
@@ -89,13 +100,16 @@ Full documentation at **[hengeveld.dev/mc-operator](https://hengeveld.dev/mc-ope
 dotnet run --project src/McOperator.Tests/
 
 # Build
-dotnet build mc-operator.slnx
+dotnet build McOperator.slnx
 
 # Lint the Helm chart
 helm lint charts/mc-operator --strict
+
+# Docs (requires Bun)
+cd docs && bun install && bun run dev
 ```
 
-See the [Development Guide](https://hengeveld.dev/mc-operator/development/guide/) for full setup instructions.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for full contributing guidelines.
 
 ## License
 

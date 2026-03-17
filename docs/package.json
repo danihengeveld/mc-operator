@@ -3,11 +3,13 @@
   "type": "module",
   "version": "0.0.1",
   "description": "Documentation for mc-operator — Kubernetes Operator for Minecraft",
+  "packageManager": "bun@1.3.10",
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
+    "check": "astro check",
     "astro": "astro"
   },
   "dependencies": {

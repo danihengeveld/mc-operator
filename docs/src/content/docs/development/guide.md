@@ -15,6 +15,7 @@ import { Aside } from '@astrojs/starlight/components';
 | Docker | Any recent | For building images |
 | kubectl | Cluster-matching | [Download](https://kubernetes.io/docs/tasks/tools/) |
 | Helm | 3.14+ | For chart work |
+| Bun | 1.3+ | [Install](https://bun.sh) — docs site only |
 | A Kubernetes cluster | 1.25+ | kind/k3d/Docker Desktop work well |
 
 Optional but useful:
