@@ -25,7 +25,7 @@ jobs:
       packages: write  # to push OCI chart to GHCR
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           # Full history is used to generate clean release notes
           fetch-depth: 0
