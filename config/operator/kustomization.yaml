@@ -1,0 +1,26 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: mc-operator-system
+
+resources:
+- namespace.yaml
+- ../rbac/cluster-role.yaml
+- ../rbac/cluster-role-binding.yaml
+- deployment.yaml
+- service.yaml
+- validators.yaml
+- mutators.yaml
+
+images:
+- name: operator
+  newName: ghcr.io/danihengeveld/mc-operator
+  newTag: latest
+
+configMapGenerator:
+- name: webhook-config
+  literals:
+  - KESTREL__ENDPOINTS__HTTP__URL=http://0.0.0.0:5000
+  - KESTREL__ENDPOINTS__HTTPS__URL=https://0.0.0.0:5001
+  - KESTREL__ENDPOINTS__HTTPS__CERTIFICATE__PATH=/certs/svc.pem
+  - KESTREL__ENDPOINTS__HTTPS__CERTIFICATE__KEYPATH=/certs/svc-key.pem

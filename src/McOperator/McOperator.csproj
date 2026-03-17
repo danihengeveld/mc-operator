@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>McOperator</RootNamespace>
+    <AssemblyName>McOperator</AssemblyName>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <DockerfileContext>../..</DockerfileContext>
+    <Version>1.0.0</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="KubeOps.Operator" Version="10.3.2" />
+    <PackageReference Include="KubeOps.Operator.Web" Version="10.3.2" />
+    <PackageReference Include="KubeOps.KubernetesClient" Version="10.3.2" />
+    <PackageReference Include="KubeOps.Transpiler" Version="10.3.2" />
+  </ItemGroup>
+</Project>

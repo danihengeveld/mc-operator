@@ -1,0 +1,51 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "mc-operator.fullname" . }}-role
+  labels:
+    {{- include "mc-operator.labels" . | nindent 4 }}
+rules:
+- apiGroups:
+  - apps
+  resources:
+  - statefulsets
+  verbs:
+  - '*'
+- apiGroups:
+  - ""
+  resources:
+  - services
+  - configmaps
+  - persistentvolumeclaims
+  verbs:
+  - '*'
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - get
+  - list
+  - create
+  - update
+  - patch
+- apiGroups:
+  - coordination.k8s.io
+  resources:
+  - leases
+  verbs:
+  - '*'
+- apiGroups:
+  - minecraft.operator.io
+  resources:
+  - minecraftservers
+  verbs:
+  - '*'
+- apiGroups:
+  - minecraft.operator.io
+  resources:
+  - minecraftservers/status
+  verbs:
+  - get
+  - update
+  - patch

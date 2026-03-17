@@ -1,0 +1,34 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: mc-operator-validators
+  annotations:
+    # If using cert-manager, add:
+    # cert-manager.io/inject-ca-from: mc-operator-system/mc-operator-webhook-cert
+webhooks:
+- name: validate.minecraftserver.minecraft.operator.io.v1alpha1
+  admissionReviewVersions:
+  - v1
+  clientConfig:
+    # caBundle is managed by the operator at runtime or cert-manager
+    # Replace with your actual CA bundle or use cert-manager injection
+    caBundle: ""
+    service:
+      name: mc-operator
+      namespace: mc-operator-system
+      path: /validate/minecraftserver
+      port: 443
+  matchPolicy: Exact
+  rules:
+  - apiGroups:
+    - minecraft.operator.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - minecraftservers
+  sideEffects: None
+  failurePolicy: Fail
+  timeoutSeconds: 10

@@ -1,0 +1,49 @@
+# Example: Spigot Minecraft Server with Minimal Resources
+# Good for small private servers or testing environments.
+# ClusterIP only - use kubectl port-forward or an Ingress TCP proxy to access externally.
+apiVersion: minecraft.operator.io/v1alpha1
+kind: MinecraftServer
+metadata:
+  name: spigot-private
+  namespace: minecraft
+spec:
+  acceptEula: true
+
+  server:
+    type: Spigot
+    version: "1.20.2"
+
+  properties:
+    motd: "§dPrivate Spigot Server"
+    difficulty: Easy
+    gameMode: Survival
+    maxPlayers: 5
+    onlineMode: true
+    whitelistEnabled: true
+    whitelist:
+      - "FriendOne"
+      - "FriendTwo"
+    pvp: false
+    spawnProtection: 16
+    viewDistance: 8
+    simulationDistance: 6
+    levelName: world
+
+  jvm:
+    initialMemory: "512m"
+    maxMemory: "1G"
+
+  resources:
+    cpuRequest: "250m"
+    cpuLimit: "1"
+    memoryRequest: "1Gi"
+    memoryLimit: "1Gi"
+
+  storage:
+    enabled: true
+    size: "5Gi"
+    deleteWithServer: false
+    mountPath: /data
+
+  service:
+    type: ClusterIP

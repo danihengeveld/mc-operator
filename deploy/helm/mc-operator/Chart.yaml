@@ -1,0 +1,15 @@
+apiVersion: v2
+name: mc-operator
+description: Kubernetes Operator for managing Minecraft server deployments
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - minecraft
+  - operator
+  - kubernetes
+home: https://github.com/danihengeveld/mc-operator
+sources:
+  - https://github.com/danihengeveld/mc-operator
+maintainers:
+  - name: danihengeveld

@@ -1,0 +1,6 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/McOperator.Tests/McOperator.Tests.csproj" />
+    <Project Path="src/McOperator/McOperator.csproj" />
+  </Folder>
+</Solution>
