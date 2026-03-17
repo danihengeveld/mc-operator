@@ -1,0 +1,38 @@
+# Valid MinecraftServer for integration tests.
+# Minimal but complete spec that exercises the main reconciliation path.
+apiVersion: minecraft.hengeveld.dev/v1alpha1
+kind: MinecraftServer
+metadata:
+  name: test-server
+spec:
+  acceptEula: true
+
+  server:
+    type: Vanilla
+    version: "1.20.4"
+
+  properties:
+    difficulty: Normal
+    gameMode: Survival
+    maxPlayers: 10
+    onlineMode: false
+    viewDistance: 10
+    simulationDistance: 10
+    levelName: world
+    serverPort: 25565
+
+  jvm:
+    initialMemory: "512m"
+    maxMemory: "1G"
+
+  resources:
+    cpuRequest: "250m"
+    memoryRequest: "512Mi"
+
+  storage:
+    enabled: true
+    size: "1Gi"
+    mountPath: /data
+
+  service:
+    type: ClusterIP

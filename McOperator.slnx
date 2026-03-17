@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/McOperator.Tests/McOperator.Tests.csproj" />
+    <Project Path="src/McOperator.IntegrationTests/McOperator.IntegrationTests.csproj" />
     <Project Path="src/McOperator/McOperator.csproj" />
   </Folder>
   <Folder Name="/solution/">
