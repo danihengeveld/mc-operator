@@ -1,7 +1,6 @@
-using FluentAssertions;
 using McOperator.Entities;
 using McOperator.Webhooks;
-using Xunit;
+using TUnit.Assertions.Extensions;
 
 namespace McOperator.Tests;
 
@@ -58,54 +57,54 @@ public class ValidationWebhookTests
         return server;
     }
 
-    [Fact]
-    public void Create_ValidServer_ReturnsSuccess()
+    [Test]
+    public async Task Create_ValidServer_ReturnsSuccess()
     {
         var webhook = new MinecraftServerValidationWebhook();
         var server = ValidServer();
 
         var result = webhook.Create(server, dryRun: false);
 
-        result.Valid.Should().BeTrue();
+        await Assert.That(result.Valid).IsTrue();
     }
 
-    [Fact]
-    public void Create_EulaNotAccepted_ReturnsFail()
+    [Test]
+    public async Task Create_EulaNotAccepted_ReturnsFail()
     {
         var webhook = new MinecraftServerValidationWebhook();
         var server = ValidServer(s => s.AcceptEula = false);
 
         var result = webhook.Create(server, dryRun: false);
 
-        result.Valid.Should().BeFalse();
-        result.Status!.Message.Should().Contain("acceptEula");
+        await Assert.That(result.Valid).IsFalse();
+        await Assert.That(result.Status!.Message).Contains("acceptEula");
     }
 
-    [Fact]
-    public void Create_EmptyVersion_ReturnsFail()
+    [Test]
+    public async Task Create_EmptyVersion_ReturnsFail()
     {
         var webhook = new MinecraftServerValidationWebhook();
         var server = ValidServer(s => s.Server.Version = "");
 
         var result = webhook.Create(server, dryRun: false);
 
-        result.Valid.Should().BeFalse();
-        result.Status!.Message.Should().Contain("version");
+        await Assert.That(result.Valid).IsFalse();
+        await Assert.That(result.Status!.Message).Contains("version");
     }
 
-    [Fact]
-    public void Create_WhitespaceVersion_ReturnsFail()
+    [Test]
+    public async Task Create_WhitespaceVersion_ReturnsFail()
     {
         var webhook = new MinecraftServerValidationWebhook();
         var server = ValidServer(s => s.Server.Version = "   ");
 
         var result = webhook.Create(server, dryRun: false);
 
-        result.Valid.Should().BeFalse();
+        await Assert.That(result.Valid).IsFalse();
     }
 
-    [Fact]
-    public void Create_JvmMaxLessThanInitial_ReturnsFail()
+    [Test]
+    public async Task Create_JvmMaxLessThanInitial_ReturnsFail()
     {
         var webhook = new MinecraftServerValidationWebhook();
         var server = ValidServer(s =>
@@ -116,12 +115,12 @@ public class ValidationWebhookTests
 
         var result = webhook.Create(server, dryRun: false);
 
-        result.Valid.Should().BeFalse();
-        result.Status!.Message.Should().Contain("maxMemory");
+        await Assert.That(result.Valid).IsFalse();
+        await Assert.That(result.Status!.Message).Contains("maxMemory");
     }
 
-    [Fact]
-    public void Create_JvmEqualMemory_ReturnsSuccess()
+    [Test]
+    public async Task Create_JvmEqualMemory_ReturnsSuccess()
     {
         var webhook = new MinecraftServerValidationWebhook();
         var server = ValidServer(s =>
@@ -132,23 +131,23 @@ public class ValidationWebhookTests
 
         var result = webhook.Create(server, dryRun: false);
 
-        result.Valid.Should().BeTrue();
+        await Assert.That(result.Valid).IsTrue();
     }
 
-    [Fact]
-    public void Create_InvalidJvmMemoryFormat_ReturnsFail()
+    [Test]
+    public async Task Create_InvalidJvmMemoryFormat_ReturnsFail()
     {
         var webhook = new MinecraftServerValidationWebhook();
         var server = ValidServer(s => s.Jvm.InitialMemory = "not-a-memory-value");
 
         var result = webhook.Create(server, dryRun: false);
 
-        result.Valid.Should().BeFalse();
-        result.Status!.Message.Should().Contain("initialMemory");
+        await Assert.That(result.Valid).IsFalse();
+        await Assert.That(result.Status!.Message).Contains("initialMemory");
     }
 
-    [Fact]
-    public void Create_NodePortOnClusterIpService_ReturnsFail()
+    [Test]
+    public async Task Create_NodePortOnClusterIpService_ReturnsFail()
     {
         var webhook = new MinecraftServerValidationWebhook();
         var server = ValidServer(s =>
@@ -159,12 +158,12 @@ public class ValidationWebhookTests
 
         var result = webhook.Create(server, dryRun: false);
 
-        result.Valid.Should().BeFalse();
-        result.Status!.Message.Should().Contain("nodePort");
+        await Assert.That(result.Valid).IsFalse();
+        await Assert.That(result.Status!.Message).Contains("nodePort");
     }
 
-    [Fact]
-    public void Create_NodePortOnNodePortService_ReturnsSuccess()
+    [Test]
+    public async Task Create_NodePortOnNodePortService_ReturnsSuccess()
     {
         var webhook = new MinecraftServerValidationWebhook();
         var server = ValidServer(s =>
@@ -175,11 +174,11 @@ public class ValidationWebhookTests
 
         var result = webhook.Create(server, dryRun: false);
 
-        result.Valid.Should().BeTrue();
+        await Assert.That(result.Valid).IsTrue();
     }
 
-    [Fact]
-    public void Create_NodePortOutOfRange_ReturnsFail()
+    [Test]
+    public async Task Create_NodePortOutOfRange_ReturnsFail()
     {
         var webhook = new MinecraftServerValidationWebhook();
         var server = ValidServer(s =>
@@ -190,60 +189,60 @@ public class ValidationWebhookTests
 
         var result = webhook.Create(server, dryRun: false);
 
-        result.Valid.Should().BeFalse();
-        result.Status!.Message.Should().Contain("30000-32767");
+        await Assert.That(result.Valid).IsFalse();
+        await Assert.That(result.Status!.Message).Contains("30000-32767");
     }
 
-    [Fact]
-    public void Create_InvalidStorageSize_ReturnsFail()
+    [Test]
+    public async Task Create_InvalidStorageSize_ReturnsFail()
     {
         var webhook = new MinecraftServerValidationWebhook();
         var server = ValidServer(s => s.Storage.Size = "not-a-size");
 
         var result = webhook.Create(server, dryRun: false);
 
-        result.Valid.Should().BeFalse();
-        result.Status!.Message.Should().Contain("storage.size");
+        await Assert.That(result.Valid).IsFalse();
+        await Assert.That(result.Status!.Message).Contains("storage.size");
     }
 
-    [Fact]
-    public void Create_RelativeMountPath_ReturnsFail()
+    [Test]
+    public async Task Create_RelativeMountPath_ReturnsFail()
     {
         var webhook = new MinecraftServerValidationWebhook();
         var server = ValidServer(s => s.Storage.MountPath = "relative/path");
 
         var result = webhook.Create(server, dryRun: false);
 
-        result.Valid.Should().BeFalse();
-        result.Status!.Message.Should().Contain("mountPath");
+        await Assert.That(result.Valid).IsFalse();
+        await Assert.That(result.Status!.Message).Contains("mountPath");
     }
 
-    [Fact]
-    public void Create_ServerPortOutOfRange_ReturnsFail()
+    [Test]
+    public async Task Create_ServerPortOutOfRange_ReturnsFail()
     {
         var webhook = new MinecraftServerValidationWebhook();
         var server = ValidServer(s => s.Properties.ServerPort = 80);
 
         var result = webhook.Create(server, dryRun: false);
 
-        result.Valid.Should().BeFalse();
-        result.Status!.Message.Should().Contain("serverPort");
+        await Assert.That(result.Valid).IsFalse();
+        await Assert.That(result.Status!.Message).Contains("serverPort");
     }
 
-    [Fact]
-    public void Create_InvalidViewDistance_ReturnsFail()
+    [Test]
+    public async Task Create_InvalidViewDistance_ReturnsFail()
     {
         var webhook = new MinecraftServerValidationWebhook();
         var server = ValidServer(s => s.Properties.ViewDistance = 1);
 
         var result = webhook.Create(server, dryRun: false);
 
-        result.Valid.Should().BeFalse();
-        result.Status!.Message.Should().Contain("viewDistance");
+        await Assert.That(result.Valid).IsFalse();
+        await Assert.That(result.Status!.Message).Contains("viewDistance");
     }
 
-    [Fact]
-    public void Update_ImmutableStorageEnabled_ReturnsFail()
+    [Test]
+    public async Task Update_ImmutableStorageEnabled_ReturnsFail()
     {
         var webhook = new MinecraftServerValidationWebhook();
         var oldServer = ValidServer();
@@ -251,12 +250,12 @@ public class ValidationWebhookTests
 
         var result = webhook.Update(newServer, oldServer, dryRun: false);
 
-        result.Valid.Should().BeFalse();
-        result.Status!.Message.Should().Contain("storage.enabled");
+        await Assert.That(result.Valid).IsFalse();
+        await Assert.That(result.Status!.Message).Contains("storage.enabled");
     }
 
-    [Fact]
-    public void Update_ImmutableStorageSize_ReturnsFail()
+    [Test]
+    public async Task Update_ImmutableStorageSize_ReturnsFail()
     {
         var webhook = new MinecraftServerValidationWebhook();
         var oldServer = ValidServer();
@@ -264,12 +263,12 @@ public class ValidationWebhookTests
 
         var result = webhook.Update(newServer, oldServer, dryRun: false);
 
-        result.Valid.Should().BeFalse();
-        result.Status!.Message.Should().Contain("storage.size");
+        await Assert.That(result.Valid).IsFalse();
+        await Assert.That(result.Status!.Message).Contains("storage.size");
     }
 
-    [Fact]
-    public void Update_ImmutableStorageClass_ReturnsFail()
+    [Test]
+    public async Task Update_ImmutableStorageClass_ReturnsFail()
     {
         var webhook = new MinecraftServerValidationWebhook();
         var oldServer = ValidServer(s => s.Storage.StorageClassName = "fast");
@@ -277,12 +276,12 @@ public class ValidationWebhookTests
 
         var result = webhook.Update(newServer, oldServer, dryRun: false);
 
-        result.Valid.Should().BeFalse();
-        result.Status!.Message.Should().Contain("storageClassName");
+        await Assert.That(result.Valid).IsFalse();
+        await Assert.That(result.Status!.Message).Contains("storageClassName");
     }
 
-    [Fact]
-    public void Update_SameStorage_ReturnsSuccess()
+    [Test]
+    public async Task Update_SameStorage_ReturnsSuccess()
     {
         var webhook = new MinecraftServerValidationWebhook();
         var oldServer = ValidServer();
@@ -294,11 +293,11 @@ public class ValidationWebhookTests
 
         var result = webhook.Update(newServer, oldServer, dryRun: false);
 
-        result.Valid.Should().BeTrue();
+        await Assert.That(result.Valid).IsTrue();
     }
 
-    [Fact]
-    public void Create_MultipleValidationErrors_AllReported()
+    [Test]
+    public async Task Create_MultipleValidationErrors_AllReported()
     {
         var webhook = new MinecraftServerValidationWebhook();
         var server = ValidServer(s =>
@@ -310,9 +309,9 @@ public class ValidationWebhookTests
 
         var result = webhook.Create(server, dryRun: false);
 
-        result.Valid.Should().BeFalse();
-        result.Status!.Message.Should().Contain("acceptEula");
-        result.Status.Message.Should().Contain("version");
-        result.Status.Message.Should().Contain("serverPort");
+        await Assert.That(result.Valid).IsFalse();
+        await Assert.That(result.Status!.Message).Contains("acceptEula");
+        await Assert.That(result.Status.Message).Contains("version");
+        await Assert.That(result.Status.Message).Contains("serverPort");
     }
 }

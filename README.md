@@ -1,6 +1,6 @@
 # mc-operator
 
-A production-ready Kubernetes Operator for managing Minecraft server deployments, built with .NET 8 and [KubeOps](https://github.com/buehler/dotnet-operator-sdk).
+A production-ready Kubernetes Operator for managing Minecraft server deployments, built with .NET 10 and [KubeOps](https://github.com/buehler/dotnet-operator-sdk).
 
 ## Features
 
@@ -213,7 +213,7 @@ See [config/examples/](config/examples/) for complete example manifests:
 
 ### Prerequisites
 
-- .NET 8 SDK
+- .NET 10 SDK
 - Docker (for building container images)
 - A Kubernetes cluster (local: kind, minikube, k3s, or Docker Desktop)
 - `kubectl`

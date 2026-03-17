@@ -1,7 +1,6 @@
-using FluentAssertions;
 using McOperator.Builders;
 using McOperator.Entities;
-using Xunit;
+using TUnit.Assertions.Extensions;
 
 namespace McOperator.Tests;
 
@@ -34,105 +33,105 @@ public class StatefulSetBuilderTests
         return server;
     }
 
-    [Fact]
-    public void Build_ReturnsStatefulSet_WithCorrectName()
+    [Test]
+    public async Task Build_ReturnsStatefulSet_WithCorrectName()
     {
         var server = BuildServer();
         var sts = StatefulSetBuilder.Build(server);
 
-        sts.Metadata.Name.Should().Be("test-server");
-        sts.Metadata.NamespaceProperty.Should().Be("default");
+        await Assert.That(sts.Metadata.Name).IsEqualTo("test-server");
+        await Assert.That(sts.Metadata.NamespaceProperty).IsEqualTo("default");
     }
 
-    [Fact]
-    public void Build_StatefulSet_HasOwnerReference()
+    [Test]
+    public async Task Build_StatefulSet_HasOwnerReference()
     {
         var server = BuildServer();
         var sts = StatefulSetBuilder.Build(server);
 
-        sts.Metadata.OwnerReferences.Should().HaveCount(1);
-        sts.Metadata.OwnerReferences[0].Kind.Should().Be("MinecraftServer");
-        sts.Metadata.OwnerReferences[0].Name.Should().Be("test-server");
-        sts.Metadata.OwnerReferences[0].Uid.Should().Be("test-uid-1234");
-        sts.Metadata.OwnerReferences[0].Controller.Should().BeTrue();
+        await Assert.That(sts.Metadata.OwnerReferences.Count).IsEqualTo(1);
+        await Assert.That(sts.Metadata.OwnerReferences[0].Kind).IsEqualTo("MinecraftServer");
+        await Assert.That(sts.Metadata.OwnerReferences[0].Name).IsEqualTo("test-server");
+        await Assert.That(sts.Metadata.OwnerReferences[0].Uid).IsEqualTo("test-uid-1234");
+        await Assert.That(sts.Metadata.OwnerReferences[0].Controller).IsTrue();
     }
 
-    [Fact]
-    public void Build_StatefulSet_HasCorrectReplicas()
+    [Test]
+    public async Task Build_StatefulSet_HasCorrectReplicas()
     {
         var server = BuildServer(s => s.Replicas = 1);
         var sts = StatefulSetBuilder.Build(server);
 
-        sts.Spec.Replicas.Should().Be(1);
+        await Assert.That(sts.Spec.Replicas).IsEqualTo(1);
     }
 
-    [Fact]
-    public void Build_StatefulSet_HasZeroReplicas_WhenPaused()
+    [Test]
+    public async Task Build_StatefulSet_HasZeroReplicas_WhenPaused()
     {
         var server = BuildServer(s => s.Replicas = 0);
         var sts = StatefulSetBuilder.Build(server);
 
-        sts.Spec.Replicas.Should().Be(0);
+        await Assert.That(sts.Spec.Replicas).IsEqualTo(0);
     }
 
-    [Fact]
-    public void Build_Container_HasCorrectImage_ForPaper()
+    [Test]
+    public async Task Build_Container_HasCorrectImage_ForPaper()
     {
         var server = BuildServer(s => s.Server.Type = ServerType.Paper);
         var sts = StatefulSetBuilder.Build(server);
 
         var container = sts.Spec.Template.Spec.Containers[0];
-        container.Image.Should().Be("itzg/minecraft-server:latest");
+        await Assert.That(container.Image).IsEqualTo("itzg/minecraft-server:latest");
     }
 
-    [Fact]
-    public void Build_Container_UsesCustomImage_WhenSpecified()
+    [Test]
+    public async Task Build_Container_UsesCustomImage_WhenSpecified()
     {
         var server = BuildServer(s => s.Image = "my-custom-image:1.0");
         var sts = StatefulSetBuilder.Build(server);
 
         var container = sts.Spec.Template.Spec.Containers[0];
-        container.Image.Should().Be("my-custom-image:1.0");
+        await Assert.That(container.Image).IsEqualTo("my-custom-image:1.0");
     }
 
-    [Fact]
-    public void Build_Container_HasEulaEnvVar()
+    [Test]
+    public async Task Build_Container_HasEulaEnvVar()
     {
         var server = BuildServer(s => s.AcceptEula = true);
         var sts = StatefulSetBuilder.Build(server);
 
         var container = sts.Spec.Template.Spec.Containers[0];
         var eulaEnv = container.Env.FirstOrDefault(e => e.Name == "EULA");
-        eulaEnv.Should().NotBeNull();
-        eulaEnv!.Value.Should().Be("TRUE");
+        await Assert.That(eulaEnv).IsNotNull();
+        await Assert.That(eulaEnv!.Value).IsEqualTo("TRUE");
     }
 
-    [Fact]
-    public void Build_Container_HasServerTypeEnvVar()
+    [Test]
+    public async Task Build_Container_HasServerTypeEnvVar()
     {
         var server = BuildServer(s => s.Server.Type = ServerType.Spigot);
         var sts = StatefulSetBuilder.Build(server);
 
         var container = sts.Spec.Template.Spec.Containers[0];
         var typeEnv = container.Env.FirstOrDefault(e => e.Name == "TYPE");
-        typeEnv.Should().NotBeNull();
-        typeEnv!.Value.Should().Be("SPIGOT");
+        await Assert.That(typeEnv).IsNotNull();
+        await Assert.That(typeEnv!.Value).IsEqualTo("SPIGOT");
     }
 
-    [Fact]
-    public void Build_Container_HasVersionEnvVar()
+    [Test]
+    public async Task Build_Container_HasVersionEnvVar()
     {
         var server = BuildServer(s => s.Server.Version = "1.20.4");
         var sts = StatefulSetBuilder.Build(server);
 
         var container = sts.Spec.Template.Spec.Containers[0];
         var versionEnv = container.Env.FirstOrDefault(e => e.Name == "VERSION");
-        versionEnv.Should().NotBeNull();
-        versionEnv!.Value.Should().Be("1.20.4");
+        await Assert.That(versionEnv).IsNotNull();
+        await Assert.That(versionEnv!.Value).IsEqualTo("1.20.4");
     }
 
-    [Fact]
-    public void Build_Container_HasJvmOptsWithMemory()
+    [Test]
+    public async Task Build_Container_HasJvmOptsWithMemory()
     {
         var server = BuildServer(s =>
         {
@@ -143,13 +142,13 @@ public class StatefulSetBuilderTests
 
         var container = sts.Spec.Template.Spec.Containers[0];
         var jvmEnv = container.Env.FirstOrDefault(e => e.Name == "JVM_OPTS");
-        jvmEnv.Should().NotBeNull();
-        jvmEnv!.Value.Should().Contain("-Xms512m");
-        jvmEnv.Value.Should().Contain("-Xmx2G");
+        await Assert.That(jvmEnv).IsNotNull();
+        await Assert.That(jvmEnv!.Value).Contains("-Xms512m");
+        await Assert.That(jvmEnv.Value).Contains("-Xmx2G");
     }
 
-    [Fact]
-    public void Build_Container_HasExtraJvmArgs()
+    [Test]
+    public async Task Build_Container_HasExtraJvmArgs()
     {
         var server = BuildServer(s =>
         {
@@ -160,12 +159,12 @@ public class StatefulSetBuilderTests
 
         var container = sts.Spec.Template.Spec.Containers[0];
         var jvmEnv = container.Env.FirstOrDefault(e => e.Name == "JVM_OPTS");
-        jvmEnv!.Value.Should().Contain("-XX:+UseG1GC");
-        jvmEnv.Value.Should().Contain("-XX:G1HeapRegionSize=4M");
+        await Assert.That(jvmEnv!.Value).Contains("-XX:+UseG1GC");
+        await Assert.That(jvmEnv.Value).Contains("-XX:G1HeapRegionSize=4M");
     }
 
-    [Fact]
-    public void Build_Container_HasResourceRequests()
+    [Test]
+    public async Task Build_Container_HasResourceRequests()
     {
         var server = BuildServer(s =>
         {
@@ -175,14 +174,14 @@ public class StatefulSetBuilderTests
         var sts = StatefulSetBuilder.Build(server);
 
         var container = sts.Spec.Template.Spec.Containers[0];
-        container.Resources.Requests.Should().ContainKey("cpu");
-        container.Resources.Requests.Should().ContainKey("memory");
-        container.Resources.Requests["cpu"].ToString().Should().Be("500m");
-        container.Resources.Requests["memory"].ToString().Should().Be("2Gi");
+        await Assert.That(container.Resources.Requests.ContainsKey("cpu")).IsTrue();
+        await Assert.That(container.Resources.Requests.ContainsKey("memory")).IsTrue();
+        await Assert.That(container.Resources.Requests["cpu"].ToString()).IsEqualTo("500m");
+        await Assert.That(container.Resources.Requests["memory"].ToString()).IsEqualTo("2Gi");
     }
 
-    [Fact]
-    public void Build_Container_MemoryLimit_DefaultsToRequest()
+    [Test]
+    public async Task Build_Container_MemoryLimit_DefaultsToRequest()
     {
         var server = BuildServer(s =>
         {
@@ -192,12 +191,12 @@ public class StatefulSetBuilderTests
         var sts = StatefulSetBuilder.Build(server);
 
         var container = sts.Spec.Template.Spec.Containers[0];
-        container.Resources.Limits.Should().ContainKey("memory");
-        container.Resources.Limits["memory"].ToString().Should().Be("2Gi");
+        await Assert.That(container.Resources.Limits.ContainsKey("memory")).IsTrue();
+        await Assert.That(container.Resources.Limits["memory"].ToString()).IsEqualTo("2Gi");
     }
 
-    [Fact]
-    public void Build_HasVolumeClaimTemplate_WhenStorageEnabled()
+    [Test]
+    public async Task Build_HasVolumeClaimTemplate_WhenStorageEnabled()
     {
         var server = BuildServer(s =>
         {
@@ -206,23 +205,25 @@ public class StatefulSetBuilderTests
         });
         var sts = StatefulSetBuilder.Build(server);
 
-        sts.Spec.VolumeClaimTemplates.Should().NotBeNullOrEmpty();
+        await Assert.That(sts.Spec.VolumeClaimTemplates).IsNotNull();
+        await Assert.That(sts.Spec.VolumeClaimTemplates!.Count).IsGreaterThan(0);
         var pvc = sts.Spec.VolumeClaimTemplates![0];
-        pvc.Metadata.Name.Should().Be("data");
-        pvc.Spec.Resources.Requests["storage"].ToString().Should().Be("10Gi");
+        await Assert.That(pvc.Metadata.Name).IsEqualTo("data");
+        await Assert.That(pvc.Spec.Resources.Requests["storage"].ToString()).IsEqualTo("10Gi");
     }
 
-    [Fact]
-    public void Build_NoVolumeClaimTemplate_WhenStorageDisabled()
+    [Test]
+    public async Task Build_NoVolumeClaimTemplate_WhenStorageDisabled()
     {
         var server = BuildServer(s => s.Storage.Enabled = false);
         var sts = StatefulSetBuilder.Build(server);
 
-        sts.Spec.VolumeClaimTemplates.Should().BeNullOrEmpty();
+        bool isNullOrEmpty = sts.Spec.VolumeClaimTemplates is null || sts.Spec.VolumeClaimTemplates.Count == 0;
+        await Assert.That(isNullOrEmpty).IsTrue();
     }
 
-    [Fact]
-    public void Build_Container_HasDataVolumeMount_WhenStorageEnabled()
+    [Test]
+    public async Task Build_Container_HasDataVolumeMount_WhenStorageEnabled()
     {
         var server = BuildServer(s =>
         {
@@ -233,52 +234,52 @@ public class StatefulSetBuilderTests
 
         var container = sts.Spec.Template.Spec.Containers[0];
         var mount = container.VolumeMounts.FirstOrDefault(m => m.Name == "data");
-        mount.Should().NotBeNull();
-        mount!.MountPath.Should().Be("/data");
+        await Assert.That(mount).IsNotNull();
+        await Assert.That(mount!.MountPath).IsEqualTo("/data");
     }
 
-    [Fact]
-    public void Build_StorageRetentionPolicy_DefaultsToRetain()
+    [Test]
+    public async Task Build_StorageRetentionPolicy_DefaultsToRetain()
     {
         var server = BuildServer(s => s.Storage.DeleteWithServer = false);
         var sts = StatefulSetBuilder.Build(server);
 
-        sts.Spec.PersistentVolumeClaimRetentionPolicy!.WhenDeleted.Should().Be("Retain");
+        await Assert.That(sts.Spec.PersistentVolumeClaimRetentionPolicy!.WhenDeleted).IsEqualTo("Retain");
     }
 
-    [Fact]
-    public void Build_StorageRetentionPolicy_IsDelete_WhenDeleteWithServerTrue()
+    [Test]
+    public async Task Build_StorageRetentionPolicy_IsDelete_WhenDeleteWithServerTrue()
     {
         var server = BuildServer(s => s.Storage.DeleteWithServer = true);
         var sts = StatefulSetBuilder.Build(server);
 
-        sts.Spec.PersistentVolumeClaimRetentionPolicy!.WhenDeleted.Should().Be("Delete");
+        await Assert.That(sts.Spec.PersistentVolumeClaimRetentionPolicy!.WhenDeleted).IsEqualTo("Delete");
     }
 
-    [Fact]
-    public void Build_Container_HasReadinessAndLivenessProbes()
+    [Test]
+    public async Task Build_Container_HasReadinessAndLivenessProbes()
     {
         var server = BuildServer();
         var sts = StatefulSetBuilder.Build(server);
 
         var container = sts.Spec.Template.Spec.Containers[0];
-        container.ReadinessProbe.Should().NotBeNull();
-        container.LivenessProbe.Should().NotBeNull();
+        await Assert.That(container.ReadinessProbe).IsNotNull();
+        await Assert.That(container.LivenessProbe).IsNotNull();
     }
 
-    [Fact]
-    public void Build_HasStandardLabels()
+    [Test]
+    public async Task Build_HasStandardLabels()
     {
         var server = BuildServer();
         var sts = StatefulSetBuilder.Build(server);
 
-        sts.Metadata.Labels.Should().ContainKey("app.kubernetes.io/name");
-        sts.Metadata.Labels.Should().ContainKey("app.kubernetes.io/instance");
-        sts.Metadata.Labels["app.kubernetes.io/instance"].Should().Be("test-server");
+        await Assert.That(sts.Metadata.Labels.ContainsKey("app.kubernetes.io/name")).IsTrue();
+        await Assert.That(sts.Metadata.Labels.ContainsKey("app.kubernetes.io/instance")).IsTrue();
+        await Assert.That(sts.Metadata.Labels["app.kubernetes.io/instance"]).IsEqualTo("test-server");
     }
 
-    [Fact]
-    public void Build_Container_HasOpsEnvVar_WhenOpsSpecified()
+    [Test]
+    public async Task Build_Container_HasOpsEnvVar_WhenOpsSpecified()
     {
         var server = BuildServer(s =>
         {
@@ -289,12 +290,12 @@ public class StatefulSetBuilderTests
 
         var container = sts.Spec.Template.Spec.Containers[0];
         var opsEnv = container.Env.FirstOrDefault(e => e.Name == "OPS");
-        opsEnv.Should().NotBeNull();
-        opsEnv!.Value.Should().Be("admin,moderator");
+        await Assert.That(opsEnv).IsNotNull();
+        await Assert.That(opsEnv!.Value).IsEqualTo("admin,moderator");
     }
 
-    [Fact]
-    public void Build_Container_HasWhitelistEnvVar_WhenWhitelistSpecified()
+    [Test]
+    public async Task Build_Container_HasWhitelistEnvVar_WhenWhitelistSpecified()
     {
         var server = BuildServer(s =>
         {
@@ -306,34 +307,34 @@ public class StatefulSetBuilderTests
 
         var container = sts.Spec.Template.Spec.Containers[0];
         var whitelistEnv = container.Env.FirstOrDefault(e => e.Name == "WHITELIST");
-        whitelistEnv.Should().NotBeNull();
-        whitelistEnv!.Value.Should().Be("player1,player2");
+        await Assert.That(whitelistEnv).IsNotNull();
+        await Assert.That(whitelistEnv!.Value).IsEqualTo("player1,player2");
     }
 
-    [Fact]
-    public void Build_Container_HasMotdEnvVar_WhenMotdSpecified()
+    [Test]
+    public async Task Build_Container_HasMotdEnvVar_WhenMotdSpecified()
     {
         var server = BuildServer(s => s.Properties.Motd = "Welcome to my server!");
         var sts = StatefulSetBuilder.Build(server);
 
         var container = sts.Spec.Template.Spec.Containers[0];
         var motdEnv = container.Env.FirstOrDefault(e => e.Name == "MOTD");
-        motdEnv.Should().NotBeNull();
-        motdEnv!.Value.Should().Be("Welcome to my server!");
+        await Assert.That(motdEnv).IsNotNull();
+        await Assert.That(motdEnv!.Value).IsEqualTo("Welcome to my server!");
     }
 
-    [Fact]
-    public void ResolveImage_ReturnsDefaultImage_WhenNoImageSpecified()
+    [Test]
+    public async Task ResolveImage_ReturnsDefaultImage_WhenNoImageSpecified()
     {
         var spec = new MinecraftServerSpec { Server = new ServerSpec { Type = ServerType.Vanilla } };
 
         var image = StatefulSetBuilder.ResolveImage(spec);
 
-        image.Should().Be("itzg/minecraft-server:latest");
+        await Assert.That(image).IsEqualTo("itzg/minecraft-server:latest");
     }
 
-    [Fact]
-    public void ResolveImage_ReturnsCustomImage_WhenImageSpecified()
+    [Test]
+    public async Task ResolveImage_ReturnsCustomImage_WhenImageSpecified()
     {
         var spec = new MinecraftServerSpec
         {
@@ -343,6 +344,6 @@ public class StatefulSetBuilderTests
 
         var image = StatefulSetBuilder.ResolveImage(spec);
 
-        image.Should().Be("my-registry/mc-server:custom");
+        await Assert.That(image).IsEqualTo("my-registry/mc-server:custom");
     }
 }

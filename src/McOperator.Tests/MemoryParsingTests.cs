@@ -1,6 +1,5 @@
-using FluentAssertions;
 using McOperator.Webhooks;
-using Xunit;
+using TUnit.Assertions.Extensions;
 
 namespace McOperator.Tests;
 
@@ -9,62 +8,62 @@ namespace McOperator.Tests;
 /// </summary>
 public class MemoryParsingTests
 {
-    [Theory]
-    [InlineData("512m", true, 512)]
-    [InlineData("512M", true, 512)]
-    [InlineData("1G", true, 1024)]
-    [InlineData("1g", true, 1024)]
-    [InlineData("2G", true, 2048)]
-    [InlineData("4096M", true, 4096)]
-    public void TryParseMemory_ValidValues_ParsesCorrectly(string value, bool expectedResult, long expectedMb)
+    [Test]
+    [Arguments("512m", true, 512L)]
+    [Arguments("512M", true, 512L)]
+    [Arguments("1G", true, 1024L)]
+    [Arguments("1g", true, 1024L)]
+    [Arguments("2G", true, 2048L)]
+    [Arguments("4096M", true, 4096L)]
+    public async Task TryParseMemory_ValidValues_ParsesCorrectly(string value, bool expectedResult, long expectedMb)
     {
         var result = MinecraftServerValidationWebhook.TryParseMemory(value, out var megabytes);
 
-        result.Should().Be(expectedResult);
-        megabytes.Should().Be(expectedMb);
+        await Assert.That(result).IsEqualTo(expectedResult);
+        await Assert.That(megabytes).IsEqualTo(expectedMb);
     }
 
-    [Theory]
-    [InlineData("not-memory")]
-    [InlineData("")]
-    [InlineData("   ")]
-    [InlineData("-1G")]
-    [InlineData("0G")]
-    [InlineData("abc")]
-    public void TryParseMemory_InvalidValues_ReturnsFalse(string value)
+    [Test]
+    [Arguments("not-memory")]
+    [Arguments("")]
+    [Arguments("   ")]
+    [Arguments("-1G")]
+    [Arguments("0G")]
+    [Arguments("abc")]
+    public async Task TryParseMemory_InvalidValues_ReturnsFalse(string value)
     {
         var result = MinecraftServerValidationWebhook.TryParseMemory(value, out _);
 
-        result.Should().BeFalse();
+        await Assert.That(result).IsFalse();
     }
 
-    [Theory]
-    [InlineData("500m")]
-    [InlineData("1")]
-    [InlineData("2.5")]
-    [InlineData("10Gi")]
-    [InlineData("1Ki")]
-    [InlineData("2Mi")]
-    [InlineData("1G")]
-    [InlineData("1M")]
-    [InlineData("1k")]
-    public void IsValidK8sQuantity_ValidValues_ReturnsTrue(string value)
+    [Test]
+    [Arguments("500m")]
+    [Arguments("1")]
+    [Arguments("2.5")]
+    [Arguments("10Gi")]
+    [Arguments("1Ki")]
+    [Arguments("2Mi")]
+    [Arguments("1G")]
+    [Arguments("1M")]
+    [Arguments("1k")]
+    public async Task IsValidK8sQuantity_ValidValues_ReturnsTrue(string value)
     {
         var result = MinecraftServerValidationWebhook.IsValidK8sQuantity(value);
 
-        result.Should().BeTrue();
+        await Assert.That(result).IsTrue();
     }
 
-    [Theory]
-    [InlineData("")]
-    [InlineData("   ")]
-    [InlineData("invalid")]
-    [InlineData("not-a-quantity")]
-    [InlineData(null)]
-    public void IsValidK8sQuantity_InvalidValues_ReturnsFalse(string? value)
+    [Test]
+    [Arguments("")]
+    [Arguments("   ")]
+    [Arguments("invalid")]
+    [Arguments("not-a-quantity")]
+    [Arguments(null)]
+    public async Task IsValidK8sQuantity_InvalidValues_ReturnsFalse(string? value)
     {
         var result = MinecraftServerValidationWebhook.IsValidK8sQuantity(value);
 
-        result.Should().BeFalse();
+        await Assert.That(result).IsFalse();
     }
 }

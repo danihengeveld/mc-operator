@@ -4,7 +4,7 @@ This document captures the key design decisions made for the v1 of the Minecraft
 
 ## Overview
 
-`mc-operator` is a Kubernetes Operator built with .NET 8 and [KubeOps 10](https://github.com/buehler/dotnet-operator-sdk). It manages `MinecraftServer` custom resources, which each represent a fully configured Minecraft server deployment and all of its supporting Kubernetes resources.
+`mc-operator` is a Kubernetes Operator built with .NET 10 and [KubeOps 10](https://github.com/buehler/dotnet-operator-sdk). It manages `MinecraftServer` custom resources, which each represent a fully configured Minecraft server deployment and all of its supporting Kubernetes resources.
 
 ---
 
@@ -192,7 +192,7 @@ mc-operator/
 ├── deploy/
 │   └── helm/mc-operator/              # Helm chart
 ├── Dockerfile                         # Multi-stage production Dockerfile
-├── mc-operator.sln                    # .NET solution file
+├── mc-operator.slnx                    # .NET solution file
 ├── README.md
 └── ARCHITECTURE.md                    # This file
 ```

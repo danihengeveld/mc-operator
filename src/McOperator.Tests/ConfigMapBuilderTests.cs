@@ -1,7 +1,6 @@
-using FluentAssertions;
 using McOperator.Builders;
 using McOperator.Entities;
-using Xunit;
+using TUnit.Assertions.Extensions;
 
 namespace McOperator.Tests;
 
@@ -36,99 +35,99 @@ public class ConfigMapBuilderTests
         return server;
     }
 
-    [Fact]
-    public void Build_ConfigMap_HasCorrectName()
+    [Test]
+    public async Task Build_ConfigMap_HasCorrectName()
     {
         var server = BuildServer();
         var cm = ConfigMapBuilder.Build(server);
 
-        cm.Metadata.Name.Should().Be("test-server-config");
+        await Assert.That(cm.Metadata.Name).IsEqualTo("test-server-config");
     }
 
-    [Fact]
-    public void Build_ConfigMap_HasOwnerReference()
+    [Test]
+    public async Task Build_ConfigMap_HasOwnerReference()
     {
         var server = BuildServer();
         var cm = ConfigMapBuilder.Build(server);
 
-        cm.Metadata.OwnerReferences.Should().HaveCount(1);
-        cm.Metadata.OwnerReferences[0].Kind.Should().Be("MinecraftServer");
+        await Assert.That(cm.Metadata.OwnerReferences.Count).IsEqualTo(1);
+        await Assert.That(cm.Metadata.OwnerReferences[0].Kind).IsEqualTo("MinecraftServer");
     }
 
-    [Fact]
-    public void Build_ConfigMap_ContainsServerProperties()
+    [Test]
+    public async Task Build_ConfigMap_ContainsServerProperties()
     {
         var server = BuildServer();
         var cm = ConfigMapBuilder.Build(server);
 
-        cm.Data.Should().ContainKey("server.properties");
-        cm.Data["server.properties"].Should().Contain("difficulty=normal");
-        cm.Data["server.properties"].Should().Contain("max-players=20");
-        cm.Data["server.properties"].Should().Contain("online-mode=true");
+        await Assert.That(cm.Data.ContainsKey("server.properties")).IsTrue();
+        await Assert.That(cm.Data["server.properties"]).Contains("difficulty=normal");
+        await Assert.That(cm.Data["server.properties"]).Contains("max-players=20");
+        await Assert.That(cm.Data["server.properties"]).Contains("online-mode=true");
     }
 
-    [Fact]
-    public void Build_ConfigMap_ContainsServerMetadata()
+    [Test]
+    public async Task Build_ConfigMap_ContainsServerMetadata()
     {
         var server = BuildServer();
         var cm = ConfigMapBuilder.Build(server);
 
-        cm.Data.Should().ContainKey("server-type");
-        cm.Data["server-type"].Should().Be("Paper");
-        cm.Data.Should().ContainKey("server-version");
-        cm.Data["server-version"].Should().Be("1.20.4");
+        await Assert.That(cm.Data.ContainsKey("server-type")).IsTrue();
+        await Assert.That(cm.Data["server-type"]).IsEqualTo("Paper");
+        await Assert.That(cm.Data.ContainsKey("server-version")).IsTrue();
+        await Assert.That(cm.Data["server-version"]).IsEqualTo("1.20.4");
     }
 
-    [Fact]
-    public void BuildServerPropertiesContent_IncludesDifficulty()
+    [Test]
+    public async Task BuildServerPropertiesContent_IncludesDifficulty()
     {
         var props = new ServerPropertiesSpec { Difficulty = Difficulty.Hard };
         var content = ConfigMapBuilder.BuildServerPropertiesContent(props);
 
-        content.Should().Contain("difficulty=hard");
+        await Assert.That(content).Contains("difficulty=hard");
     }
 
-    [Fact]
-    public void BuildServerPropertiesContent_IncludesMotd_WhenSet()
+    [Test]
+    public async Task BuildServerPropertiesContent_IncludesMotd_WhenSet()
     {
         var props = new ServerPropertiesSpec { Motd = "Hello World" };
         var content = ConfigMapBuilder.BuildServerPropertiesContent(props);
 
-        content.Should().Contain("motd=Hello World");
+        await Assert.That(content).Contains("motd=Hello World");
     }
 
-    [Fact]
-    public void BuildServerPropertiesContent_ExcludesMotd_WhenNull()
+    [Test]
+    public async Task BuildServerPropertiesContent_ExcludesMotd_WhenNull()
     {
         var props = new ServerPropertiesSpec { Motd = null };
         var content = ConfigMapBuilder.BuildServerPropertiesContent(props);
 
-        content.Should().NotContain("motd=");
+        await Assert.That(content).DoesNotContain("motd=");
     }
 
-    [Fact]
-    public void BuildServerPropertiesContent_IncludesSeed_WhenSet()
+    [Test]
+    public async Task BuildServerPropertiesContent_IncludesSeed_WhenSet()
     {
         var props = new ServerPropertiesSpec { LevelSeed = "12345" };
         var content = ConfigMapBuilder.BuildServerPropertiesContent(props);
 
-        content.Should().Contain("level-seed=12345");
+        await Assert.That(content).Contains("level-seed=12345");
     }
 
-    [Fact]
-    public void BuildServerPropertiesContent_IncludesAdditionalProperties()
+    [Test]
+    public async Task BuildServerPropertiesContent_IncludesAdditionalProperties()
     {
         var props = new ServerPropertiesSpec();
         props.AdditionalProperties["custom-key"] = "custom-value";
 
         var content = ConfigMapBuilder.BuildServerPropertiesContent(props);
 
-        content.Should().Contain("custom-key=custom-value");
+        await Assert.That(content).Contains("custom-key=custom-value");
     }
 
-    [Fact]
-    public void ConfigMapName_ReturnsCorrectName()
+    [Test]
+    public async Task ConfigMapName_ReturnsCorrectName()
     {
-        ConfigMapBuilder.ConfigMapName("my-server").Should().Be("my-server-config");
+        await Assert.That(ConfigMapBuilder.ConfigMapName("my-server")).IsEqualTo("my-server-config");
     }
 }

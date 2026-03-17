@@ -1,7 +1,6 @@
-using FluentAssertions;
 using McOperator.Builders;
 using McOperator.Entities;
-using Xunit;
+using TUnit.Assertions.Extensions;
 
 namespace McOperator.Tests;
 
@@ -27,36 +26,36 @@ public class ServiceBuilderTests
         return server;
     }
 
-    [Fact]
-    public void Build_Service_HasCorrectName()
+    [Test]
+    public async Task Build_Service_HasCorrectName()
     {
         var server = BuildServer();
         var svc = ServiceBuilder.Build(server);
 
-        svc.Metadata.Name.Should().Be("my-server");
+        await Assert.That(svc.Metadata.Name).IsEqualTo("my-server");
     }
 
-    [Fact]
-    public void Build_Service_HasOwnerReference()
+    [Test]
+    public async Task Build_Service_HasOwnerReference()
     {
         var server = BuildServer();
         var svc = ServiceBuilder.Build(server);
 
-        svc.Metadata.OwnerReferences.Should().HaveCount(1);
-        svc.Metadata.OwnerReferences[0].Kind.Should().Be("MinecraftServer");
+        await Assert.That(svc.Metadata.OwnerReferences.Count).IsEqualTo(1);
+        await Assert.That(svc.Metadata.OwnerReferences[0].Kind).IsEqualTo("MinecraftServer");
     }
 
-    [Fact]
-    public void Build_Service_DefaultsToClusterIP()
+    [Test]
+    public async Task Build_Service_DefaultsToClusterIP()
     {
         var server = BuildServer();
         var svc = ServiceBuilder.Build(server);
 
-        svc.Spec.Type.Should().Be("ClusterIP");
+        await Assert.That(svc.Spec.Type).IsEqualTo("ClusterIP");
     }
 
-    [Fact]
-    public void Build_Service_CanBeNodePort()
+    [Test]
+    public async Task Build_Service_CanBeNodePort()
     {
         var server = BuildServer(s =>
         {
@@ -65,42 +64,42 @@ public class ServiceBuilderTests
         });
         var svc = ServiceBuilder.Build(server);
 
-        svc.Spec.Type.Should().Be("NodePort");
-        svc.Spec.Ports[0].NodePort.Should().Be(30565);
+        await Assert.That(svc.Spec.Type).IsEqualTo("NodePort");
+        await Assert.That(svc.Spec.Ports[0].NodePort).IsEqualTo(30565);
     }
 
-    [Fact]
-    public void Build_Service_CanBeLoadBalancer()
+    [Test]
+    public async Task Build_Service_CanBeLoadBalancer()
     {
         var server = BuildServer(s => s.Service.Type = ServiceType.LoadBalancer);
         var svc = ServiceBuilder.Build(server);
 
-        svc.Spec.Type.Should().Be("LoadBalancer");
+        await Assert.That(svc.Spec.Type).IsEqualTo("LoadBalancer");
     }
 
-    [Fact]
-    public void Build_Service_HasMinecraftPort()
+    [Test]
+    public async Task Build_Service_HasMinecraftPort()
     {
         var server = BuildServer(s => s.Properties.ServerPort = 25565);
         var svc = ServiceBuilder.Build(server);
 
-        svc.Spec.Ports.Should().HaveCount(1);
-        svc.Spec.Ports[0].Port.Should().Be(25565);
-        svc.Spec.Ports[0].Name.Should().Be("minecraft");
+        await Assert.That(svc.Spec.Ports.Count).IsEqualTo(1);
+        await Assert.That(svc.Spec.Ports[0].Port).IsEqualTo(25565);
+        await Assert.That(svc.Spec.Ports[0].Name).IsEqualTo("minecraft");
     }
 
-    [Fact]
-    public void Build_Service_HasSelectorLabels()
+    [Test]
+    public async Task Build_Service_HasSelectorLabels()
     {
         var server = BuildServer();
         var svc = ServiceBuilder.Build(server);
 
-        svc.Spec.Selector.Should().ContainKey("app.kubernetes.io/instance");
-        svc.Spec.Selector["app.kubernetes.io/instance"].Should().Be("my-server");
+        await Assert.That(svc.Spec.Selector.ContainsKey("app.kubernetes.io/instance")).IsTrue();
+        await Assert.That(svc.Spec.Selector["app.kubernetes.io/instance"]).IsEqualTo("my-server");
     }
 
-    [Fact]
-    public void Build_Service_HasAnnotations_WhenSpecified()
+    [Test]
+    public async Task Build_Service_HasAnnotations_WhenSpecified()
     {
         var server = BuildServer(s =>
         {
@@ -108,11 +107,11 @@ public class ServiceBuilderTests
         });
         var svc = ServiceBuilder.Build(server);
 
-        svc.Metadata.Annotations.Should().ContainKey("service.beta.kubernetes.io/aws-load-balancer-type");
+        await Assert.That(svc.Metadata.Annotations.ContainsKey("service.beta.kubernetes.io/aws-load-balancer-type")).IsTrue();
     }
 
-    [Fact]
-    public void Build_Service_NodePort_IsNull_WhenClusterIP()
+    [Test]
+    public async Task Build_Service_NodePort_IsNull_WhenClusterIP()
     {
         var server = BuildServer(s =>
         {
@@ -121,6 +120,6 @@ public class ServiceBuilderTests
         });
         var svc = ServiceBuilder.Build(server);
 
-        svc.Spec.Ports[0].NodePort.Should().BeNull();
+        await Assert.That(svc.Spec.Ports[0].NodePort).IsNull();
     }
 }
