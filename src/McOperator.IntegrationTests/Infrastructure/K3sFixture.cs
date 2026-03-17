@@ -94,17 +94,7 @@ public class K3sFixture : IAsyncInitializer, IAsyncDisposable
 
     private async Task ApplyCrd()
     {
-        // Read the CRD from the manifests directory (checked into source control)
-        var crdPath = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "manifests", "crd",
-            "minecraftservers.yaml");
-        crdPath = Path.GetFullPath(crdPath);
-
-        if (!File.Exists(crdPath))
-        {
-            throw new FileNotFoundException(
-                $"CRD file not found at {crdPath}. Make sure you're running from the integration test project directory.");
-        }
-
+        var crdPath = FindCrdPath();
         var crdYaml = await File.ReadAllTextAsync(crdPath);
         var crd = KubernetesYaml.Deserialize<V1CustomResourceDefinition>(crdYaml);
 
@@ -171,5 +161,35 @@ public class K3sFixture : IAsyncInitializer, IAsyncDisposable
 
         // Start the operator in the background
         await _operatorApp.StartAsync();
+    }
+
+    /// <summary>
+    /// Finds the CRD YAML file by walking up from the build output directory
+    /// until we find the solution root (identified by McOperator.slnx).
+    /// </summary>
+    private static string FindCrdPath()
+    {
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+
+        while (directory is not null)
+        {
+            var crdFile = Path.Combine(directory.FullName, "manifests", "crd", "minecraftservers.yaml");
+            if (File.Exists(crdFile))
+            {
+                return crdFile;
+            }
+
+            // Check for solution file as a safety stop
+            if (File.Exists(Path.Combine(directory.FullName, "McOperator.slnx")))
+            {
+                throw new FileNotFoundException(
+                    $"Found solution root at {directory.FullName} but CRD file is missing at manifests/crd/minecraftservers.yaml");
+            }
+
+            directory = directory.Parent;
+        }
+
+        throw new FileNotFoundException(
+            $"Could not find CRD file. Searched upward from {AppContext.BaseDirectory} for manifests/crd/minecraftservers.yaml");
     }
 }
