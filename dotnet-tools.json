@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "isRoot": true,
+  "tools": {
+    "kubeops.cli": {
+      "version": "10.3.2",
+      "commands": [
+        "kubeops"
+      ],
+      "rollForward": false
+    }
+  }
+}

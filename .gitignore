@@ -1,0 +1,50 @@
+# .NET
+bin/
+obj/
+*.user
+.vs/
+*.suo
+
+# Build artifacts
+out/
+publish/
+
+# Test results
+TestResults/
+*.trx
+*.coverage
+
+# Rider
+.idea/
+
+# VS Code
+.vscode/
+
+# macOS
+.DS_Store
+
+# Certificate files (ephemeral, never commit)
+*.pem
+*.pfx
+*.crt
+*.key
+ca-key.pem
+ca.pem
+svc-key.pem
+svc.pem
+
+# NuGet
+*.nupkg
+.nuget/
+
+# Logs
+*.log
+
+# docs (Astro Starlight — Bun-managed)
+# bun.lock IS committed; node_modules and build output are not
+docs/node_modules/
+docs/dist/
+docs/.astro/
+
+# Helm (packaged charts — produced at release time)
+*.tgz

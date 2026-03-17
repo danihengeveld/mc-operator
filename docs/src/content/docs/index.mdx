@@ -1,0 +1,34 @@
+---
+title: mc-operator
+description: A Kubernetes Operator for managing Minecraft server deployments — built with .NET 10 and KubeOps.
+template: splash
+hero:
+  tagline: Manage Minecraft servers on Kubernetes with a production-grade operator.
+  actions:
+    - text: Quickstart
+      link: /mc-operator/getting-started/quickstart/
+      icon: right-arrow
+      variant: primary
+    - text: View on GitHub
+      link: https://github.com/danihengeveld/mc-operator
+      icon: external
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## Why mc-operator?
+
+<CardGrid stagger>
+  <Card title="Kubernetes-native" icon="puzzle">
+    Full CRD, validating/mutating webhooks, status conditions, owner references, and finalizers. Integrates cleanly with the Kubernetes API.
+  </Card>
+  <Card title="Production-ready defaults" icon="approve-check">
+    Data safety by default — PVCs are retained on server deletion. Immutable storage fields enforced at admission. Leader election for safe multi-replica deployments.
+  </Card>
+  <Card title="Full server control" icon="setting">
+    Expose every important `server.properties` setting through the CRD spec. JVM heap tuning, game mode, difficulty, whitelists, ops, and more.
+  </Card>
+  <Card title="Multiple distributions" icon="open-book">
+    Run Vanilla, Paper, Spigot, or Bukkit servers. Powered by the battle-tested [`itzg/minecraft-server`](https://github.com/itzg/docker-minecraft-server) image.
+  </Card>
+</CardGrid>

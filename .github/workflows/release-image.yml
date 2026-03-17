@@ -1,0 +1,137 @@
+name: Release – Container Image
+
+# Triggered by operator-specific version tags: operator/v1.2.3
+# This keeps image releases fully independent from Helm chart releases.
+on:
+  push:
+    tags:
+      - "operator/v*.*.*"
+
+concurrency:
+  group: release-image-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-push:
+    name: Build & Push Image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      # Required for writing image attestations (SLSA provenance)
+      id-token: write
+      attestations: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Strip the "operator/v" prefix to get a clean semver string (e.g. "1.2.3")
+      - name: Resolve image version from tag
+        id: version
+        run: |
+          VERSION="${GITHUB_REF_NAME#operator/v}"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Image version: ${VERSION}"
+
+      # Generate OCI-compliant image metadata (tags, labels) from the git ref.
+      # For tag operator/v1.2.3 this produces:
+      #   - ghcr.io/danihengeveld/mc-operator:1.2.3        (exact semver)
+      #   - ghcr.io/danihengeveld/mc-operator:1.2          (minor channel)
+      #   - ghcr.io/danihengeveld/mc-operator:1            (major channel)
+      #   - ghcr.io/danihengeveld/mc-operator:sha-<short>  (commit traceability)
+      # "latest" is intentionally omitted to avoid accidental upgrades in production.
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          # The tag value used here is derived from the raw ref so we strip the prefix
+          # explicitly to produce a clean semver output from docker/metadata-action.
+          tags: |
+            type=raw,value=${{ steps.version.outputs.version }}
+            type=raw,value=${{ steps.version.outputs.version }},suffix=
+            type=semver,pattern={{major}}.{{minor}},value=v${{ steps.version.outputs.version }}
+            type=semver,pattern={{major}},value=v${{ steps.version.outputs.version }}
+            type=sha,prefix=sha-,format=short
+          labels: |
+            org.opencontainers.image.title=mc-operator
+            org.opencontainers.image.description=Kubernetes Operator for Minecraft server deployments
+            org.opencontainers.image.vendor=hengeveld.dev
+            org.opencontainers.image.version=${{ steps.version.outputs.version }}
+            org.opencontainers.image.documentation=https://hengeveld.dev/mc-operator
+            org.opencontainers.image.source=https://github.com/danihengeveld/mc-operator
+            org.opencontainers.image.licenses=MIT
+
+      - name: Set up QEMU (multi-arch emulation)
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push image
+        id: push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # Layer caching via GitHub Actions cache (speeds up incremental rebuilds)
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          provenance: true
+          sbom: true
+
+      # Attest the image build — generates SLSA provenance attached to the image.
+      # Verify with: gh attestation verify oci://ghcr.io/danihengeveld/mc-operator:<ver>
+      - name: Generate image attestation
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
+
+      # Create a lightweight GitHub Release for traceability.
+      # This does NOT include the Helm chart — that is managed by release-chart.yml.
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: "Operator ${{ steps.version.outputs.version }}"
+          generate_release_notes: true
+          body: |
+            ## Container Image
+
+            ```
+            ghcr.io/danihengeveld/mc-operator:${{ steps.version.outputs.version }}
+            ```
+
+            ### Available tags
+
+            | Tag | Purpose |
+            |-----|---------|
+            | `${{ steps.version.outputs.version }}` | Exact version (recommended) |
+            | `${{ steps.version.outputs.version }}` minor channel | Stable minor |
+            | `sha-*` | Commit-level traceability |
+
+            ### Verify provenance
+            ```bash
+            gh attestation verify \
+              oci://ghcr.io/danihengeveld/mc-operator:${{ steps.version.outputs.version }} \
+              --repo danihengeveld/mc-operator
+            ```
+
+            See the [documentation](https://hengeveld.dev/mc-operator) for installation instructions.
+

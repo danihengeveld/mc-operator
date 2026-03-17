@@ -1,0 +1,20 @@
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- KubeOps operator packages -->
+    <PackageVersion Include="KubeOps.Operator" Version="10.3.2" />
+    <PackageVersion Include="KubeOps.Operator.Web" Version="10.3.2" />
+    <PackageVersion Include="KubeOps.KubernetesClient" Version="10.3.2" />
+    <PackageVersion Include="KubeOps.Transpiler" Version="10.3.2" />
+
+    <!-- Test packages -->
+    <PackageVersion Include="TUnit" Version="1.19.74" />
+    <PackageVersion Include="TUnit.Mocks" Version="1.19.74" />
+
+    <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.201" />
+  </ItemGroup>
+</Project>

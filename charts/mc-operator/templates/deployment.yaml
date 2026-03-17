@@ -1,0 +1,99 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "mc-operator.fullname" . }}
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    {{- include "mc-operator.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      {{- include "mc-operator.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "mc-operator.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "mc-operator.serviceAccountName" . }}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        fsGroup: 1001
+      terminationGracePeriodSeconds: 30
+      containers:
+      - name: mc-operator
+        image: "{{ .Values.image.repository }}:{{ include "mc-operator.imageTag" . }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        env:
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: ASPNETCORE_ENVIRONMENT
+          value: Production
+        - name: Logging__LogLevel__Default
+          value: {{ .Values.logLevel }}
+        {{- if .Values.webhooks.enabled }}
+        envFrom:
+        - configMapRef:
+            name: webhook-config
+        {{- end }}
+        ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+        {{- if .Values.webhooks.enabled }}
+        - name: https
+          containerPort: {{ .Values.webhooks.port }}
+          protocol: TCP
+        {{- end }}
+        resources:
+          {{- toYaml .Values.resources | nindent 10 }}
+        {{- if .Values.webhooks.enabled }}
+        volumeMounts:
+        - name: certificates
+          mountPath: /certs
+          readOnly: true
+        - name: ca-certificates
+          mountPath: /ca
+          readOnly: true
+        {{- end }}
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10
+      {{- if .Values.webhooks.enabled }}
+      volumes:
+      - name: certificates
+        secret:
+          secretName: webhook-cert
+      - name: ca-certificates
+        secret:
+          secretName: webhook-ca
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

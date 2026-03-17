@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="none">
+  <!-- Simplified grass block icon representing Minecraft -->
+  <rect x="4" y="4" width="32" height="32" rx="4" fill="#5D9C3F"/>
+  <rect x="4" y="16" width="32" height="20" rx="0" fill="#8B6336"/>
+  <rect x="4" y="28" width="32" height="8" rx="0" ry="0" fill="#8B6336"/>
+  <rect x="4" y="28" width="32" height="8" rx="0" fill="#8B6336" style="rx:0 0 4 4"/>
+  <text x="20" y="26" font-family="monospace" font-size="14" font-weight="bold" fill="white" text-anchor="middle">mc</text>
+</svg>

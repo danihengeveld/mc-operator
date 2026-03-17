@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <RootNamespace>McOperator</RootNamespace>
+    <AssemblyName>McOperator</AssemblyName>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <DockerfileContext>../..</DockerfileContext>
+    <Version>1.0.0</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="KubeOps.Operator" />
+    <PackageReference Include="KubeOps.Operator.Web" />
+    <PackageReference Include="KubeOps.KubernetesClient" />
+    <PackageReference Include="KubeOps.Transpiler" />
+  </ItemGroup>
+</Project>

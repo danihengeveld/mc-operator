@@ -1,0 +1,35 @@
+# Example: Paused Server (replicas=0)
+# Setting replicas to 0 stops the server process without deleting world data.
+# The PVC and other resources are preserved.
+# Set replicas back to 1 to resume the server.
+apiVersion: minecraft.hengeveld.dev/v1alpha1
+kind: MinecraftServer
+metadata:
+  name: paused-server
+  namespace: minecraft
+spec:
+  acceptEula: true
+  replicas: 0  # Server is stopped but world data is preserved
+
+  server:
+    type: Paper
+    version: "1.20.4"
+
+  properties:
+    motd: "Server is currently offline"
+    maxPlayers: 20
+
+  jvm:
+    initialMemory: "1G"
+    maxMemory: "2G"
+
+  resources:
+    memoryRequest: "2Gi"
+
+  storage:
+    enabled: true
+    size: "10Gi"
+    deleteWithServer: false
+
+  service:
+    type: ClusterIP

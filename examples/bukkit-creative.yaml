@@ -1,0 +1,49 @@
+# Example: Bukkit Creative Server
+# A creative Bukkit server with a flat world and no PvP.
+# Uses a custom image override to show that capability.
+apiVersion: minecraft.hengeveld.dev/v1alpha1
+kind: MinecraftServer
+metadata:
+  name: bukkit-creative
+  namespace: minecraft
+spec:
+  acceptEula: true
+
+  server:
+    type: Bukkit
+    version: "1.19.4"
+
+  properties:
+    motd: "§6Creative Build Server"
+    difficulty: Peaceful
+    gameMode: Creative
+    maxPlayers: 15
+    onlineMode: true
+    pvp: false
+    hardcore: false
+    spawnProtection: 0
+    viewDistance: 16
+    simulationDistance: 12
+    levelType: FLAT
+    levelName: creative-world
+    generateStructures: false
+    allowNether: false
+    ops:
+      - "BuildTeamAdmin"
+
+  jvm:
+    initialMemory: "1G"
+    maxMemory: "2G"
+
+  resources:
+    cpuRequest: "500m"
+    memoryRequest: "2Gi"
+
+  storage:
+    enabled: true
+    size: "10Gi"
+    deleteWithServer: false
+    mountPath: /data
+
+  service:
+    type: ClusterIP

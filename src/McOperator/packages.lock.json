@@ -1,0 +1,149 @@
+{
+  "version": 2,
+  "dependencies": {
+    "net10.0": {
+      "KubeOps.KubernetesClient": {
+        "type": "Direct",
+        "requested": "[10.3.2, )",
+        "resolved": "10.3.2",
+        "contentHash": "BIBjwpnI0xTgRyLwfNnUTwgzEo3I+ZCqVKQp3maBM//0WjgpAF0EJwUWl2CkSXbz1eL3EIh8cuciHJkF81Iwmg==",
+        "dependencies": {
+          "KubeOps.Abstractions": "10.3.2",
+          "KubeOps.Transpiler": "10.3.2"
+        }
+      },
+      "KubeOps.Operator": {
+        "type": "Direct",
+        "requested": "[10.3.2, )",
+        "resolved": "10.3.2",
+        "contentHash": "/3qyh/rQF8c0cyIZiqXquDFUO/TFALy+JWuvn2hd1OIWEzvReFVYJV7G0SsyyVGGbTDHpi+r1rROO1rlhUKh1w==",
+        "dependencies": {
+          "KubeOps.Abstractions": "10.3.2",
+          "KubeOps.KubernetesClient": "10.3.2",
+          "KubeOps.Transpiler": "10.3.2"
+        }
+      },
+      "KubeOps.Operator.Web": {
+        "type": "Direct",
+        "requested": "[10.3.2, )",
+        "resolved": "10.3.2",
+        "contentHash": "eGLmOcnupPQ8XVOnds0X3pgJtnmFSGWkMjG1nXbqekk/MLJZhzTKxEaqS17chziUY1DSkWfh3noVkkwV9iZ4mQ==",
+        "dependencies": {
+          "KubeOps.Abstractions": "10.3.2",
+          "KubeOps.Operator": "10.3.2",
+          "Localtunnel": "2.0.0"
+        }
+      },
+      "KubeOps.Transpiler": {
+        "type": "Direct",
+        "requested": "[10.3.2, )",
+        "resolved": "10.3.2",
+        "contentHash": "HRryWqFuKMsYuGZm5Uv242oDugH3OhJJA36HpkwmYcuA9s9TwE+V0cPoLBqNcuwTQ/wFVRrB+II3DqO1AEPaCg==",
+        "dependencies": {
+          "KubeOps.Abstractions": "10.3.2",
+          "System.Reflection.MetadataLoadContext": "10.0.5"
+        }
+      },
+      "Microsoft.SourceLink.GitHub": {
+        "type": "Direct",
+        "requested": "[10.0.201, )",
+        "resolved": "10.0.201",
+        "contentHash": "qxYAmO4ktzd9L+HMdnqWucxpu7bI9undPyACXOMqPyhaiMtbpbYL/n0ACyWIJlbyEJrXFwxiOaBOSasLtDvsCg==",
+        "dependencies": {
+          "Microsoft.Build.Tasks.Git": "10.0.201",
+          "Microsoft.SourceLink.Common": "10.0.201",
+          "System.IO.Hashing": "10.0.5"
+        }
+      },
+      "Fractions": {
+        "type": "Transitive",
+        "resolved": "7.3.0",
+        "contentHash": "2bETFWLBc8b7Ut2SVi+bxhGVwiSpknHYGBh2PADyGWONLkTxT7bKyDRhF8ao+XUv90tq8Fl7GTPxSI5bacIRJw=="
+      },
+      "Humanizer.Core": {
+        "type": "Transitive",
+        "resolved": "3.0.1",
+        "contentHash": "scB3+KcxNmEjZK5V8rKCW2gIiL8m8KH91w14FuuExyhi9xTyAJ+jr+DDxGdy12mHmioe2uvjxTfMgM7WmSUFlw=="
+      },
+      "Json.More.Net": {
+        "type": "Transitive",
+        "resolved": "2.2.0",
+        "contentHash": "fiyEZJNgiCzDa7/N9bZ+CnM5qnawyJ54+CkHNZ2svwxWBWNNFzydJ7RlroqMdOjokGBiLcKIxdajNvOklzlYqQ=="
+      },
+      "JsonPatch.Net": {
+        "type": "Transitive",
+        "resolved": "4.0.1",
+        "contentHash": "Omrc/UUtFIAtaCjFFGjIXVbx7sZbtDFqzzqVebCjU6AXkBrSGduNgGtGe6woY4zanRT/xN27srpIzp5H64q3Ng==",
+        "dependencies": {
+          "JsonPointer.Net": "6.0.1"
+        }
+      },
+      "JsonPointer.Net": {
+        "type": "Transitive",
+        "resolved": "6.0.1",
+        "contentHash": "EbSJkd/1y9r0WBIptjUctA6BzjgKh1aNU/g6QGgdMZVZ8wc0S/ysQhfiQerP9/VFTeENFHFdCQaoOk9fZqwnFQ==",
+        "dependencies": {
+          "Humanizer.Core": "3.0.1",
+          "Json.More.Net": "2.2.0"
+        }
+      },
+      "KubeOps.Abstractions": {
+        "type": "Transitive",
+        "resolved": "10.3.2",
+        "contentHash": "JNToEMQhz0ue7CKfgAbry93Ffvn8fpdXgtaQrvG6dDeGqLhmHL/kCaDWvfDEH9WFoXxTAVzP+zZZnlZCx3Rp0A==",
+        "dependencies": {
+          "JsonPatch.Net": "4.0.1",
+          "KubernetesClient": "19.0.2",
+          "ZiggyCreatures.FusionCache": "2.6.0"
+        }
+      },
+      "KubernetesClient": {
+        "type": "Transitive",
+        "resolved": "19.0.2",
+        "contentHash": "0m8FuzCDBygaXMbsb7qVapNZzTm4ftM7ECp/waTRh/XOUQziRF2rKJCRmsvYbBXgJkQvU+FBbkoa40hexzDC+g==",
+        "dependencies": {
+          "Fractions": "7.3.0",
+          "YamlDotNet": "16.3.0"
+        }
+      },
+      "Localtunnel": {
+        "type": "Transitive",
+        "resolved": "2.0.0",
+        "contentHash": "bCsY9WhDBPBrxf6vckEW+n3unM9R7IQJlmqr0E9q5RaWXcdjSdL+PrXh+PAMKv2WgI466GkbUYNiP5Ka8RInwg=="
+      },
+      "Microsoft.Build.Tasks.Git": {
+        "type": "Transitive",
+        "resolved": "10.0.201",
+        "contentHash": "DMYBnrFZvLnBKn14VavEuuIr31CY6YY2i2L9P8DorS/Qp6ifRR8ZPLdJCFLFfjikNq8DykbYyLd/RP6lSqHcWw==",
+        "dependencies": {
+          "System.IO.Hashing": "10.0.5"
+        }
+      },
+      "Microsoft.SourceLink.Common": {
+        "type": "Transitive",
+        "resolved": "10.0.201",
+        "contentHash": "QbBYhkjgL6rCnBfDbzsAJLlsad13TlBHqYCFDIw56OO2g6ix+9RsmY8uxiQGdWwFKbZXaXyAA6jDCzFYVGCZDw=="
+      },
+      "System.IO.Hashing": {
+        "type": "Transitive",
+        "resolved": "10.0.5",
+        "contentHash": "8IBJWcCT9+e4Bmevm4T7+fQEiAh133KGiz4oiVTgJckd3Q76OFdR1falgn9lpz7+C4HJvogCDJeAa2QmvbeVtg=="
+      },
+      "System.Reflection.MetadataLoadContext": {
+        "type": "Transitive",
+        "resolved": "10.0.5",
+        "contentHash": "z9yyFZcuCwtZXrxxDc2nBfB5lTHf96gS/rsD38Lcv6Ok25TOYPjNKlqpTZUqu2HTLPAM4w+/WjGL6gi9cIJO6w=="
+      },
+      "YamlDotNet": {
+        "type": "Transitive",
+        "resolved": "16.3.0",
+        "contentHash": "SgMOdxbz8X65z8hraIs6hOEdnkH6hESTAIUa7viEngHOYaH+6q5XJmwr1+yb9vJpNQ19hCQY69xbFsLtXpobQA=="
+      },
+      "ZiggyCreatures.FusionCache": {
+        "type": "Transitive",
+        "resolved": "2.6.0",
+        "contentHash": "BCe+/SkwQZfaMpq2ZGDZB2pyx6BdGnP+zxqjMM/5K+4PBuH6hljZeIqH4KVzQ26khSbPsQ7IiYZl0Fve4OZOog=="
+      }
+    }
+  }
+}

@@ -1,0 +1,65 @@
+# Default values for mc-operator Helm chart.
+# Override these in your values file or with --set flags.
+
+# Operator image configuration
+image:
+  repository: ghcr.io/danihengeveld/mc-operator
+  pullPolicy: IfNotPresent
+  tag: ""  # Defaults to chart appVersion
+
+imagePullSecrets: []
+
+# Operator deployment configuration
+replicaCount: 1
+
+nameOverride: ""
+fullnameOverride: ""
+
+# Resource limits for the operator itself
+resources:
+  limits:
+    cpu: 200m
+    memory: 128Mi
+  requests:
+    cpu: 100m
+    memory: 64Mi
+
+# Node selector and affinity for the operator pod
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+# Service account for the operator
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+# Namespace where the operator will be deployed
+# The operator watches resources across all namespaces by default
+namespace:
+  create: true
+  name: mc-operator-system
+
+# Webhook configuration
+webhooks:
+  enabled: true
+  # The service port for the webhook server
+  port: 5001
+  # TLS configuration for the webhook service
+  # In production, use cert-manager or a proper certificate solution
+  certManager:
+    enabled: false
+    issuerRef: {}
+
+# Leader election configuration
+leaderElection:
+  enabled: true
+
+# Logging level (Information, Debug, Warning, Error)
+logLevel: Information
+
+# Metrics configuration (future use)
+metrics:
+  enabled: false
+  port: 8080
