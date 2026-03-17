@@ -3,34 +3,46 @@ name: CI
 on:
   push:
     branches: [main]
-    paths:
-      - "src/**"
-      - "Directory.Build.props"
-      - "Directory.Packages.props"
-      - "NuGet.config"
-      - "Dockerfile"
-      - "charts/**"
-      - "docs/**"
-      - ".github/workflows/ci.yml"
   pull_request:
     branches: [main]
-    paths:
-      - "src/**"
-      - "Directory.Build.props"
-      - "Directory.Packages.props"
-      - "NuGet.config"
-      - "Dockerfile"
-      - "charts/**"
-      - "docs/**"
-      - ".github/workflows/ci.yml"
 
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
+  changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      operator: ${{ steps.filter.outputs.operator }}
+      chart: ${{ steps.filter.outputs.chart }}
+      docs: ${{ steps.filter.outputs.docs }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Detect changed paths
+        id: filter
+        uses: dorny/paths-filter@v4
+        with:
+          filters: |
+            operator:
+              - 'src/**'
+              - 'Directory.Build.props'
+              - 'Directory.Packages.props'
+              - 'NuGet.config'
+              - 'Dockerfile'
+            chart:
+              - 'charts/**'
+            docs:
+              - 'docs/**'
+
   build-and-test:
     name: Build & Test
+    needs: changes
+    if: needs.changes.outputs.operator == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -51,6 +63,8 @@ jobs:
 
   lint-chart:
     name: Lint Helm Chart
+    needs: changes
+    if: needs.changes.outputs.chart == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -63,6 +77,8 @@ jobs:
 
   build-docs:
     name: Build Docs
+    needs: changes
+    if: needs.changes.outputs.docs == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
