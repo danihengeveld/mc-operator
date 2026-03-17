@@ -83,6 +83,9 @@ public class K3sFixture : IAsyncInitializer, IAsyncDisposable
             await _operatorApp.DisposeAsync();
         }
 
+        // Clean up the KUBECONFIG environment variable set during operator startup
+        Environment.SetEnvironmentVariable("KUBECONFIG", null);
+
         Client?.Dispose();
         await _container.DisposeAsync();
 
@@ -132,7 +135,10 @@ public class K3sFixture : IAsyncInitializer, IAsyncDisposable
             EnvironmentName = "IntegrationTest",
         });
 
-        // Point the Kubernetes client at our k3s cluster
+        // Point the KubeOps framework's internal Kubernetes client at our k3s cluster.
+        // KubeOps reads KUBECONFIG from the environment when initializing its client.
+        // This is safe because the fixture is shared per-assembly (single instance).
+        // The env var is cleaned up in DisposeAsync.
         Environment.SetEnvironmentVariable("KUBECONFIG", _kubeconfigPath);
 
         builder.Logging.ClearProviders();
