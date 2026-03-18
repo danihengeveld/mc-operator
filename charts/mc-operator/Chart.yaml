@@ -2,8 +2,8 @@ apiVersion: v2
 name: mc-operator
 description: A Kubernetes Operator for managing Minecraft server deployments — powered by .NET 10 and KubeOps.
 type: application
-version: 1.0.0
-appVersion: "1.0.0"
+version: 0.1.0-alpha.1
+appVersion: "0.1.0-alpha.1"
 keywords:
   - minecraft
   - operator
@@ -18,6 +18,10 @@ maintainers:
 annotations:
   artifacthub.io/category: integration-delivery
   artifacthub.io/license: MIT
-  artifacthub.io/signKey: |
-    fingerprint: ""
-    url: ""
+  artifacthub.io/links: |
+    - name: source
+      url: https://github.com/danihengeveld/mc-operator
+    - name: documentation
+      url: https://mc-operator.dhv.sh
+    - name: support
+      url: https://github.com/danihengeveld/mc-operator/issues

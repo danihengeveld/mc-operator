@@ -34,9 +34,8 @@ The chart `version` and `appVersion` evolve independently.
 Before tagging either artefact:
 
 1. [ ] All changes merged to `main` with CI passing (build, tests, helm lint, docs build)
-2. [ ] `CHANGELOG.md` updated — move relevant entries from `## [Unreleased]` to a new versioned section
-3. [ ] For an operator release: verify that `charts/mc-operator/Chart.yaml` `appVersion` is correct
-4. [ ] For a chart release: verify that `charts/mc-operator/values.yaml` `image.tag` default is appropriate
+2. [ ] For an operator release: verify that `charts/mc-operator/Chart.yaml` `appVersion` is correct
+3. [ ] For a chart release: verify that `charts/mc-operator/values.yaml` `image.tag` default is appropriate
 
 ---
 
@@ -48,14 +47,7 @@ The image release pipeline is triggered by pushing a tag that matches `operator/
 # 1. Ensure you are on main and CI is green
 git checkout main && git pull
 
-# 2. Update CHANGELOG.md
-#    Move entries from [Unreleased] to a new ## Operator Image / [X.Y.Z] section
-
-# 3. Commit the changelog
-git add CHANGELOG.md
-git commit -m "chore: release operator v1.2.3"
-
-# 4. Create and push the tag
+# 2. Create and push the tag
 git tag -a operator/v1.2.3 -m "Operator release 1.2.3"
 git push origin main operator/v1.2.3
 ```
@@ -96,12 +88,10 @@ The chart release pipeline is triggered by pushing a tag that matches `chart/v*.
 # 1. Ensure you are on main and CI is green
 git checkout main && git pull
 
-# 2. Update CHANGELOG.md
-#    Move entries from [Unreleased] to a new ## Helm Chart / [X.Y.Z] section
-#    Also update charts/mc-operator/Chart.yaml appVersion if needed
+# 2. Update charts/mc-operator/Chart.yaml appVersion if needed
 
-# 3. Commit the changelog (and any Chart.yaml appVersion change)
-git add CHANGELOG.md charts/mc-operator/Chart.yaml
+# 3. Commit any Chart.yaml appVersion change
+git add charts/mc-operator/Chart.yaml
 git commit -m "chore: release chart v1.2.3"
 
 # 4. Create and push the tag

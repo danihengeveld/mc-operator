@@ -21,8 +21,8 @@ jobs:
     name: Package & Publish Helm Chart
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # to create GitHub Releases and upload assets
-      packages: write  # to push OCI chart to GHCR
+      contents: write # to create GitHub Releases and upload assets
+      packages: write # to push OCI chart to GHCR
 
     steps:
       - uses: actions/checkout@v6
@@ -74,6 +74,27 @@ jobs:
         if: always()
         run: helm registry logout ghcr.io
 
+      - name: Install ORAS
+        uses: oras-project/setup-oras@v1
+
+      - name: Push Artifact Hub repository metadata
+        env:
+          EMAIL: ${{ secrets.ARTIFACTHUB_EMAIL }}
+        run: |
+          cat > artifacthub-repo.yml <<EOF
+          repositoryID: "d3d81057-0045-4d27-a893-18e070818a8a"
+          owners:
+            - name: ${{ github.actor }}
+              email: ${EMAIL}
+          EOF
+
+          echo "${{ secrets.GITHUB_TOKEN }}" | oras login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+          oras push \
+            ghcr.io/danihengeveld/charts/mc-operator:artifacthub.io \
+            --config /dev/null:application/vnd.cncf.artifacthub.config.v1+yaml \
+            artifacthub-repo.yml:application/vnd.cncf.artifacthub.repository-metadata.layer.v1.yaml
+
       # Create a GitHub Release specific to the chart. This is separate from the
       # operator image release so each can have its own changelog and install notes.
       - name: Create GitHub Release
@@ -102,4 +123,3 @@ jobs:
             ```
 
             See the [documentation](https://mc-operator.dhv.sh) for full installation and configuration instructions.
-
