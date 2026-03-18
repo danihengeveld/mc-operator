@@ -65,7 +65,7 @@ This decision prioritizes **safety over convenience**. The operational cost of a
 
 ## Decision 4: CRD API Group and Version
 
-**Choice: `minecraft.dhv.sh/v1alpha1`**
+**Choice: `mc-operator.dhv.sh/v1alpha1`**
 
 Although this is "v1 of the software," the API version is `v1alpha1` because:
 - The spec may evolve as we learn from production usage

@@ -2,7 +2,7 @@
 
 A production-grade Kubernetes Operator for managing Minecraft server deployments, built with .NET 10 and [KubeOps](https://github.com/buehler/dotnet-operator-sdk).
 
-**API group**: `minecraft.dhv.sh` · **Docs**: [mc-operator.dhv.sh](https://mc-operator.dhv.sh) · **Maintained by**: [dani.hengeveld.dev](https://dani.hengeveld.dev)
+**API group**: `mc-operator.dhv.sh` · **Docs**: [mc-operator.dhv.sh](https://mc-operator.dhv.sh) · **Maintained by**: [dani.hengeveld.dev](https://dani.hengeveld.dev)
 
 ---
 
@@ -46,7 +46,7 @@ helm install mc-operator oci://ghcr.io/danihengeveld/charts/mc-operator \
 Then deploy a server:
 
 ```yaml
-apiVersion: minecraft.dhv.sh/v1alpha1
+apiVersion: mc-operator.dhv.sh/v1alpha1
 kind: MinecraftServer
 metadata:
   name: paper-survival

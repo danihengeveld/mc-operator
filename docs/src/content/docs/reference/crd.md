@@ -9,7 +9,7 @@ import { Aside } from '@astrojs/starlight/components';
 
 ## MinecraftServer
 
-**API Group/Version**: `minecraft.dhv.sh/v1alpha1`  
+**API Group/Version**: `mc-operator.dhv.sh/v1alpha1`  
 **Kind**: `MinecraftServer`  
 **Short name**: `mcs`  
 **Scope**: Namespaced

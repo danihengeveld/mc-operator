@@ -14,7 +14,7 @@ Running a Minecraft server on Kubernetes without an operator means manually writ
 mc-operator turns server administration into a single Kubernetes resource:
 
 ```yaml
-apiVersion: minecraft.dhv.sh/v1alpha1
+apiVersion: mc-operator.dhv.sh/v1alpha1
 kind: MinecraftServer
 metadata:
   name: paper-survival

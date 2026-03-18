@@ -29,7 +29,7 @@ public class ValidationTests
             // "Forge" is not in the CRD enum (only Vanilla, Paper, Spigot, Bukkit)
             var server = new Dictionary<string, object>
             {
-                ["apiVersion"] = "minecraft.dhv.sh/v1alpha1",
+                ["apiVersion"] = "mc-operator.dhv.sh/v1alpha1",
                 ["kind"] = "MinecraftServer",
                 ["metadata"] = new Dictionary<string, object>
                 {
@@ -69,7 +69,7 @@ public class ValidationTests
             // Missing required 'server' field
             var server = new Dictionary<string, object>
             {
-                ["apiVersion"] = "minecraft.dhv.sh/v1alpha1",
+                ["apiVersion"] = "mc-operator.dhv.sh/v1alpha1",
                 ["kind"] = "MinecraftServer",
                 ["metadata"] = new Dictionary<string, object>
                 {
@@ -103,7 +103,7 @@ public class ValidationTests
             // "ExternalName" is not in the CRD enum (only ClusterIP, NodePort, LoadBalancer)
             var server = new Dictionary<string, object>
             {
-                ["apiVersion"] = "minecraft.dhv.sh/v1alpha1",
+                ["apiVersion"] = "mc-operator.dhv.sh/v1alpha1",
                 ["kind"] = "MinecraftServer",
                 ["metadata"] = new Dictionary<string, object>
                 {
@@ -145,7 +145,7 @@ public class ValidationTests
         {
             var server = new Dictionary<string, object>
             {
-                ["apiVersion"] = "minecraft.dhv.sh/v1alpha1",
+                ["apiVersion"] = "mc-operator.dhv.sh/v1alpha1",
                 ["kind"] = "MinecraftServer",
                 ["metadata"] = new Dictionary<string, object>
                 {

@@ -1,7 +1,7 @@
 # Example: Paper Minecraft Server
 # A performance-optimized Paper server with plugins support,
 # using NodePort for external access and a whitelist.
-apiVersion: minecraft.dhv.sh/v1alpha1
+apiVersion: mc-operator.dhv.sh/v1alpha1
 kind: MinecraftServer
 metadata:
   name: paper-survival

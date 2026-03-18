@@ -1,6 +1,6 @@
 # Example: Vanilla Minecraft Server
 # A simple vanilla server with persistent storage, exposed via LoadBalancer.
-apiVersion: minecraft.dhv.sh/v1alpha1
+apiVersion: mc-operator.dhv.sh/v1alpha1
 kind: MinecraftServer
 metadata:
   name: vanilla-server

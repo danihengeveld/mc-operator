@@ -24,7 +24,7 @@ The **operator image** and **Helm chart** are versioned independently:
 - Dependabot configuration for GitHub Actions, NuGet, Docker, and npm/Bun
 - `.editorconfig` and updated `.gitignore`
 - `LICENSE` (MIT), `CHANGELOG.md`, `CONTRIBUTING.md`, `RELEASING.md`
-- API group updated to `minecraft.dhv.sh/v1alpha1`
+- API group updated to `mc-operator.dhv.sh/v1alpha1`
 
 ---
 
@@ -35,7 +35,7 @@ The **operator image** and **Helm chart** are versioned independently:
 Initial production release of the mc-operator container image.
 
 #### Added
-- `MinecraftServer` CRD (`minecraft.dhv.sh/v1alpha1`)
+- `MinecraftServer` CRD (`mc-operator.dhv.sh/v1alpha1`)
 - Reconciliation controller managing StatefulSet, Service, and ConfigMap
 - Validating and mutating admission webhooks
 - PVC lifecycle management with safe retain-by-default policy

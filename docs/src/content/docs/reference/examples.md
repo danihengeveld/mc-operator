@@ -12,7 +12,7 @@ All example manifests are available in the [`examples/`](https://github.com/dani
 A simple vanilla server with external access via a cloud load balancer:
 
 ```yaml
-apiVersion: minecraft.dhv.sh/v1alpha1
+apiVersion: mc-operator.dhv.sh/v1alpha1
 kind: MinecraftServer
 metadata:
   name: vanilla-survival
@@ -44,7 +44,7 @@ spec:
 High-performance Paper server with a whitelist and G1GC tuning:
 
 ```yaml
-apiVersion: minecraft.dhv.sh/v1alpha1
+apiVersion: mc-operator.dhv.sh/v1alpha1
 kind: MinecraftServer
 metadata:
   name: paper-survival
@@ -98,7 +98,7 @@ spec:
 A small server for a group of friends on a local network:
 
 ```yaml
-apiVersion: minecraft.dhv.sh/v1alpha1
+apiVersion: mc-operator.dhv.sh/v1alpha1
 kind: MinecraftServer
 metadata:
   name: spigot-friends
@@ -137,7 +137,7 @@ spec:
 A creative building server on a superflat world:
 
 ```yaml
-apiVersion: minecraft.dhv.sh/v1alpha1
+apiVersion: mc-operator.dhv.sh/v1alpha1
 kind: MinecraftServer
 metadata:
   name: bukkit-creative
@@ -175,7 +175,7 @@ spec:
 A server that has been intentionally paused — zero replicas keeps the pod stopped without deleting the world:
 
 ```yaml
-apiVersion: minecraft.dhv.sh/v1alpha1
+apiVersion: mc-operator.dhv.sh/v1alpha1
 kind: MinecraftServer
 metadata:
   name: paper-survival

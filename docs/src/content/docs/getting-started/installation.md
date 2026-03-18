@@ -82,7 +82,7 @@ You can use Kustomize overlays to customize the deployment for your environment.
 kubectl get pods -n mc-operator-system
 
 # CRD should be established
-kubectl get crd minecraftservers.minecraft.dhv.sh
+kubectl get crd minecraftservers.mc-operator.dhv.sh
 ```
 
 ## Helm values reference

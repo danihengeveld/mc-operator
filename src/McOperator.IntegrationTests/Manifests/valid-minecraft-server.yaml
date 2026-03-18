@@ -1,6 +1,6 @@
 # Valid MinecraftServer for integration tests.
 # Minimal but complete spec that exercises the main reconciliation path.
-apiVersion: minecraft.dhv.sh/v1alpha1
+apiVersion: mc-operator.dhv.sh/v1alpha1
 kind: MinecraftServer
 metadata:
   name: test-server

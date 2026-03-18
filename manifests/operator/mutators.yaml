@@ -6,7 +6,7 @@ metadata:
     # If using cert-manager, add:
     # cert-manager.io/inject-ca-from: mc-operator-system/mc-operator-webhook-cert
 webhooks:
-- name: mutate.minecraftserver.minecraft.dhv.sh.v1alpha1
+- name: mutate.minecraftserver.mc-operator.dhv.sh.v1alpha1
   admissionReviewVersions:
   - v1
   clientConfig:
@@ -20,7 +20,7 @@ webhooks:
   matchPolicy: Exact
   rules:
   - apiGroups:
-    - minecraft.dhv.sh
+    - mc-operator.dhv.sh
     apiVersions:
     - v1alpha1
     operations:

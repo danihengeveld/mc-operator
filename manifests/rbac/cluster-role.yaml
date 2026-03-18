@@ -35,7 +35,7 @@ rules:
   verbs:
   - '*'
 - apiGroups:
-  - minecraft.dhv.sh
+  - mc-operator.dhv.sh
   resources:
   - minecraftservers
   verbs:
@@ -62,7 +62,7 @@ rules:
   - patch
   - delete
 - apiGroups:
-  - minecraft.dhv.sh
+  - mc-operator.dhv.sh
   resources:
   - minecraftservers/status
   verbs:
