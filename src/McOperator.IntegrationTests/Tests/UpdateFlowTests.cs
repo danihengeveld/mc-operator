@@ -1,5 +1,6 @@
 using System.Text.Json;
 using k8s;
+using McOperator.Builders;
 using McOperator.IntegrationTests.Infrastructure;
 using TUnit.Assertions.Extensions;
 
@@ -82,13 +83,15 @@ public class UpdateFlowTests
         try
         {
             var serverName = "update-players";
+            var configMapName = ConfigMapBuilder.ConfigMapName(serverName);
             await CreateMinecraftServer(K3s.Client, ns, serverName);
 
             // Wait for initial ConfigMap creation
+            // The operator names ConfigMaps as "{serverName}-config"
             var cm = await KubernetesHelper.WaitForResourceAsync(
-                () => K3s.Client.CoreV1.ReadNamespacedConfigMapAsync(serverName, ns),
+                () => K3s.Client.CoreV1.ReadNamespacedConfigMapAsync(configMapName, ns),
                 timeout: TimeSpan.FromSeconds(60),
-                description: $"ConfigMap '{serverName}' to be created");
+                description: $"ConfigMap '{configMapName}' to be created");
 
             await Assert.That(cm.Data["server.properties"]).Contains("max-players=10");
 
@@ -110,13 +113,13 @@ public class UpdateFlowTests
             await KubernetesHelper.WaitForConditionAsync(
                 async () =>
                 {
-                    var updated = await K3s.Client.CoreV1.ReadNamespacedConfigMapAsync(serverName, ns);
+                    var updated = await K3s.Client.CoreV1.ReadNamespacedConfigMapAsync(configMapName, ns);
                     return updated.Data["server.properties"].Contains("max-players=50");
                 },
                 timeout: TimeSpan.FromSeconds(60),
                 description: "ConfigMap to reflect maxPlayers=50");
 
-            var updatedCm = await K3s.Client.CoreV1.ReadNamespacedConfigMapAsync(serverName, ns);
+            var updatedCm = await K3s.Client.CoreV1.ReadNamespacedConfigMapAsync(configMapName, ns);
             await Assert.That(updatedCm.Data["server.properties"]).Contains("max-players=50");
         }
         finally

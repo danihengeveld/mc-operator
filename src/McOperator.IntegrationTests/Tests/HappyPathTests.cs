@@ -1,5 +1,6 @@
 using System.Text.Json;
 using k8s;
+using McOperator.Builders;
 using McOperator.IntegrationTests.Infrastructure;
 using TUnit.Assertions.Extensions;
 
@@ -81,16 +82,18 @@ public class HappyPathTests
         try
         {
             var serverName = "happy-cm";
+            var configMapName = ConfigMapBuilder.ConfigMapName(serverName);
             await CreateValidMinecraftServer(K3s.Client, ns, serverName);
 
             // Wait for the ConfigMap to be created by the operator
+            // The operator names ConfigMaps as "{serverName}-config"
             var cm = await KubernetesHelper.WaitForResourceAsync(
-                () => K3s.Client.CoreV1.ReadNamespacedConfigMapAsync(serverName, ns),
+                () => K3s.Client.CoreV1.ReadNamespacedConfigMapAsync(configMapName, ns),
                 timeout: TimeSpan.FromSeconds(60),
-                description: $"ConfigMap '{serverName}' to be created");
+                description: $"ConfigMap '{configMapName}' to be created");
 
             await Assert.That(cm).IsNotNull();
-            await Assert.That(cm.Metadata.Name).IsEqualTo(serverName);
+            await Assert.That(cm.Metadata.Name).IsEqualTo(configMapName);
             await Assert.That(cm.Data).IsNotNull();
             await Assert.That(cm.Data.ContainsKey("server-type")).IsTrue();
             await Assert.That(cm.Data["server-type"]).IsEqualTo("Vanilla");
@@ -141,30 +144,34 @@ public class HappyPathTests
             var serverName = "happy-status";
             await CreateValidMinecraftServer(K3s.Client, ns, serverName);
 
-            // Wait for the status to be updated by the operator
-            // The operator sets phase to Provisioning initially, then updates based on replica state
+            // Wait for the full status to be updated by the operator.
+            // The operator first sets phase to Provisioning, then after reconciling all
+            // child resources it updates the full status including currentImage and conditions.
+            // We wait specifically for currentImage to ensure full reconciliation completed.
             await KubernetesHelper.WaitForConditionAsync(
                 async () =>
                 {
                     var server = await KubernetesHelper.GetMinecraftServerAsync(K3s.Client, ns, serverName);
                     if (server is null) return false;
 
-                    var json = ((JsonElement)server).GetRawText();
-                    // Check that status exists and has been set (phase is no longer empty/Pending)
-                    return json.Contains("\"phase\"") &&
-                           (json.Contains("Provisioning") || json.Contains("Running") || json.Contains("Paused"));
+                    var jsonElement = (JsonElement)server;
+                    if (!jsonElement.TryGetProperty("status", out var status)) return false;
+                    if (!status.TryGetProperty("currentImage", out var img)) return false;
+                    return img.ValueKind == JsonValueKind.String && img.GetString() is not null;
                 },
                 timeout: TimeSpan.FromSeconds(60),
-                description: "MinecraftServer status to be updated");
+                description: "MinecraftServer status to have currentImage set");
 
             // Get the final status
             var result = await KubernetesHelper.GetMinecraftServerAsync(K3s.Client, ns, serverName);
             await Assert.That(result).IsNotNull();
 
-            var resultJson = ((JsonElement)result!).GetRawText();
-            // The status should contain conditions set by the operator
-            await Assert.That(resultJson).Contains("conditions");
-            await Assert.That(resultJson).Contains("currentImage");
+            var jsonResult = (JsonElement)result!;
+            var statusObj = jsonResult.GetProperty("status");
+
+            // The status should contain conditions and currentImage set by the operator
+            await Assert.That(statusObj.TryGetProperty("conditions", out _)).IsTrue();
+            await Assert.That(statusObj.GetProperty("currentImage").GetString()).IsEqualTo("itzg/minecraft-server:latest");
         }
         finally
         {
