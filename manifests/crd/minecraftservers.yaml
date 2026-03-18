@@ -1,9 +1,9 @@
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
-  name: minecraftservers.minecraft.hengeveld.dev
+  name: minecraftservers.minecraft.dhv.sh
 spec:
-  group: minecraft.hengeveld.dev
+  group: minecraft.dhv.sh
   names:
     kind: MinecraftServer
     listKind: MinecraftServerList

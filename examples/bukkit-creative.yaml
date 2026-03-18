@@ -1,7 +1,7 @@
 # Example: Bukkit Creative Server
 # A creative Bukkit server with a flat world and no PvP.
 # Uses a custom image override to show that capability.
-apiVersion: minecraft.hengeveld.dev/v1alpha1
+apiVersion: minecraft.dhv.sh/v1alpha1
 kind: MinecraftServer
 metadata:
   name: bukkit-creative

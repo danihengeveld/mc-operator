@@ -35,7 +35,7 @@ rules:
   verbs:
   - '*'
 - apiGroups:
-  - minecraft.hengeveld.dev
+  - minecraft.dhv.sh
   resources:
   - minecraftservers
   verbs:
@@ -62,7 +62,7 @@ rules:
   - patch
   - delete
 - apiGroups:
-  - minecraft.hengeveld.dev
+  - minecraft.dhv.sh
   resources:
   - minecraftservers/status
   verbs:

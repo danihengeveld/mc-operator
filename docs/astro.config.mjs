@@ -72,12 +72,12 @@ export default defineConfig({
           tag: "meta",
           attrs: {
             name: "og:site_name",
-            content: "mc-operator | hengeveld.dev",
+            content: "mc-operator | dhv.sh",
           },
         },
       ],
     }),
   ],
-  site: "https://hengeveld.dev/mc-operator",
-  base: "/mc-operator",
+  site: "https://mc-operator.dhv.sh/",
+  base: "/",
 });

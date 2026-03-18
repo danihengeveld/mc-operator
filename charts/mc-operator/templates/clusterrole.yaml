@@ -36,13 +36,13 @@ rules:
   verbs:
   - '*'
 - apiGroups:
-  - minecraft.hengeveld.dev
+  - minecraft.dhv.sh
   resources:
   - minecraftservers
   verbs:
   - '*'
 - apiGroups:
-  - minecraft.hengeveld.dev
+  - minecraft.dhv.sh
   resources:
   - minecraftservers/status
   verbs:

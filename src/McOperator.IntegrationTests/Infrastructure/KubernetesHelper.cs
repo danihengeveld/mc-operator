@@ -121,7 +121,7 @@ public static class KubernetesHelper
     {
         return await client.CustomObjects.CreateNamespacedCustomObjectAsync(
             body: serverSpec,
-            group: "minecraft.hengeveld.dev",
+            group: "minecraft.dhv.sh",
             version: "v1alpha1",
             namespaceParameter: namespaceName,
             plural: "minecraftservers");
@@ -138,7 +138,7 @@ public static class KubernetesHelper
         try
         {
             return await client.CustomObjects.GetNamespacedCustomObjectAsync(
-                group: "minecraft.hengeveld.dev",
+                group: "minecraft.dhv.sh",
                 version: "v1alpha1",
                 namespaceParameter: namespaceName,
                 plural: "minecraftservers",
@@ -162,7 +162,7 @@ public static class KubernetesHelper
         var patch = new V1Patch(patchBody, V1Patch.PatchType.MergePatch);
         return await client.CustomObjects.PatchNamespacedCustomObjectAsync(
             body: patch,
-            group: "minecraft.hengeveld.dev",
+            group: "minecraft.dhv.sh",
             version: "v1alpha1",
             namespaceParameter: namespaceName,
             plural: "minecraftservers",
@@ -180,7 +180,7 @@ public static class KubernetesHelper
         try
         {
             await client.CustomObjects.DeleteNamespacedCustomObjectAsync(
-                group: "minecraft.hengeveld.dev",
+                group: "minecraft.dhv.sh",
                 version: "v1alpha1",
                 namespaceParameter: namespaceName,
                 plural: "minecraftservers",

@@ -49,7 +49,7 @@ A PVC in `Pending` state usually means no StorageClass matches, or the cluster h
 
 ### Webhook admission errors
 
-**Error example**: `Error from server: admission webhook "validate.minecraftserver.minecraft.hengeveld.dev.v1alpha1" denied the request: ...`
+**Error example**: `Error from server: admission webhook "validate.minecraftserver.minecraft.dhv.sh.v1alpha1" denied the request: ...`
 
 **Cause**: The validating webhook rejected your spec.
 
@@ -121,7 +121,7 @@ kubectl patch mutatingwebhookconfiguration mc-operator-mutators \
 
 **Error**: `no matches for kind "MinecraftServer" in version "minecraft.operator.io/v1alpha1"`
 
-**Cause**: The API group changed from `minecraft.operator.io` to `minecraft.hengeveld.dev` in this version.
+**Cause**: The API group changed from `minecraft.operator.io` to `minecraft.dhv.sh` in this version.
 
 **Fix**: Update your manifests and existing resources to use the new API group:
 
@@ -130,7 +130,7 @@ kubectl patch mutatingwebhookconfiguration mc-operator-mutators \
 apiVersion: minecraft.operator.io/v1alpha1
 
 # New
-apiVersion: minecraft.hengeveld.dev/v1alpha1
+apiVersion: minecraft.dhv.sh/v1alpha1
 ```
 
 If you have existing resources in the cluster under the old group, you need to export their specs, delete them, apply the new CRD, and recreate them under the new API group.

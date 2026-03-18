@@ -118,7 +118,7 @@ public class K3sFixture : IAsyncInitializer, IAsyncDisposable
             async () =>
             {
                 var crd = await Client.ApiextensionsV1.ReadCustomResourceDefinitionAsync(
-                    "minecraftservers.minecraft.hengeveld.dev");
+                    "minecraftservers.minecraft.dhv.sh");
                 return crd.Status?.Conditions?.Any(c =>
                     c.Type == "Established" && c.Status == "True") == true;
             },
@@ -154,7 +154,7 @@ public class K3sFixture : IAsyncInitializer, IAsyncDisposable
             })
             .AddController<MinecraftServerController, MinecraftServer>()
             .AddFinalizer<MinecraftServerFinalizer, MinecraftServer>(
-                "mc-operator.minecraft.hengeveld.dev/finalizer");
+                "mc-operator.minecraft.dhv.sh/finalizer");
 
         builder.Services.AddControllers();
 

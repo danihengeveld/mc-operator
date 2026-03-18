@@ -307,6 +307,6 @@ public static class StatefulSetBuilder
             ["app.kubernetes.io/name"] = "minecraft-server",
             ["app.kubernetes.io/instance"] = server.Name(),
             ["app.kubernetes.io/managed-by"] = "mc-operator",
-            ["minecraft.hengeveld.dev/server-name"] = server.Name(),
+            ["minecraft.dhv.sh/server-name"] = server.Name(),
         };
 }

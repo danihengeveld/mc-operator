@@ -66,7 +66,3 @@ ci: add docs build step to CI workflow
 
 Prefixes: `feat`, `fix`, `docs`, `chore`, `refactor`, `test`, `ci`.
 
-## Security issues
-
-Do **not** open a public issue for security vulnerabilities. Email [dani@hengeveld.dev](mailto:dani@hengeveld.dev) directly.
-

@@ -64,13 +64,13 @@ public static class ServiceBuilder
             ["app.kubernetes.io/name"] = "minecraft-server",
             ["app.kubernetes.io/instance"] = server.Name(),
             ["app.kubernetes.io/managed-by"] = "mc-operator",
-            ["minecraft.hengeveld.dev/server-name"] = server.Name(),
+            ["minecraft.dhv.sh/server-name"] = server.Name(),
         };
 
     private static IDictionary<string, string> BuildSelectorLabels(MinecraftServer server) =>
         new Dictionary<string, string>
         {
             ["app.kubernetes.io/instance"] = server.Name(),
-            ["minecraft.hengeveld.dev/server-name"] = server.Name(),
+            ["minecraft.dhv.sh/server-name"] = server.Name(),
         };
 }

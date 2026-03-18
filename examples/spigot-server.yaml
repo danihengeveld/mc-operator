@@ -1,7 +1,7 @@
 # Example: Spigot Minecraft Server with Minimal Resources
 # Good for small private servers or testing environments.
 # ClusterIP only - use kubectl port-forward or an Ingress TCP proxy to access externally.
-apiVersion: minecraft.hengeveld.dev/v1alpha1
+apiVersion: minecraft.dhv.sh/v1alpha1
 kind: MinecraftServer
 metadata:
   name: spigot-private

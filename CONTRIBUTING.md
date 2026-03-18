@@ -101,7 +101,3 @@ mc-operator/
 ## Changelog
 
 All user-visible changes must be recorded in `CHANGELOG.md` under `## [Unreleased]`. See the existing entries for the format. Include entries under the relevant section (`### Added`, `### Changed`, `### Fixed`, `### Removed`).
-
-## Security issues
-
-Do **not** open a public issue for security vulnerabilities. Email [dani@hengeveld.dev](mailto:dani@hengeveld.dev) directly.

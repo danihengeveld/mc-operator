@@ -9,7 +9,7 @@ keywords:
   - operator
   - kubernetes
   - gaming
-home: https://hengeveld.dev/mc-operator
+home: https://mc-operator.dhv.sh
 sources:
   - https://github.com/danihengeveld/mc-operator
 maintainers:

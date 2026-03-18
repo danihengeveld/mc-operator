@@ -60,9 +60,9 @@ jobs:
           labels: |
             org.opencontainers.image.title=mc-operator
             org.opencontainers.image.description=Kubernetes Operator for Minecraft server deployments
-            org.opencontainers.image.vendor=hengeveld.dev
+            org.opencontainers.image.vendor=dhv.sh
             org.opencontainers.image.version=${{ steps.version.outputs.version }}
-            org.opencontainers.image.documentation=https://hengeveld.dev/mc-operator
+            org.opencontainers.image.documentation=https://mc-operator.dhv.sh
             org.opencontainers.image.source=https://github.com/danihengeveld/mc-operator
             org.opencontainers.image.licenses=MIT
 
@@ -133,5 +133,5 @@ jobs:
               --repo danihengeveld/mc-operator
             ```
 
-            See the [documentation](https://hengeveld.dev/mc-operator) for installation instructions.
+            See the [documentation](https://mc-operator.dhv.sh) for installation instructions.
 

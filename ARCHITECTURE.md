@@ -4,7 +4,7 @@ This document captures the key design decisions made for the v1 of the Minecraft
 
 ## Overview
 
-`mc-operator` is a Kubernetes Operator built with .NET 10, maintained under the [hengeveld.dev](https://hengeveld.dev) umbrella and [KubeOps 10](https://github.com/buehler/dotnet-operator-sdk). It manages `MinecraftServer` custom resources, which each represent a fully configured Minecraft server deployment and all of its supporting Kubernetes resources.
+`mc-operator` is a Kubernetes Operator built with .NET 10, maintained under the [dhv.sh](https://dhv.sh) umbrella and [KubeOps 10](https://github.com/buehler/dotnet-operator-sdk). It manages `MinecraftServer` custom resources, which each represent a fully configured Minecraft server deployment and all of its supporting Kubernetes resources.
 
 ---
 
@@ -65,7 +65,7 @@ This decision prioritizes **safety over convenience**. The operational cost of a
 
 ## Decision 4: CRD API Group and Version
 
-**Choice: `minecraft.hengeveld.dev/v1alpha1`**
+**Choice: `minecraft.dhv.sh/v1alpha1`**
 
 Although this is "v1 of the software," the API version is `v1alpha1` because:
 - The spec may evolve as we learn from production usage

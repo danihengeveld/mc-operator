@@ -6,7 +6,7 @@ metadata:
     # If using cert-manager, add:
     # cert-manager.io/inject-ca-from: mc-operator-system/mc-operator-webhook-cert
 webhooks:
-- name: validate.minecraftserver.minecraft.hengeveld.dev.v1alpha1
+- name: validate.minecraftserver.minecraft.dhv.sh.v1alpha1
   admissionReviewVersions:
   - v1
   clientConfig:
@@ -21,7 +21,7 @@ webhooks:
   matchPolicy: Exact
   rules:
   - apiGroups:
-    - minecraft.hengeveld.dev
+    - minecraft.dhv.sh
     apiVersions:
     - v1alpha1
     operations:

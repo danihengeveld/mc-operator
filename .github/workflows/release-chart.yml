@@ -101,5 +101,5 @@ jobs:
               --namespace mc-operator-system
             ```
 
-            See the [documentation](https://hengeveld.dev/mc-operator) for full installation and configuration instructions.
+            See the [documentation](https://mc-operator.dhv.sh) for full installation and configuration instructions.
 

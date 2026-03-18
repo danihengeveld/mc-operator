@@ -2,7 +2,7 @@
 # Setting replicas to 0 stops the server process without deleting world data.
 # The PVC and other resources are preserved.
 # Set replicas back to 1 to resume the server.
-apiVersion: minecraft.hengeveld.dev/v1alpha1
+apiVersion: minecraft.dhv.sh/v1alpha1
 kind: MinecraftServer
 metadata:
   name: paused-server

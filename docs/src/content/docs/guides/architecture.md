@@ -13,7 +13,7 @@ mc-operator is a [Kubernetes Operator](https://kubernetes.io/docs/concepts/exten
 
 ### API group
 
-The operator uses the API group `minecraft.hengeveld.dev`. This domain is owned and maintained under the [hengeveld.dev](https://hengeveld.dev) umbrella.
+The operator uses the API group `minecraft.dhv.sh`. This domain is owned and maintained under the [dhv.sh](https://dhv.sh) umbrella.
 
 ## Repository layout
 
@@ -42,7 +42,7 @@ mc-operator/
 
 ### MinecraftServer CRD
 
-The `MinecraftServer` CRD (`minecraft.hengeveld.dev/v1alpha1`) is the operator's public API. Every field in the spec maps directly to a Kubernetes resource or container configuration. The CRD is fully documented in the [CRD reference](/mc-operator/reference/crd/).
+The `MinecraftServer` CRD (`minecraft.dhv.sh/v1alpha1`) is the operator's public API. Every field in the spec maps directly to a Kubernetes resource or container configuration. The CRD is fully documented in the [CRD reference](/mc-operator/reference/crd/).
 
 ### Controller (reconciler)
 

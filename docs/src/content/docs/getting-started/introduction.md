@@ -5,7 +5,7 @@ sidebar:
   order: 1
 ---
 
-**mc-operator** is a production-grade [Kubernetes Operator](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/) for managing Minecraft server deployments. It is built with [.NET 10](https://learn.microsoft.com/en-us/dotnet/core/whats-new/dotnet-10/) and [KubeOps 10](https://github.com/buehler/dotnet-operator-sdk), and is maintained under the [hengeveld.dev](https://hengeveld.dev) umbrella.
+**mc-operator** is a production-grade [Kubernetes Operator](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/) for managing Minecraft server deployments. It is built with [.NET 10](https://learn.microsoft.com/en-us/dotnet/core/whats-new/dotnet-10/) and [KubeOps 10](https://github.com/buehler/dotnet-operator-sdk), and is maintained under the [dhv.sh](https://dhv.sh) umbrella.
 
 ## What problem does it solve?
 
@@ -14,7 +14,7 @@ Running a Minecraft server on Kubernetes without an operator means manually writ
 mc-operator turns server administration into a single Kubernetes resource:
 
 ```yaml
-apiVersion: minecraft.hengeveld.dev/v1alpha1
+apiVersion: minecraft.dhv.sh/v1alpha1
 kind: MinecraftServer
 metadata:
   name: paper-survival

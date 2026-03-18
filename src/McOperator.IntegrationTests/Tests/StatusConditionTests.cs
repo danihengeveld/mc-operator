@@ -144,7 +144,7 @@ public class StatusConditionTests
             // Create a server with replicas=0 (paused from the start)
             var server = new Dictionary<string, object>
             {
-                ["apiVersion"] = "minecraft.hengeveld.dev/v1alpha1",
+                ["apiVersion"] = "minecraft.dhv.sh/v1alpha1",
                 ["kind"] = "MinecraftServer",
                 ["metadata"] = new Dictionary<string, object>
                 {
@@ -229,7 +229,7 @@ public class StatusConditionTests
     {
         var server = new Dictionary<string, object>
         {
-            ["apiVersion"] = "minecraft.hengeveld.dev/v1alpha1",
+            ["apiVersion"] = "minecraft.dhv.sh/v1alpha1",
             ["kind"] = "MinecraftServer",
             ["metadata"] = new Dictionary<string, object>
             {

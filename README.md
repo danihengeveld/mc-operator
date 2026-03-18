@@ -2,7 +2,7 @@
 
 A production-grade Kubernetes Operator for managing Minecraft server deployments, built with .NET 10 and [KubeOps](https://github.com/buehler/dotnet-operator-sdk).
 
-**API group**: `minecraft.hengeveld.dev` · **Docs**: [hengeveld.dev/mc-operator](https://hengeveld.dev/mc-operator) · **Maintained by**: [hengeveld.dev](https://hengeveld.dev)
+**API group**: `minecraft.dhv.sh` · **Docs**: [mc-operator.dhv.sh](https://mc-operator.dhv.sh) · **Maintained by**: [dani.hengeveld.dev](https://dani.hengeveld.dev)
 
 ---
 
@@ -19,7 +19,7 @@ mc-operator/
 ├── charts/
 │   └── mc-operator/            # Helm chart (OCI-published to GHCR)
 ├── docs/                       # Astro Starlight site (Bun)
-│                               # Deployed to hengeveld.dev/mc-operator
+│                               # Deployed to mc-operator.dhv.sh
 ├── examples/                   # Example MinecraftServer manifests
 ├── manifests/
 │   ├── crd/                    # CustomResourceDefinition YAML
@@ -46,7 +46,7 @@ helm install mc-operator oci://ghcr.io/danihengeveld/charts/mc-operator \
 Then deploy a server:
 
 ```yaml
-apiVersion: minecraft.hengeveld.dev/v1alpha1
+apiVersion: minecraft.dhv.sh/v1alpha1
 kind: MinecraftServer
 metadata:
   name: paper-survival
@@ -84,14 +84,14 @@ See [RELEASING.md](RELEASING.md) for the full release procedure and [CHANGELOG.m
 
 ## Documentation
 
-Full documentation at **[hengeveld.dev/mc-operator](https://hengeveld.dev/mc-operator)**, including:
+Full documentation at **[mc-operator.dhv.sh](https://mc-operator.dhv.sh)**, including:
 
-- [Quickstart](https://hengeveld.dev/mc-operator/getting-started/quickstart/)
-- [CRD Reference](https://hengeveld.dev/mc-operator/reference/crd/)
-- [Configuration Guide](https://hengeveld.dev/mc-operator/reference/configuration/)
-- [Architecture](https://hengeveld.dev/mc-operator/guides/architecture/)
-- [Running in Production](https://hengeveld.dev/mc-operator/guides/production/)
-- [Development Guide](https://hengeveld.dev/mc-operator/development/guide/)
+- [Quickstart](https://mc-operator.dhv.sh/getting-started/quickstart/)
+- [CRD Reference](https://mc-operator.dhv.sh/reference/crd/)
+- [Configuration Guide](https://mc-operator.dhv.sh/reference/configuration/)
+- [Architecture](https://mc-operator.dhv.sh/guides/architecture/)
+- [Running in Production](https://mc-operator.dhv.sh/guides/production/)
+- [Development Guide](https://mc-operator.dhv.sh/development/guide/)
 
 ## Development
 

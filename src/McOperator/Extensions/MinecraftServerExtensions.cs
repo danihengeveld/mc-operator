@@ -15,7 +15,7 @@ public static class MinecraftServerExtensions
     {
         return new V1OwnerReference
         {
-            ApiVersion = $"minecraft.hengeveld.dev/v1alpha1",
+            ApiVersion = $"minecraft.dhv.sh/v1alpha1",
             Kind = "MinecraftServer",
             Name = server.Name(),
             Uid = server.Uid(),
