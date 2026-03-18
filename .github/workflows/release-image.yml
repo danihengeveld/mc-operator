@@ -20,7 +20,7 @@ jobs:
     name: Build & Push Image
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write # to create GitHub Releases and upload assets
       packages: write
       # Required for writing image attestations (SLSA provenance)
       id-token: write
@@ -134,4 +134,3 @@ jobs:
             ```
 
             See the [documentation](https://mc-operator.dhv.sh) for installation instructions.
-
