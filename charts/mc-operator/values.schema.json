@@ -2,6 +2,53 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "mc-operator Helm chart values",
   "description": "Configuration values for the mc-operator Helm chart",
+  "definitions": {
+    "io.k8s.api.core.v1.PullPolicy": {
+      "type": "string",
+      "description": "PullPolicy describes a policy for if/when to pull a container image. https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy",
+      "enum": ["Always", "IfNotPresent", "Never"]
+    },
+    "io.k8s.api.core.v1.ResourceList": {
+      "type": "object",
+      "description": "ResourceList is a set of (resource name, quantity) pairs. https://kubernetes.io/docs/reference/kubernetes-api/common-definitions/quantity/",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "io.k8s.api.core.v1.Toleration": {
+      "type": "object",
+      "description": "Toleration allows the pod to tolerate any taint that matches the given key/value/effect. https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/pod-v1/#scheduling",
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "type": "string",
+          "description": "Taint key the toleration applies to. Empty matches all keys"
+        },
+        "operator": {
+          "type": "string",
+          "description": "Relationship between the key and value",
+          "enum": ["Exists", "Equal"]
+        },
+        "value": {
+          "type": "string",
+          "description": "Taint value the toleration matches to"
+        },
+        "effect": {
+          "type": "string",
+          "description": "Taint effect to match. Empty matches all effects",
+          "enum": ["NoSchedule", "PreferNoSchedule", "NoExecute"]
+        },
+        "tolerationSeconds": {
+          "type": "integer",
+          "description": "Duration the toleration tolerates the taint (only for NoExecute effect)"
+        }
+      }
+    },
+    "io.k8s.api.core.v1.Affinity": {
+      "type": "object",
+      "description": "Affinity is a group of affinity scheduling rules. https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/pod-v1/#scheduling"
+    }
+  },
   "type": "object",
   "additionalProperties": false,
   "properties": {
@@ -21,9 +68,7 @@
           "default": ""
         },
         "pullPolicy": {
-          "type": "string",
-          "description": "Image pull policy",
-          "enum": ["Always", "IfNotPresent", "Never"],
+          "allOf": [{"$ref": "#/definitions/io.k8s.api.core.v1.PullPolicy"}],
           "default": "IfNotPresent"
         }
       }
@@ -66,38 +111,14 @@
       "additionalProperties": false,
       "properties": {
         "requests": {
-          "type": "object",
+          "allOf": [{"$ref": "#/definitions/io.k8s.api.core.v1.ResourceList"}],
           "description": "Minimum resources required",
-          "additionalProperties": false,
-          "properties": {
-            "cpu": {
-              "type": "string",
-              "description": "CPU request (e.g. 100m)",
-              "default": "100m"
-            },
-            "memory": {
-              "type": "string",
-              "description": "Memory request (e.g. 64Mi)",
-              "default": "64Mi"
-            }
-          }
+          "default": {"cpu": "100m", "memory": "64Mi"}
         },
         "limits": {
-          "type": "object",
+          "allOf": [{"$ref": "#/definitions/io.k8s.api.core.v1.ResourceList"}],
           "description": "Maximum resources the operator may consume",
-          "additionalProperties": false,
-          "properties": {
-            "cpu": {
-              "type": "string",
-              "description": "CPU limit (e.g. 200m)",
-              "default": "200m"
-            },
-            "memory": {
-              "type": "string",
-              "description": "Memory limit (e.g. 128Mi)",
-              "default": "128Mi"
-            }
-          }
+          "default": {"cpu": "200m", "memory": "128Mi"}
         }
       }
     },
@@ -111,11 +132,11 @@
       "description": "Tolerations for the operator pod",
       "default": [],
       "items": {
-        "type": "object"
+        "$ref": "#/definitions/io.k8s.api.core.v1.Toleration"
       }
     },
     "affinity": {
-      "type": "object",
+      "allOf": [{"$ref": "#/definitions/io.k8s.api.core.v1.Affinity"}],
       "description": "Affinity rules for the operator pod",
       "default": {}
     },
