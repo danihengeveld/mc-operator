@@ -63,8 +63,7 @@ updates:
 
   # ── npm/Bun (docs site) ───────────────────────────────────────────────────
   # Tracks Astro, Starlight, and other docs tooling dependencies.
-  # Dependabot uses the npm ecosystem for bun.lock files (bun is compatible).
-  - package-ecosystem: npm
+  - package-ecosystem: bun
     directory: /docs
     schedule:
       interval: weekly
