@@ -67,43 +67,16 @@ jobs:
       - name: Build
         run: dotnet build McOperator.slnx --no-restore -c Release
 
-      - name: Test
+      - name: Run tests
         run: dotnet run --project src/McOperator.Tests/McOperator.Tests.csproj -c Release
+
+      - name: Run integration tests
+        run: dotnet run --project src/McOperator.IntegrationTests/McOperator.IntegrationTests.csproj -c Release
 
       - name: Lint Dockerfile
         uses: hadolint/hadolint-action@v3.1.0
         with:
           dockerfile: Dockerfile
-
-  integration-test:
-    name: Integration Tests
-    needs: [changes, build-and-test]
-    if: needs.changes.outputs.operator == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v5
-        with:
-          dotnet-version: "10.x"
-
-      - name: Cache NuGet packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.nuget/packages
-          key: nuget-${{ runner.os }}-${{ hashFiles('**/packages.lock.json') }}
-          restore-keys: |
-            nuget-${{ runner.os }}-
-
-      - name: Restore
-        run: dotnet restore McOperator.slnx --locked-mode
-
-      - name: Build
-        run: dotnet build McOperator.slnx --no-restore -c Release
-
-      - name: Run integration tests
-        run: dotnet run --project src/McOperator.IntegrationTests/McOperator.IntegrationTests.csproj -c Release
 
   lint-chart:
     name: Lint Helm Chart
@@ -142,4 +115,3 @@ jobs:
       - name: Build docs
         working-directory: docs
         run: bun run build
-
