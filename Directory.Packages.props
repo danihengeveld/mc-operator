@@ -15,6 +15,10 @@
     <PackageVersion Include="TUnit" Version="1.19.74" />
     <PackageVersion Include="TUnit.Mocks" Version="1.19.74" />
 
+    <!-- Integration test packages -->
+    <PackageVersion Include="Testcontainers.K3s" Version="4.11.0" />
+    <PackageVersion Include="KubernetesClient" Version="19.0.2" />
+
     <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.201" />
   </ItemGroup>
 </Project>
