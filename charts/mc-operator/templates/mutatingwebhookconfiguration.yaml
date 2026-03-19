@@ -1,0 +1,32 @@
+{{- $certs := include "mc-operator.webhookCerts" . | fromYaml }}
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: {{ include "mc-operator.fullname" . }}-mutators
+  labels:
+    {{- include "mc-operator.labels" . | nindent 4 }}
+webhooks:
+- name: mutate.minecraftserver.mc-operator.dhv.sh.v1alpha1
+  admissionReviewVersions:
+  - v1
+  clientConfig:
+    caBundle: {{ $certs.ca }}
+    service:
+      name: {{ include "mc-operator.fullname" . }}
+      namespace: {{ .Values.namespace.name }}
+      path: /mutate/minecraftserver
+      port: 443
+  matchPolicy: Exact
+  rules:
+  - apiGroups:
+    - mc-operator.dhv.sh
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - minecraftservers
+  sideEffects: None
+  failurePolicy: Fail
+  timeoutSeconds: 10

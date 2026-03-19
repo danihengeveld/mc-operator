@@ -39,31 +39,22 @@ spec:
           value: Production
         - name: Logging__LogLevel__Default
           value: {{ .Values.logLevel }}
-        {{- if .Values.webhooks.enabled }}
         envFrom:
         - configMapRef:
-            name: webhook-config
-        {{- end }}
+            name: {{ include "mc-operator.fullname" . }}-webhook-config
         ports:
         - name: http
           containerPort: 8080
           protocol: TCP
-        {{- if .Values.webhooks.enabled }}
         - name: https
           containerPort: {{ .Values.webhooks.port }}
           protocol: TCP
-        {{- end }}
         resources:
           {{- toYaml .Values.resources | nindent 10 }}
-        {{- if .Values.webhooks.enabled }}
         volumeMounts:
-        - name: certificates
+        - name: webhook-certs
           mountPath: /certs
           readOnly: true
-        - name: ca-certificates
-          mountPath: /ca
-          readOnly: true
-        {{- end }}
         livenessProbe:
           httpGet:
             path: /healthz
@@ -76,15 +67,10 @@ spec:
             port: 8080
           initialDelaySeconds: 5
           periodSeconds: 10
-      {{- if .Values.webhooks.enabled }}
       volumes:
-      - name: certificates
+      - name: webhook-certs
         secret:
-          secretName: webhook-cert
-      - name: ca-certificates
-        secret:
-          secretName: webhook-ca
-      {{- end }}
+          secretName: {{ include "mc-operator.webhookCertSecret" . }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

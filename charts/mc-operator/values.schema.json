@@ -181,37 +181,15 @@
     },
     "webhooks": {
       "type": "object",
-      "description": "Admission webhook configuration",
+      "description": "Admission webhook configuration. Webhooks are always enabled and TLS certificates are auto-generated.",
       "additionalProperties": false,
       "properties": {
-        "enabled": {
-          "type": "boolean",
-          "description": "Enable validating and mutating admission webhooks",
-          "default": true
-        },
         "port": {
           "type": "integer",
           "description": "HTTPS port for the webhook server",
           "minimum": 1,
           "maximum": 65535,
           "default": 5001
-        },
-        "certManager": {
-          "type": "object",
-          "description": "cert-manager integration for webhook TLS",
-          "additionalProperties": false,
-          "properties": {
-            "enabled": {
-              "type": "boolean",
-              "description": "Use cert-manager to provision TLS certificates for the webhook server",
-              "default": false
-            },
-            "issuerRef": {
-              "type": "object",
-              "description": "Reference to a cert-manager Issuer or ClusterIssuer",
-              "default": {}
-            }
-          }
         }
       }
     },

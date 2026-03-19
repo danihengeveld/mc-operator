@@ -43,14 +43,8 @@ namespace:
 
 # Webhook configuration
 webhooks:
-  enabled: true
   # The service port for the webhook server
   port: 5001
-  # TLS configuration for the webhook service
-  # In production, use cert-manager or a proper certificate solution
-  certManager:
-    enabled: false
-    issuerRef: {}
 
 # Leader election configuration
 leaderElection:

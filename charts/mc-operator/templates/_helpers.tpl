@@ -65,3 +65,35 @@ Image tag - defaults to chart appVersion.
 {{- define "mc-operator.imageTag" -}}
 {{- .Values.image.tag | default .Chart.AppVersion }}
 {{- end }}
+
+{{/*
+Webhook certificate secret name.
+*/}}
+{{- define "mc-operator.webhookCertSecret" -}}
+{{- printf "%s-webhook-cert" (include "mc-operator.fullname" .) }}
+{{- end }}
+
+{{/*
+Generate webhook TLS certificates.
+Uses lookup to reuse existing certificates on upgrades.
+Returns a dict with ca, cert, and key (all base64-encoded).
+*/}}
+{{- define "mc-operator.webhookCerts" -}}
+{{- $secretName := include "mc-operator.webhookCertSecret" . -}}
+{{- $secret := lookup "v1" "Secret" .Values.namespace.name $secretName -}}
+{{- if and $secret $secret.data -}}
+ca: {{ index $secret.data "ca.crt" }}
+cert: {{ index $secret.data "tls.crt" }}
+key: {{ index $secret.data "tls.key" }}
+{{- else -}}
+{{- $svcName := include "mc-operator.fullname" . -}}
+{{- $ns := .Values.namespace.name -}}
+{{- $cn := printf "%s.%s.svc" $svcName $ns -}}
+{{- $altNames := list $cn (printf "%s.%s.svc.cluster.local" $svcName $ns) -}}
+{{- $ca := genCA "mc-operator-ca" 3650 -}}
+{{- $cert := genSignedCert $cn nil $altNames 3650 $ca -}}
+ca: {{ $ca.Cert | b64enc }}
+cert: {{ $cert.Cert | b64enc }}
+key: {{ $cert.Key | b64enc }}
+{{- end -}}
+{{- end }}
