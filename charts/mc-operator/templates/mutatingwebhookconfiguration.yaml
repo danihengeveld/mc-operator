@@ -1,18 +1,19 @@
+{{- $certs := include "mc-operator.webhookCerts" . | fromYaml }}
 apiVersion: admissionregistration.k8s.io/v1
 kind: MutatingWebhookConfiguration
 metadata:
-  name: mc-operator-mutators
+  name: {{ include "mc-operator.fullname" . }}-mutators
+  labels:
+    {{- include "mc-operator.labels" . | nindent 4 }}
 webhooks:
 - name: mutate.minecraftserver.mc-operator.dhv.sh.v1alpha1
   admissionReviewVersions:
   - v1
   clientConfig:
-    # When using Helm, caBundle is auto-generated and injected automatically.
-    # When using Kustomize, replace with your base64-encoded CA certificate.
-    caBundle: ""
+    caBundle: {{ $certs.ca }}
     service:
-      name: mc-operator
-      namespace: mc-operator-system
+      name: {{ include "mc-operator.fullname" . }}
+      namespace: {{ .Values.namespace.name }}
       path: /mutate/minecraftserver
       port: 443
   matchPolicy: Exact

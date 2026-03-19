@@ -101,19 +101,28 @@ resources:
 
 **Cause**: The `caBundle` in the webhook configuration doesn't match the certificate served by the operator.
 
-**Fix**: If using cert-manager, ensure the annotation is correctly injecting the CA bundle. If managing certificates manually, re-export the CA and patch the webhook configurations:
+**Fix**:
 
-```bash
-CA_BUNDLE=$(kubectl get secret webhook-ca -n mc-operator-system -o jsonpath='{.data.ca\.pem}')
+- **Helm deployments**: The chart auto-generates certificates and injects the `caBundle` automatically. Try reinstalling the chart to regenerate certificates:
 
-kubectl patch validatingwebhookconfiguration mc-operator-validators \
-  --type='json' \
-  -p="[{\"op\": \"replace\", \"path\": \"/webhooks/0/clientConfig/caBundle\", \"value\": \"${CA_BUNDLE}\"}]"
+  ```bash
+  helm upgrade --install mc-operator oci://ghcr.io/danihengeveld/charts/mc-operator \
+    --namespace mc-operator-system
+  ```
 
-kubectl patch mutatingwebhookconfiguration mc-operator-mutators \
-  --type='json' \
-  -p="[{\"op\": \"replace\", \"path\": \"/webhooks/0/clientConfig/caBundle\", \"value\": \"${CA_BUNDLE}\"}]"
-```
+- **Kustomize deployments**: Ensure the `caBundle` in the webhook configurations matches the CA that signed the server certificate. Re-export and patch if needed:
+
+  ```bash
+  CA_BUNDLE=$(kubectl get secret webhook-cert -n mc-operator-system -o jsonpath='{.data.ca\.crt}')
+
+  kubectl patch validatingwebhookconfiguration mc-operator-validators \
+    --type='json' \
+    -p="[{\"op\": \"replace\", \"path\": \"/webhooks/0/clientConfig/caBundle\", \"value\": \"${CA_BUNDLE}\"}]"
+
+  kubectl patch mutatingwebhookconfiguration mc-operator-mutators \
+    --type='json' \
+    -p="[{\"op\": \"replace\", \"path\": \"/webhooks/0/clientConfig/caBundle\", \"value\": \"${CA_BUNDLE}\"}]"
+  ```
 
 ---
 

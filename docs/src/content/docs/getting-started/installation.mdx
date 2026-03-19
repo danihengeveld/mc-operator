@@ -15,10 +15,6 @@ import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 | Helm        | 3.14+ (for OCI chart support) |
 | kubectl     | Matching cluster version |
 
-For production webhook support, you also need:
-
-- [cert-manager](https://cert-manager.io/) or a custom TLS provisioning setup to serve the webhook endpoint over HTTPS.
-
 ## Install the CRD
 
 The `MinecraftServer` CRD must be installed before the operator:
@@ -98,52 +94,16 @@ Key values you may want to override:
 | `resources.requests.memory` | `64Mi` | Memory request |
 | `resources.limits.cpu` | `200m` | CPU limit |
 | `resources.limits.memory` | `128Mi` | Memory limit |
-| `webhooks.enabled` | `true` | Enable admission webhooks |
-| `webhooks.port` | `5001` | HTTPS port for webhooks |
 | `logLevel` | `Information` | Log verbosity |
-| `leaderElection.enabled` | `true` | Enable leader election |
 
 Full values reference: `helm show values oci://ghcr.io/danihengeveld/charts/mc-operator`
 
-## Webhooks setup
+## Webhooks
 
-The operator runs validating and mutating admission webhooks on port `5001` (HTTPS). The Kubernetes API server must be able to reach the operator service over TLS.
+The operator runs validating and mutating admission webhooks on port `5001` (HTTPS). Webhooks are always enabled and the Helm chart automatically generates a self-signed CA and TLS certificate for the webhook service during installation.
 
-### Using cert-manager (recommended)
+The generated `caBundle` is injected into the `ValidatingWebhookConfiguration` and `MutatingWebhookConfiguration` resources automatically. Certificates are persisted across `helm upgrade` operations — the chart reuses existing certificates if the webhook Secret already exists in the cluster.
 
-1. Install [cert-manager](https://cert-manager.io/docs/installation/).
-
-2. Configure Helm to create an `Issuer` and inject the CA bundle automatically:
-
-   ```yaml
-   # values-prod.yaml
-   webhooks:
-     enabled: true
-     certManager:
-       enabled: true
-       issuerRef:
-         name: my-cluster-issuer
-         kind: ClusterIssuer
-   ```
-
-3. Annotate the `ValidatingWebhookConfiguration` and `MutatingWebhookConfiguration` with:
-
-   ```yaml
-   cert-manager.io/inject-ca-from: mc-operator-system/mc-operator-webhook-cert
-   ```
-
-   These annotations are already present in the `manifests/operator/validators.yaml` and `manifests/operator/mutators.yaml` as comments — uncomment them and fill in the correct certificate resource name.
-
-### Manual TLS
-
-If you are not using cert-manager, you need to:
-
-1. Generate a TLS certificate for the webhook service (CN: `mc-operator.mc-operator-system.svc`).
-2. Create two Kubernetes Secrets:
-   - `webhook-cert` — the certificate and private key (`svc.pem`, `svc-key.pem`)
-   - `webhook-ca` — the CA certificate (`ca.pem`)
-3. Patch the `caBundle` field in the webhook configurations with the base64-encoded CA cert.
-
-<Aside type="tip">
-For development, you can disable webhooks entirely: `helm install ... --set webhooks.enabled=false`
+<Aside type="note">
+When using Kustomize instead of Helm, you must provision TLS certificates manually and set the `caBundle` in the webhook configurations yourself.
 </Aside>

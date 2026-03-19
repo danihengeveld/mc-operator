@@ -72,7 +72,7 @@ dotnet run --project src/McOperator/ -- --environment Development
 ```
 
 <Aside type="note">
-Admission webhooks require TLS. For local development without webhooks, use a cluster that skips webhook registration, or configure the operator with `webhooks.enabled=false`.
+Admission webhooks require TLS and are always enabled when deploying via Helm (certificates are auto-generated). For local development without webhooks, run the operator directly with `dotnet run` and skip the webhook manifests.
 </Aside>
 
 ## Building the Docker image

@@ -28,8 +28,6 @@ For each `MinecraftServer` resource the operator creates and manages:
 | Helm        | 3.14+ (OCI chart support) |
 | kubectl     | Matching your cluster version |
 
-For production webhook support you also need [cert-manager](https://cert-manager.io/) or a custom TLS provisioning solution.
-
 ---
 
 ## Installing the Chart
@@ -113,7 +111,7 @@ The following table lists all configurable values with their defaults.
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `replicaCount` | integer | `1` | Number of operator replicas. Use `1` unless enabling leader election with multiple replicas |
+| `replicaCount` | integer | `1` | Number of operator replicas. Leader election is automatically enabled when running more than one replica |
 | `nameOverride` | string | `""` | Override the chart name |
 | `fullnameOverride` | string | `""` | Override the fully qualified app name |
 
@@ -149,69 +147,25 @@ The following table lists all configurable values with their defaults.
 | `namespace.create` | bool | `true` | Create the operator namespace |
 | `namespace.name` | string | `mc-operator-system` | Namespace where the operator is deployed |
 
-### Webhooks
-
-The operator exposes validating and mutating admission webhooks that enforce constraints and apply defaults to `MinecraftServer` resources.
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| `webhooks.enabled` | bool | `true` | Enable admission webhooks |
-| `webhooks.port` | integer | `5001` | HTTPS port for the webhook server |
-| `webhooks.certManager.enabled` | bool | `false` | Use cert-manager to provision webhook TLS certificates |
-| `webhooks.certManager.issuerRef` | object | `{}` | cert-manager `Issuer` or `ClusterIssuer` reference |
-
-> **Tip**: For development or quick testing, disable webhooks with `--set webhooks.enabled=false`.
-
-### Leader Election
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| `leaderElection.enabled` | bool | `true` | Enable leader election for high-availability multi-replica deployments |
-
 ### Logging
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `logLevel` | string | `Information` | Log verbosity level. One of `Trace`, `Debug`, `Information`, `Warning`, `Error`, `Critical` |
 
-### Metrics
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| `metrics.enabled` | bool | `false` | Enable the metrics endpoint (future use) |
-| `metrics.port` | integer | `8080` | Port for the metrics endpoint |
-
 ---
 
-## Webhook TLS Setup
+## Webhook TLS
 
-The Kubernetes API server must reach the operator over HTTPS for webhooks to function. Two approaches are supported:
+The operator exposes validating and mutating admission webhooks that enforce constraints and apply defaults to `MinecraftServer` resources. Webhooks are always enabled — the Kubernetes API server must reach the operator over HTTPS for them to function.
 
-### Using cert-manager (recommended)
+The Helm chart automatically generates a self-signed CA and TLS certificate for the webhook service during installation. The generated `caBundle` is injected into the `ValidatingWebhookConfiguration` and `MutatingWebhookConfiguration` resources automatically.
 
-1. [Install cert-manager](https://cert-manager.io/docs/installation/).
+Certificates are persisted across `helm upgrade` operations — the chart reuses existing certificates if the webhook Secret already exists in the cluster.
 
-2. Configure your Helm values:
+## Leader Election
 
-   ```yaml
-   webhooks:
-     enabled: true
-     certManager:
-       enabled: true
-       issuerRef:
-         name: my-cluster-issuer
-         kind: ClusterIssuer
-   ```
-
-### Manual TLS
-
-If you are not using cert-manager:
-
-1. Generate a TLS certificate for the webhook service with CN: `mc-operator.mc-operator-system.svc`.
-2. Create two Kubernetes Secrets in the operator namespace:
-   - `webhook-cert` — the certificate and private key (`svc.pem`, `svc-key.pem`)
-   - `webhook-ca` — the CA certificate (`ca.pem`)
-3. Patch the `caBundle` field in the `ValidatingWebhookConfiguration` and `MutatingWebhookConfiguration` with the base64-encoded CA certificate.
+Leader election is automatically enabled when `replicaCount` is greater than 1. Only one replica is the active leader at any time; passive replicas take over within seconds of leader failure. With a single replica, leader election is disabled to avoid unnecessary overhead.
 
 ---
 
@@ -264,18 +218,16 @@ The chart creates a `ClusterRole` granting the operator permissions to manage:
 
 ## Example Values
 
-### Minimal (webhooks disabled)
+### Minimal
 
 ```yaml
-webhooks:
-  enabled: false
 logLevel: Warning
 ```
 
-### Production with cert-manager
+### Production
 
 ```yaml
-replicaCount: 1
+replicaCount: 2
 resources:
   requests:
     cpu: 100m
@@ -283,15 +235,6 @@ resources:
   limits:
     cpu: 500m
     memory: 256Mi
-webhooks:
-  enabled: true
-  certManager:
-    enabled: true
-    issuerRef:
-      name: letsencrypt-prod
-      kind: ClusterIssuer
-leaderElection:
-  enabled: true
 logLevel: Information
 ```
 

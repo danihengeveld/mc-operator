@@ -32,19 +32,19 @@ The operator requires cluster-scoped RBAC to watch `MinecraftServer` resources a
 
 ### Webhook TLS
 
-In production, **always** use cert-manager to provision and rotate webhook TLS certificates. See the [Installation guide](/mc-operator/getting-started/installation/#webhooks-setup) for the recommended cert-manager setup.
+The Helm chart automatically generates self-signed TLS certificates for the webhook service and injects the `caBundle` into the webhook configurations. Certificates are valid for 10 years and persist across `helm upgrade` operations.
+
+For environments that require certificate rotation or integration with an organizational PKI, you can use [cert-manager](https://cert-manager.io/) or another certificate management solution alongside the operator.
 
 ## High availability
 
 ### Multiple operator replicas
 
-The operator supports running multiple replicas using built-in Kubernetes leader election:
+The operator supports running multiple replicas with built-in Kubernetes leader election. Leader election is automatically enabled when deploying more than one replica:
 
 ```yaml
 # values-prod.yaml
 replicaCount: 2
-leaderElection:
-  enabled: true
 ```
 
 Only one replica is the active leader at any time. Passive replicas take over within seconds of leader failure. There is no warm cache to warm up — the operator is stateless between reconciles.

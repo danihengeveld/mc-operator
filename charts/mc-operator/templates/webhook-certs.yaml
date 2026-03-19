@@ -1,0 +1,13 @@
+{{- $certs := include "mc-operator.webhookCerts" . | fromYaml }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ include "mc-operator.webhookCertSecret" . }}
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    {{- include "mc-operator.labels" . | nindent 4 }}
+type: kubernetes.io/tls
+data:
+  ca.crt: {{ $certs.ca }}
+  tls.crt: {{ $certs.cert }}
+  tls.key: {{ $certs.key }}
