@@ -1,0 +1,16 @@
+{
+  "main": "dist/_worker.js/index.js",
+  "name": "mc-operator",
+  "compatibility_date": "2026-03-19",
+  "compatibility_flags": [
+    "global_fetch_strictly_public",
+    "nodejs_compat"
+  ],
+  "assets": {
+    "binding": "ASSETS",
+    "directory": "dist"
+  },
+  "observability": {
+    "enabled": true
+  }
+}

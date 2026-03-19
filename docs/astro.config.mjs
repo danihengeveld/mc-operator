@@ -1,7 +1,11 @@
 import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
+import cloudflare from "@astrojs/cloudflare";
 
 export default defineConfig({
+  site: "https://mc-operator.dhv.sh/",
+  base: "/",
+  adapter: cloudflare(),
   integrations: [
     starlight({
       title: "mc-operator",
@@ -67,17 +71,35 @@ export default defineConfig({
           ],
         },
       ],
+      expressiveCode: {
+        themes: ["starlight-dark", "starlight-light"],
+        defaultProps: {
+          wrap: true,
+        },
+      },
       head: [
         {
           tag: "meta",
           attrs: {
+            property: "og:type",
+            content: "website",
+          },
+        },
+        {
+          tag: "meta",
+          attrs: {
             name: "og:site_name",
-            content: "mc-operator | dhv.sh",
+            content: "mc-operator",
+          },
+        },
+        {
+          tag: "meta",
+          attrs: {
+            name: "twitter:card",
+            content: "summary_large_image",
           },
         },
       ],
     }),
-  ],
-  site: "https://mc-operator.dhv.sh/",
-  base: "/",
+  ]
 });

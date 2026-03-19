@@ -1,21 +1,25 @@
 {
   "name": "mc-operator-docs",
   "type": "module",
+  "private": true,
   "version": "0.0.1",
   "description": "Documentation for mc-operator — Kubernetes Operator for Minecraft",
   "packageManager": "bun@1.3.11",
   "scripts": {
     "dev": "astro dev",
-    "start": "astro dev",
     "build": "astro build",
-    "preview": "astro preview",
+    "preview": "bun run build && wrangler dev",
     "check": "astro check",
-    "astro": "astro"
+    "astro": "astro",
+    "deploy": "bun run build && wrangler deploy",
+    "cf-typegen": "wrangler types"
   },
   "dependencies": {
+    "@astrojs/cloudflare": "^13.1.2",
     "@astrojs/starlight": "^0.38.1",
     "astro": "^6.0.5",
-    "sharp": "^0.34.5"
+    "sharp": "^0.34.5",
+    "wrangler": "^4.75.0"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.4",
