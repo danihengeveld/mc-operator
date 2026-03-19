@@ -8,18 +8,15 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
-    "preview": "bun run build && wrangler dev",
+    "preview": "astro preview",
     "check": "astro check",
-    "astro": "astro",
-    "deploy": "bun run build && wrangler deploy",
-    "cf-typegen": "wrangler types"
+    "astro": "astro"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^13.1.2",
     "@astrojs/starlight": "^0.38.1",
     "astro": "^6.0.5",
-    "sharp": "^0.34.5",
-    "wrangler": "^4.75.0"
+    "sharp": "^0.34.5"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.4",
