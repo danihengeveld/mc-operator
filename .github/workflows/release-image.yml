@@ -96,12 +96,12 @@ jobs:
 
       # Attest the image build — generates SLSA provenance attached to the image.
       # Verify with: gh attestation verify oci://ghcr.io/danihengeveld/mc-operator:<ver>
-      #- name: Generate image attestation
-      #  uses: actions/attest-build-provenance@v4
-      #  with:
-      #    subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-      #    subject-digest: ${{ steps.push.outputs.digest }}
-      #    push-to-registry: true
+      - name: Generate image attestation
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
 
       # Create a lightweight GitHub Release for traceability.
       # This does NOT include the Helm chart — that is managed by release-chart.yml.
