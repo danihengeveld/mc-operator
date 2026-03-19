@@ -2,16 +2,13 @@ apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
   name: mc-operator-validators
-  annotations:
-    # If using cert-manager, add:
-    # cert-manager.io/inject-ca-from: mc-operator-system/mc-operator-webhook-cert
 webhooks:
 - name: validate.minecraftserver.mc-operator.dhv.sh.v1alpha1
   admissionReviewVersions:
   - v1
   clientConfig:
-    # caBundle is managed by the operator at runtime or cert-manager
-    # Replace with your actual CA bundle or use cert-manager injection
+    # When using Helm, caBundle is auto-generated and injected automatically.
+    # When using Kustomize, replace with your base64-encoded CA certificate.
     caBundle: ""
     service:
       name: mc-operator

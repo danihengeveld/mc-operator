@@ -39,16 +39,10 @@ spec:
             memory: 64Mi
         volumeMounts:
         - mountPath: /certs
-          name: certificates
-          readOnly: true
-        - mountPath: /ca
-          name: ca-certificates
+          name: webhook-certs
           readOnly: true
       terminationGracePeriodSeconds: 10
       volumes:
-      - name: certificates
+      - name: webhook-certs
         secret:
           secretName: webhook-cert
-      - name: ca-certificates
-        secret:
-          secretName: webhook-ca
