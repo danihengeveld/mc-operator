@@ -40,13 +40,11 @@ For environments that require certificate rotation or integration with an organi
 
 ### Multiple operator replicas
 
-The operator supports running multiple replicas using built-in Kubernetes leader election:
+The operator supports running multiple replicas with built-in Kubernetes leader election. Leader election is automatically enabled when deploying more than one replica:
 
 ```yaml
 # values-prod.yaml
 replicaCount: 2
-leaderElection:
-  enabled: true
 ```
 
 Only one replica is the active leader at any time. Passive replicas take over within seconds of leader failure. There is no warm cache to warm up — the operator is stateless between reconciles.

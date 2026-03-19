@@ -7,6 +7,6 @@ metadata:
     {{- include "mc-operator.labels" . | nindent 4 }}
 data:
   KESTREL__ENDPOINTS__HTTP__URL: "http://0.0.0.0:8080"
-  KESTREL__ENDPOINTS__HTTPS__URL: "https://0.0.0.0:{{ .Values.webhooks.port }}"
+  KESTREL__ENDPOINTS__HTTPS__URL: "https://0.0.0.0:5001"
   KESTREL__ENDPOINTS__HTTPS__CERTIFICATE__PATH: "/certs/tls.crt"
   KESTREL__ENDPOINTS__HTTPS__CERTIFICATE__KEYPATH: "/certs/tls.key"

@@ -179,56 +179,11 @@
         }
       }
     },
-    "webhooks": {
-      "type": "object",
-      "description": "Admission webhook configuration. Webhooks are always enabled and TLS certificates are auto-generated.",
-      "additionalProperties": false,
-      "properties": {
-        "port": {
-          "type": "integer",
-          "description": "HTTPS port for the webhook server",
-          "minimum": 1,
-          "maximum": 65535,
-          "default": 5001
-        }
-      }
-    },
-    "leaderElection": {
-      "type": "object",
-      "description": "Leader election configuration for high-availability deployments",
-      "additionalProperties": false,
-      "properties": {
-        "enabled": {
-          "type": "boolean",
-          "description": "Enable leader election so only one replica actively reconciles at a time",
-          "default": true
-        }
-      }
-    },
     "logLevel": {
       "type": "string",
       "description": "Log verbosity level for the operator",
       "enum": ["Trace", "Debug", "Information", "Warning", "Error", "Critical"],
       "default": "Information"
-    },
-    "metrics": {
-      "type": "object",
-      "description": "Metrics endpoint configuration (future use)",
-      "additionalProperties": false,
-      "properties": {
-        "enabled": {
-          "type": "boolean",
-          "description": "Enable the metrics endpoint",
-          "default": false
-        },
-        "port": {
-          "type": "integer",
-          "description": "Port for the metrics endpoint",
-          "minimum": 1,
-          "maximum": 65535,
-          "default": 8080
-        }
-      }
     }
   }
 }

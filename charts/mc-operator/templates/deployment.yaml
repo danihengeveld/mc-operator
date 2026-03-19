@@ -47,7 +47,7 @@ spec:
           containerPort: 8080
           protocol: TCP
         - name: https
-          containerPort: {{ .Values.webhooks.port }}
+          containerPort: 5001
           protocol: TCP
         resources:
           {{- toYaml .Values.resources | nindent 10 }}

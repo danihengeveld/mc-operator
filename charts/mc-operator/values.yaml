@@ -41,19 +41,5 @@ namespace:
   create: true
   name: mc-operator-system
 
-# Webhook configuration
-webhooks:
-  # The service port for the webhook server
-  port: 5001
-
-# Leader election configuration
-leaderElection:
-  enabled: true
-
 # Logging level (Information, Debug, Warning, Error)
 logLevel: Information
-
-# Metrics configuration (future use)
-metrics:
-  enabled: false
-  port: 8080
