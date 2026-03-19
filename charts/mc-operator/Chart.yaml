@@ -2,8 +2,8 @@ apiVersion: v2
 name: mc-operator
 description: A Kubernetes Operator for managing Minecraft server deployments — powered by .NET 10 and KubeOps.
 type: application
-version: 0.1.0-alpha.1
-appVersion: "0.1.0-alpha.1"
+version: 0.1.0-alpha.2
+appVersion: "0.1.0-alpha.2"
 keywords:
   - minecraft
   - operator
