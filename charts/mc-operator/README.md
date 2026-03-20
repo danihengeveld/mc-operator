@@ -8,7 +8,7 @@ A Helm chart for deploying **mc-operator** — a production-grade Kubernetes Ope
 
 ## Overview
 
-mc-operator manages the full lifecycle of Minecraft servers as first-class Kubernetes resources. Once installed, you can deploy and manage Minecraft servers using a simple `MinecraftServer` custom resource.
+mc-operator manages the full lifecycle of Minecraft servers as first-class Kubernetes resources. Once installed, you can deploy and manage Minecraft servers using a simple `MinecraftServer` custom resource, or group multiple servers behind a Velocity proxy using a `MinecraftServerCluster` resource.
 
 **Supported server distributions**: Vanilla, Paper, Spigot, CraftBukkit
 
@@ -17,6 +17,11 @@ For each `MinecraftServer` resource the operator creates and manages:
 - A **Service** exposing the game port (25565) and RCON port (25575)
 - A **PersistentVolumeClaim** for world data and server configuration
 - A **ConfigMap** containing the derived `server.properties`
+
+For each `MinecraftServerCluster` resource the operator creates and manages:
+- A **Deployment** for the Velocity proxy
+- A **Service** exposing the proxy port
+- References to member `MinecraftServer` resources
 
 ---
 
@@ -32,15 +37,16 @@ For each `MinecraftServer` resource the operator creates and manages:
 
 ## Installing the Chart
 
-### 1. Install the CRD
+### 1. Install the CRDs
 
-The `MinecraftServer` CRD must be installed before the operator:
+The `MinecraftServer` and `MinecraftServerCluster` CRDs must be installed before the operator:
 
 ```bash
 kubectl apply -f https://raw.githubusercontent.com/danihengeveld/mc-operator/main/manifests/crd/minecraftservers.yaml
+kubectl apply -f https://raw.githubusercontent.com/danihengeveld/mc-operator/main/manifests/crd/minecraftserverclusters.yaml
 ```
 
-> **Note**: Always install the CRD version that matches your operator version.
+> **Note**: Always install the CRD versions that match your operator version.
 
 ### 2. Install the operator
 
@@ -59,8 +65,9 @@ helm install mc-operator oci://ghcr.io/danihengeveld/charts/mc-operator \
 # Operator pod should be Running
 kubectl get pods -n mc-operator-system
 
-# CRD should be established
+# CRDs should be established
 kubectl get crd minecraftservers.mc-operator.dhv.sh
+kubectl get crd minecraftserverclusters.mc-operator.dhv.sh
 ```
 
 ---
@@ -90,6 +97,41 @@ spec:
 ```bash
 kubectl apply -f server.yaml
 kubectl get minecraftservers -n minecraft
+```
+
+## Deploying a Minecraft Server Cluster
+
+To group multiple servers behind a Velocity proxy, create a `MinecraftServerCluster` resource:
+
+```yaml
+apiVersion: mc-operator.dhv.sh/v1alpha1
+kind: MinecraftServerCluster
+metadata:
+  name: my-cluster
+  namespace: minecraft
+spec:
+  template:
+    acceptEula: true
+    server:
+      type: Paper
+      version: "1.21.4"
+    jvm:
+      initialMemory: "2G"
+      maxMemory: "4G"
+    storage:
+      size: "20Gi"
+  scaling:
+    mode: Static
+    replicas: 3
+  proxy:
+    maxPlayers: 100
+    service:
+      type: LoadBalancer
+```
+
+```bash
+kubectl apply -f cluster.yaml
+kubectl get minecraftserverclusters -n minecraft
 ```
 
 ---
@@ -157,7 +199,7 @@ The following table lists all configurable values with their defaults.
 
 ## Webhook TLS
 
-The operator exposes validating and mutating admission webhooks that enforce constraints and apply defaults to `MinecraftServer` resources. Webhooks are always enabled — the Kubernetes API server must reach the operator over HTTPS for them to function.
+The operator exposes validating and mutating admission webhooks that enforce constraints and apply defaults to `MinecraftServer` and `MinecraftServerCluster` resources. Webhooks are always enabled — the Kubernetes API server must reach the operator over HTTPS for them to function.
 
 The Helm chart automatically generates a self-signed CA and TLS certificate for the webhook service during installation. The generated `caBundle` is injected into the `ValidatingWebhookConfiguration` and `MutatingWebhookConfiguration` resources automatically.
 
@@ -177,10 +219,11 @@ helm upgrade mc-operator oci://ghcr.io/danihengeveld/charts/mc-operator \
   --namespace mc-operator-system
 ```
 
-After upgrading the chart, also update the CRD if the new version includes CRD changes:
+After upgrading the chart, also update the CRDs if the new version includes CRD changes:
 
 ```bash
 kubectl apply -f https://raw.githubusercontent.com/danihengeveld/mc-operator/main/manifests/crd/minecraftservers.yaml
+kubectl apply -f https://raw.githubusercontent.com/danihengeveld/mc-operator/main/manifests/crd/minecraftserverclusters.yaml
 ```
 
 ---
@@ -191,12 +234,13 @@ kubectl apply -f https://raw.githubusercontent.com/danihengeveld/mc-operator/mai
 helm uninstall mc-operator --namespace mc-operator-system
 ```
 
-> **Warning**: Uninstalling the operator does **not** delete any `MinecraftServer` resources or the data held in their PersistentVolumeClaims. Clean those up manually if needed.
+> **Warning**: Uninstalling the operator does **not** delete any `MinecraftServer` or `MinecraftServerCluster` resources or the data held in their PersistentVolumeClaims. Clean those up manually if needed.
 
-To also remove the CRD (this will delete all MinecraftServer resources):
+To also remove the CRDs (this will delete all MinecraftServer and MinecraftServerCluster resources):
 
 ```bash
 kubectl delete crd minecraftservers.mc-operator.dhv.sh
+kubectl delete crd minecraftserverclusters.mc-operator.dhv.sh
 ```
 
 ---
@@ -208,11 +252,14 @@ The chart creates a `ClusterRole` granting the operator permissions to manage:
 | Resource | API Group | Verbs |
 |----------|-----------|-------|
 | `statefulsets` | `apps` | `*` |
+| `deployments` | `apps` | `*` |
 | `services`, `configmaps`, `persistentvolumeclaims` | `""` | `*` |
 | `events` | `""` | `get`, `list`, `create`, `update`, `patch` |
 | `leases` | `coordination.k8s.io` | `*` |
 | `minecraftservers` | `mc-operator.dhv.sh` | `*` |
 | `minecraftservers/status` | `mc-operator.dhv.sh` | `get`, `update`, `patch` |
+| `minecraftserverclusters` | `mc-operator.dhv.sh` | `*` |
+| `minecraftserverclusters/status` | `mc-operator.dhv.sh` | `get`, `update`, `patch` |
 
 ---
 

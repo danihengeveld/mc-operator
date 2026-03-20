@@ -30,3 +30,27 @@ webhooks:
   sideEffects: None
   failurePolicy: Fail
   timeoutSeconds: 10
+- name: validate.minecraftservercluster.mc-operator.dhv.sh.v1alpha1
+  admissionReviewVersions:
+  - v1
+  clientConfig:
+    caBundle: {{ $certs.ca }}
+    service:
+      name: {{ include "mc-operator.fullname" . }}
+      namespace: {{ .Values.namespace.name }}
+      path: /validate/minecraftservercluster
+      port: 443
+  matchPolicy: Exact
+  rules:
+  - apiGroups:
+    - mc-operator.dhv.sh
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - minecraftserverclusters
+  sideEffects: None
+  failurePolicy: Fail
+  timeoutSeconds: 10

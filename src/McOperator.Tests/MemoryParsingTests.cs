@@ -1,5 +1,4 @@
 using McOperator.Webhooks;
-using TUnit.Assertions.Extensions;
 
 namespace McOperator.Tests;
 
@@ -49,7 +48,7 @@ public class MemoryParsingTests
     [Arguments("1k")]
     public async Task IsValidK8sQuantity_ValidValues_ReturnsTrue(string value)
     {
-        var result = MinecraftServerValidationWebhook.IsValidK8sQuantity(value);
+        var result = MinecraftServerValidationWebhook.IsValidKubernetesQuantity(value);
 
         await Assert.That(result).IsTrue();
     }
@@ -62,7 +61,7 @@ public class MemoryParsingTests
     [Arguments(null)]
     public async Task IsValidK8sQuantity_InvalidValues_ReturnsFalse(string? value)
     {
-        var result = MinecraftServerValidationWebhook.IsValidK8sQuantity(value);
+        var result = MinecraftServerValidationWebhook.IsValidKubernetesQuantity(value);
 
         await Assert.That(result).IsFalse();
     }

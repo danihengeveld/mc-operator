@@ -68,11 +68,6 @@ public class MinecraftServerMutationWebhook : MutationWebhook<MinecraftServer>
             }
         }
 
-        if (!modified)
-        {
-            return hook.NoChanges();
-        }
-
-        return hook.Modified(server);
+        return !modified ? hook.NoChanges() : hook.Modified(server);
     }
 }

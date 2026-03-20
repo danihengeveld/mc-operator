@@ -1,0 +1,50 @@
+apiVersion: mc-operator.dhv.sh/v1alpha1
+kind: MinecraftServerCluster
+metadata:
+  name: survival-cluster
+  namespace: minecraft
+spec:
+  template:
+    acceptEula: true
+    server:
+      type: Paper
+      version: "1.20.4"
+    properties:
+      difficulty: Normal
+      gameMode: Survival
+      maxPlayers: 50
+      viewDistance: 10
+      simulationDistance: 10
+      ops:
+        - AdminPlayer
+    jvm:
+      initialMemory: "1G"
+      maxMemory: "3G"
+      extraJvmArgs:
+        - "-XX:+UseG1GC"
+        - "-XX:G1HeapRegionSize=4M"
+    resources:
+      cpuRequest: "1"
+      cpuLimit: "2"
+      memoryRequest: "3Gi"
+      memoryLimit: "4Gi"
+    storage:
+      enabled: true
+      size: "20Gi"
+      deleteWithServer: false
+  scaling:
+    mode: Static
+    replicas: 3
+  proxy:
+    proxyPort: 25577
+    maxPlayers: 150
+    onlineMode: true
+    playerForwardingMode: Modern
+    version: "LATEST"
+    service:
+      type: LoadBalancer
+      annotations:
+        service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    resources:
+      cpuRequest: "500m"
+      memoryRequest: "512Mi"

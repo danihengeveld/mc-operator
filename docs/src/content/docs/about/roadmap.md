@@ -7,7 +7,7 @@ sidebar:
 
 ## Current scope (v1)
 
-mc-operator v1 is a production-grade **server lifecycle manager**. It handles provisioning, configuration, persistence, and exposure of individual Minecraft server instances on Kubernetes.
+mc-operator v1 is a production-grade **server lifecycle manager**. It handles provisioning, configuration, persistence, and exposure of individual Minecraft server instances on Kubernetes. It also supports **multi-server clusters** with a managed Velocity proxy via the `MinecraftServerCluster` CRD.
 
 It deliberately does **not** include game-content concerns (plugins, modpacks, backups, RCON). These are significant surface areas that need careful design. See the rationale in the [Architecture guide](/mc-operator/guides/architecture/).
 
@@ -18,14 +18,23 @@ It deliberately does **not** include game-content concerns (plugins, modpacks, b
 | No plugin management | Users manage plugins via init containers, custom images, or exec |
 | No automated backups | Use Velero or manual `kubectl cp` from a paused server |
 | No RCON integration | Use `kubectl exec` for server commands |
-| Single-replica only | Minecraft is not horizontally scalable |
+| Single-replica per server | Individual Minecraft servers are not horizontally scalable |
 | Storage size immutable | Resize PVCs directly via `kubectl patch` |
-| No auto-scaling | Player-count-based scaling not implemented |
-| No multi-server proxy | BungeeCord/Velocity topologies not managed |
+| Dynamic scaling framework only | Scaling policy is validated and stored, but metric collection is not yet implemented |
+
+## Completed
+
+| Feature | Notes |
+|---------|-------|
+| Multi-server proxy (Velocity) | `MinecraftServerCluster` CRD with managed Velocity proxy, Modern forwarding, and automatic server registration |
+| Scaling framework | Static mode (fixed replicas) and Dynamic mode structure (min/max/policy) — metric-driven scaling pending |
 
 ## Planned for future releases
 
 These are possibilities, not commitments. Priority depends on community interest and use cases.
+
+### Metric collection for dynamic scaling
+Collect player count metrics from backend servers to drive auto-scaling decisions. The `ScalingPolicy` spec is already in place; the missing piece is a metric collection sidecar or RCON-based polling.
 
 ### Plugin management
 A structured way to declare plugin JARs in the spec. Likely via init containers or a sidecar pattern that downloads plugins from URLs or a plugin registry.

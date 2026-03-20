@@ -4,7 +4,7 @@ This document captures the key design decisions made for the v1 of the Minecraft
 
 ## Overview
 
-`mc-operator` is a Kubernetes Operator built with .NET 10, maintained under the [dhv.sh](https://dhv.sh) umbrella and [KubeOps 10](https://github.com/buehler/dotnet-operator-sdk). It manages `MinecraftServer` custom resources, which each represent a fully configured Minecraft server deployment and all of its supporting Kubernetes resources.
+`mc-operator` is a Kubernetes Operator built with .NET 10, maintained under the [dhv.sh](https://dhv.sh) umbrella and [KubeOps 10](https://github.com/buehler/dotnet-operator-sdk). It manages `MinecraftServer` and `MinecraftServerCluster` custom resources, which represent fully configured Minecraft server deployments and multi-server clusters with Velocity proxy support.
 
 ---
 
@@ -161,7 +161,71 @@ Automated backups require object storage credentials, backup scheduling, retenti
 RCON integration would allow the operator to send commands to running servers. This requires network access to the RCON port and secure credential management. Deferred as `kubectl exec` suffices for v1.
 
 ### Horizontal Scaling / Proxy Support
-Minecraft servers are not horizontally scalable in the traditional sense. Multi-server setups require proxy servers (BungeeCord, Velocity). This is a different product category from single-server management.
+Minecraft servers are not horizontally scalable in the traditional sense. Multi-server setups require proxy servers (BungeeCord, Velocity). The `MinecraftServerCluster` CRD now manages multi-server topologies with Velocity proxy support, including automatic server registration and forwarding secret management. Full metric-driven auto-scaling (dynamic mode) is architected but pending metric collection implementation.
+
+---
+
+## Decision 11: MinecraftServerCluster CRD Design
+
+**Choice: Separate CRD for clusters (`MinecraftServerCluster`)**
+
+Rather than extending the `MinecraftServer` CRD with multi-server support, a separate `MinecraftServerCluster` CRD was created. This provides:
+
+- **Clear separation of concerns**: Single-server management remains simple and focused
+- **Distinct lifecycle phases**: Clusters have `Degraded` phase (some servers not ready) which doesn't apply to single servers
+- **Composability**: The cluster controller creates `MinecraftServer` instances as child resources, reusing the same reconciliation logic
+- **Independent validation**: Cluster validation rules (scaling constraints, proxy settings) don't complicate single-server webhooks
+
+The cluster spec contains a `template` (same fields as MinecraftServerSpec minus replicas/service), `scaling` (mode and replica configuration), and `proxy` (Velocity settings).
+
+---
+
+## Decision 12: Velocity Proxy Deployment Strategy
+
+**Choice: Deployment (not StatefulSet) for the Velocity proxy**
+
+The Velocity proxy is **stateless** — it maintains only in-memory player sessions and routes traffic to backend servers. Using a Deployment provides:
+
+- **Simple restarts**: No need for ordered startup/shutdown or stable identities
+- **No PVC requirement**: The proxy stores no persistent data
+- **Rolling updates**: Standard Deployment rollout strategy handles config changes
+- **Future horizontal scaling**: Multiple proxy replicas are straightforward with a Deployment
+
+The proxy image is `itzg/mc-proxy` (community standard), configured via `TYPE=VELOCITY` environment variable, matching the pattern used for backend servers with `itzg/minecraft-server`.
+
+---
+
+## Decision 13: Server Registration in Velocity
+
+**Choice: ConfigMap-based `velocity.toml` generation**
+
+The cluster controller generates `velocity.toml` dynamically and stores it in a ConfigMap. This ConfigMap is mounted into the proxy pod. When backend servers are added or removed:
+
+1. The controller regenerates the `[servers]` section with current backend addresses (using Kubernetes internal DNS: `<server-name>.<namespace>.svc.cluster.local`)
+2. The `[servers.try]` list is updated based on the `tryOrder` spec or ascending index order
+3. The ConfigMap update triggers a proxy pod restart via annotation-based rollout
+
+For **Modern** and **BungeeGuard** forwarding modes, a `forwarding.secret` file is generated with a random UUID and included in the same ConfigMap. Backend servers are automatically configured with `onlineMode: false` since the proxy handles authentication.
+
+**Trade-off**: ConfigMap-based configuration requires a proxy restart to pick up changes. This was chosen over Velocity's plugin API because it requires no additional dependencies and works with the stock proxy image.
+
+---
+
+## Decision 14: Scaling Architecture
+
+**Choice: Two scaling modes — Static and Dynamic**
+
+- **Static mode**: Fixed replica count. Simple, predictable, suitable for most use cases.
+- **Dynamic mode**: Auto-scale between `minReplicas` and `maxReplicas` based on a `ScalingPolicy`. The policy specifies a metric (currently `PlayerCount`) and a target utilization percentage.
+
+The scaling infrastructure is fully architected:
+- `ScalingSpec`, `ScalingPolicy`, and `ScalingMetric` types are defined
+- Validation webhooks enforce constraints (min ≤ max, policy required for Dynamic)
+- The controller reads the scaling config and provisions the correct number of servers
+
+**What's pending**: Metric collection. In Dynamic mode, the controller currently provisions `minReplicas` servers. Once a metric collection mechanism is implemented (likely via RCON polling or a sidecar), the controller will scale between min and max based on actual player counts.
+
+This "framework first" approach ensures the API and validation are stable before the full scaling loop is connected.
 
 ---
 
@@ -182,25 +246,28 @@ mc-operator/
 │       └── values.yaml
 ├── docs/                       # Astro Starlight documentation site
 │   └── src/content/docs/       # All documentation pages
-├── examples/                   # Example MinecraftServer manifests
+├── examples/                   # Example MinecraftServer and MinecraftServerCluster manifests
 ├── manifests/
-│   ├── crd/                    # CustomResourceDefinition YAML
+│   ├── crd/                    # CustomResourceDefinition YAML (MinecraftServer + MinecraftServerCluster)
 │   ├── rbac/                   # ClusterRole + ClusterRoleBinding
 │   └── operator/               # Deployment, Service, webhooks (Kustomize)
 └── src/
     ├── McOperator/             # .NET 10 operator application
-    │   ├── Builders/           # Resource builders (StatefulSet, Service, ConfigMap)
-    │   ├── Controllers/        # Reconciliation controller
-    │   ├── Entities/           # CRD entity types (spec, status)
+    │   ├── Builders/           # Resource builders (StatefulSet, Service, ConfigMap, VelocityProxy)
+    │   ├── Controllers/        # Reconciliation controllers (MinecraftServer, MinecraftServerCluster)
+    │   ├── Entities/           # CRD entity types (spec, status for both resources)
     │   ├── Extensions/         # Extension methods
-    │   ├── Finalizers/         # PVC cleanup finalizer
-    │   ├── Webhooks/           # Validating/mutating webhooks
+    │   ├── Finalizers/         # PVC cleanup and cluster finalizers
+    │   ├── Webhooks/           # Validating/mutating webhooks for both resources
     │   └── Program.cs          # Entry point and DI registration
     └── McOperator.Tests/       # TUnit unit tests
         ├── ValidationWebhookTests.cs
+        ├── ClusterValidationWebhookTests.cs
         ├── StatefulSetBuilderTests.cs
+        ├── VelocityProxyBuilderTests.cs
         ├── ServiceBuilderTests.cs
         ├── ConfigMapBuilderTests.cs
+        ├── ClusterExtensionsTests.cs
         └── MemoryParsingTests.cs
 ```
 

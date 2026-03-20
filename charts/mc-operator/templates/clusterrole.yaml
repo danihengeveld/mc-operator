@@ -49,3 +49,25 @@ rules:
   - get
   - update
   - patch
+# MinecraftServerCluster CRD permissions
+- apiGroups:
+  - mc-operator.dhv.sh
+  resources:
+  - minecraftserverclusters
+  verbs:
+  - '*'
+- apiGroups:
+  - mc-operator.dhv.sh
+  resources:
+  - minecraftserverclusters/status
+  verbs:
+  - get
+  - update
+  - patch
+# Deployments (for Velocity proxy)
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  verbs:
+  - '*'

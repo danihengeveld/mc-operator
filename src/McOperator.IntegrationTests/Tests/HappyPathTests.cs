@@ -2,7 +2,6 @@ using System.Text.Json;
 using k8s;
 using McOperator.Builders;
 using McOperator.IntegrationTests.Infrastructure;
-using TUnit.Assertions.Extensions;
 
 namespace McOperator.IntegrationTests.Tests;
 
@@ -19,15 +18,15 @@ public class HappyPathTests
     [Timeout(120_000)]
     public async Task CreateValidServer_CreatesStatefulSet(CancellationToken cancellationToken)
     {
-        var ns = await KubernetesHelper.CreateTestNamespaceAsync(K3s.Client);
+        var ns = await KubernetesHelper.CreateTestNamespaceAsync(K3s.Client, cancellationToken: cancellationToken);
         try
         {
-            var serverName = "happy-sts";
-            await CreateValidMinecraftServer(K3s.Client, ns, serverName);
+            const string serverName = "happy-sts";
+            await CreateValidMinecraftServer(K3s.Client, ns, serverName, cancellationToken);
 
             // Wait for the StatefulSet to be created by the operator
             var sts = await KubernetesHelper.WaitForResourceAsync(
-                () => K3s.Client.AppsV1.ReadNamespacedStatefulSetAsync(serverName, ns),
+                () => K3s.Client.AppsV1.ReadNamespacedStatefulSetAsync(serverName, ns, cancellationToken: cancellationToken),
                 timeout: TimeSpan.FromSeconds(60),
                 description: $"StatefulSet '{serverName}' to be created");
 
@@ -42,7 +41,7 @@ public class HappyPathTests
         }
         finally
         {
-            await KubernetesHelper.DeleteNamespaceAsync(K3s.Client, ns);
+            await KubernetesHelper.DeleteNamespaceAsync(K3s.Client, ns, cancellationToken);
         }
     }
 
@@ -50,15 +49,15 @@ public class HappyPathTests
     [Timeout(120_000)]
     public async Task CreateValidServer_CreatesService(CancellationToken cancellationToken)
     {
-        var ns = await KubernetesHelper.CreateTestNamespaceAsync(K3s.Client);
+        var ns = await KubernetesHelper.CreateTestNamespaceAsync(K3s.Client, cancellationToken: cancellationToken);
         try
         {
-            var serverName = "happy-svc";
-            await CreateValidMinecraftServer(K3s.Client, ns, serverName);
+            const string serverName = "happy-svc";
+            await CreateValidMinecraftServer(K3s.Client, ns, serverName, cancellationToken);
 
             // Wait for the Service to be created by the operator
             var svc = await KubernetesHelper.WaitForResourceAsync(
-                () => K3s.Client.CoreV1.ReadNamespacedServiceAsync(serverName, ns),
+                () => K3s.Client.CoreV1.ReadNamespacedServiceAsync(serverName, ns, cancellationToken: cancellationToken),
                 timeout: TimeSpan.FromSeconds(60),
                 description: $"Service '{serverName}' to be created");
 
@@ -70,7 +69,7 @@ public class HappyPathTests
         }
         finally
         {
-            await KubernetesHelper.DeleteNamespaceAsync(K3s.Client, ns);
+            await KubernetesHelper.DeleteNamespaceAsync(K3s.Client, ns, cancellationToken);
         }
     }
 
@@ -78,17 +77,17 @@ public class HappyPathTests
     [Timeout(120_000)]
     public async Task CreateValidServer_CreatesConfigMap(CancellationToken cancellationToken)
     {
-        var ns = await KubernetesHelper.CreateTestNamespaceAsync(K3s.Client);
+        var ns = await KubernetesHelper.CreateTestNamespaceAsync(K3s.Client, cancellationToken: cancellationToken);
         try
         {
-            var serverName = "happy-cm";
+            const string serverName = "happy-cm";
             var configMapName = ConfigMapBuilder.ConfigMapName(serverName);
-            await CreateValidMinecraftServer(K3s.Client, ns, serverName);
+            await CreateValidMinecraftServer(K3s.Client, ns, serverName, cancellationToken);
 
             // Wait for the ConfigMap to be created by the operator
             // The operator names ConfigMaps as "{serverName}-config"
             var cm = await KubernetesHelper.WaitForResourceAsync(
-                () => K3s.Client.CoreV1.ReadNamespacedConfigMapAsync(configMapName, ns),
+                () => K3s.Client.CoreV1.ReadNamespacedConfigMapAsync(configMapName, ns, cancellationToken: cancellationToken),
                 timeout: TimeSpan.FromSeconds(60),
                 description: $"ConfigMap '{configMapName}' to be created");
 
@@ -101,7 +100,7 @@ public class HappyPathTests
         }
         finally
         {
-            await KubernetesHelper.DeleteNamespaceAsync(K3s.Client, ns);
+            await KubernetesHelper.DeleteNamespaceAsync(K3s.Client, ns, cancellationToken);
         }
     }
 
@@ -109,15 +108,15 @@ public class HappyPathTests
     [Timeout(120_000)]
     public async Task CreateValidServer_HasVolumeClaimTemplate(CancellationToken cancellationToken)
     {
-        var ns = await KubernetesHelper.CreateTestNamespaceAsync(K3s.Client);
+        var ns = await KubernetesHelper.CreateTestNamespaceAsync(K3s.Client, cancellationToken: cancellationToken);
         try
         {
-            var serverName = "happy-pvc";
-            await CreateValidMinecraftServer(K3s.Client, ns, serverName);
+            const string serverName = "happy-pvc";
+            await CreateValidMinecraftServer(K3s.Client, ns, serverName, cancellationToken);
 
             // Wait for the StatefulSet to be created
             var sts = await KubernetesHelper.WaitForResourceAsync(
-                () => K3s.Client.AppsV1.ReadNamespacedStatefulSetAsync(serverName, ns),
+                () => K3s.Client.AppsV1.ReadNamespacedStatefulSetAsync(serverName, ns, cancellationToken: cancellationToken),
                 timeout: TimeSpan.FromSeconds(60),
                 description: $"StatefulSet '{serverName}' with VolumeClaimTemplate");
 
@@ -130,7 +129,7 @@ public class HappyPathTests
         }
         finally
         {
-            await KubernetesHelper.DeleteNamespaceAsync(K3s.Client, ns);
+            await KubernetesHelper.DeleteNamespaceAsync(K3s.Client, ns, cancellationToken);
         }
     }
 
@@ -138,11 +137,11 @@ public class HappyPathTests
     [Timeout(120_000)]
     public async Task CreateValidServer_StatusIsUpdated(CancellationToken cancellationToken)
     {
-        var ns = await KubernetesHelper.CreateTestNamespaceAsync(K3s.Client);
+        var ns = await KubernetesHelper.CreateTestNamespaceAsync(K3s.Client, cancellationToken: cancellationToken);
         try
         {
-            var serverName = "happy-status";
-            await CreateValidMinecraftServer(K3s.Client, ns, serverName);
+            const string serverName = "happy-status";
+            await CreateValidMinecraftServer(K3s.Client, ns, serverName, cancellationToken);
 
             // Wait for the full status to be updated by the operator.
             // The operator first sets phase to Provisioning, then after reconciling all
@@ -151,7 +150,7 @@ public class HappyPathTests
             await KubernetesHelper.WaitForConditionAsync(
                 async () =>
                 {
-                    var server = await KubernetesHelper.GetMinecraftServerAsync(K3s.Client, ns, serverName);
+                    var server = await KubernetesHelper.GetMinecraftServerAsync(K3s.Client, ns, serverName, cancellationToken);
                     if (server is null) return false;
 
                     var jsonElement = (JsonElement)server;
@@ -163,7 +162,7 @@ public class HappyPathTests
                 description: "MinecraftServer status to have currentImage set");
 
             // Get the final status
-            var result = await KubernetesHelper.GetMinecraftServerAsync(K3s.Client, ns, serverName);
+            var result = await KubernetesHelper.GetMinecraftServerAsync(K3s.Client, ns, serverName, cancellationToken);
             await Assert.That(result).IsNotNull();
 
             var jsonResult = (JsonElement)result!;
@@ -171,11 +170,12 @@ public class HappyPathTests
 
             // The status should contain conditions and currentImage set by the operator
             await Assert.That(statusObj.TryGetProperty("conditions", out _)).IsTrue();
-            await Assert.That(statusObj.GetProperty("currentImage").GetString()).IsEqualTo("itzg/minecraft-server:latest");
+            await Assert.That(statusObj.GetProperty("currentImage").GetString())
+                .IsEqualTo("itzg/minecraft-server:latest");
         }
         finally
         {
-            await KubernetesHelper.DeleteNamespaceAsync(K3s.Client, ns);
+            await KubernetesHelper.DeleteNamespaceAsync(K3s.Client, ns, cancellationToken);
         }
     }
 
@@ -185,26 +185,19 @@ public class HappyPathTests
     private static async Task CreateValidMinecraftServer(
         IKubernetes client,
         string namespaceName,
-        string name)
+        string name,
+        CancellationToken cancellationToken = default)
     {
         var server = new Dictionary<string, object>
         {
             ["apiVersion"] = "mc-operator.dhv.sh/v1alpha1",
             ["kind"] = "MinecraftServer",
-            ["metadata"] = new Dictionary<string, object>
-            {
-                ["name"] = name,
-                ["namespace"] = namespaceName,
-            },
+            ["metadata"] = new Dictionary<string, object> { ["name"] = name, ["namespace"] = namespaceName, },
             ["spec"] = new Dictionary<string, object>
             {
                 ["acceptEula"] = true,
                 ["replicas"] = 1,
-                ["server"] = new Dictionary<string, object>
-                {
-                    ["type"] = "Vanilla",
-                    ["version"] = "1.20.4",
-                },
+                ["server"] = new Dictionary<string, object> { ["type"] = "Vanilla", ["version"] = "1.20.4", },
                 ["properties"] = new Dictionary<string, object>
                 {
                     ["difficulty"] = "Normal",
@@ -216,29 +209,15 @@ public class HappyPathTests
                     ["levelName"] = "world",
                     ["serverPort"] = 25565,
                 },
-                ["jvm"] = new Dictionary<string, object>
-                {
-                    ["initialMemory"] = "512m",
-                    ["maxMemory"] = "1G",
-                },
-                ["resources"] = new Dictionary<string, object>
-                {
-                    ["cpuRequest"] = "250m",
-                    ["memoryRequest"] = "512Mi",
-                },
-                ["storage"] = new Dictionary<string, object>
-                {
-                    ["enabled"] = true,
-                    ["size"] = "1Gi",
-                    ["mountPath"] = "/data",
-                },
-                ["service"] = new Dictionary<string, object>
-                {
-                    ["type"] = "ClusterIP",
-                },
+                ["jvm"] = new Dictionary<string, object> { ["initialMemory"] = "512m", ["maxMemory"] = "1G", },
+                ["resources"] =
+                    new Dictionary<string, object> { ["cpuRequest"] = "250m", ["memoryRequest"] = "512Mi", },
+                ["storage"] =
+                    new Dictionary<string, object> { ["enabled"] = true, ["size"] = "1Gi", ["mountPath"] = "/data", },
+                ["service"] = new Dictionary<string, object> { ["type"] = "ClusterIP", },
             },
         };
 
-        await KubernetesHelper.CreateMinecraftServerAsync(client, namespaceName, server);
+        await KubernetesHelper.CreateMinecraftServerAsync(client, namespaceName, server, cancellationToken);
     }
 }

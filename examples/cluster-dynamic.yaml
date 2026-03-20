@@ -1,0 +1,44 @@
+apiVersion: mc-operator.dhv.sh/v1alpha1
+kind: MinecraftServerCluster
+metadata:
+  name: dynamic-cluster
+  namespace: minecraft
+spec:
+  template:
+    acceptEula: true
+    server:
+      type: Paper
+      version: "1.20.4"
+    properties:
+      difficulty: Normal
+      gameMode: Survival
+      maxPlayers: 30
+      viewDistance: 10
+      simulationDistance: 10
+    jvm:
+      initialMemory: "512m"
+      maxMemory: "2G"
+    resources:
+      cpuRequest: "500m"
+      memoryRequest: "2Gi"
+    storage:
+      enabled: true
+      size: "10Gi"
+  scaling:
+    mode: Dynamic
+    minReplicas: 1
+    maxReplicas: 5
+    policy:
+      metric: PlayerCount
+      targetPercentage: 75
+  proxy:
+    proxyPort: 25577
+    maxPlayers: 150
+    onlineMode: true
+    playerForwardingMode: Modern
+    service:
+      type: NodePort
+      nodePort: 30577
+    resources:
+      cpuRequest: "250m"
+      memoryRequest: "256Mi"

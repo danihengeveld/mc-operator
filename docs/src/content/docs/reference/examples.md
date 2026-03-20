@@ -199,3 +199,80 @@ Resume by patching `spec.replicas: 1`:
 kubectl patch minecraftserver paper-survival -n minecraft \
   --type merge -p '{"spec": {"replicas": 1}}'
 ```
+
+## Minecraft cluster with static scaling
+
+Three Paper servers behind a Velocity proxy with external access via LoadBalancer:
+
+```yaml
+apiVersion: mc-operator.dhv.sh/v1alpha1
+kind: MinecraftServerCluster
+metadata:
+  name: survival-cluster
+  namespace: minecraft
+spec:
+  template:
+    acceptEula: true
+    server:
+      type: Paper
+      version: "1.20.4"
+    properties:
+      difficulty: Normal
+      maxPlayers: 50
+    jvm:
+      initialMemory: "1G"
+      maxMemory: "3G"
+    resources:
+      cpuRequest: "1"
+      memoryRequest: "3Gi"
+    storage:
+      size: "20Gi"
+  scaling:
+    mode: Static
+    replicas: 3
+  proxy:
+    proxyPort: 25577
+    maxPlayers: 150
+    onlineMode: true
+    playerForwardingMode: Modern
+    service:
+      type: LoadBalancer
+```
+
+## Minecraft cluster with dynamic scaling
+
+An auto-scaling cluster that grows and shrinks based on player count:
+
+```yaml
+apiVersion: mc-operator.dhv.sh/v1alpha1
+kind: MinecraftServerCluster
+metadata:
+  name: dynamic-cluster
+  namespace: minecraft
+spec:
+  template:
+    acceptEula: true
+    server:
+      type: Paper
+      version: "1.20.4"
+    properties:
+      maxPlayers: 30
+    jvm:
+      maxMemory: "2G"
+    storage:
+      size: "10Gi"
+  scaling:
+    mode: Dynamic
+    minReplicas: 1
+    maxReplicas: 5
+    policy:
+      metric: PlayerCount
+      targetPercentage: 75
+  proxy:
+    proxyPort: 25577
+    maxPlayers: 150
+    playerForwardingMode: Modern
+    service:
+      type: NodePort
+      nodePort: 30577
+```

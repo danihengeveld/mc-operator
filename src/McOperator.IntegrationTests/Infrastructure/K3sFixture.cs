@@ -1,5 +1,8 @@
+using System.Net;
 using k8s;
+using k8s.Autorest;
 using k8s.Models;
+using KubeOps.Abstractions.Builder;
 using KubeOps.Operator;
 using McOperator.Controllers;
 using McOperator.Entities;
@@ -86,7 +89,7 @@ public class K3sFixture : IAsyncInitializer, IAsyncDisposable
         // Clean up the KUBECONFIG environment variable set during operator startup
         Environment.SetEnvironmentVariable("KUBECONFIG", null);
 
-        Client?.Dispose();
+        Client.Dispose();
         await _container.DisposeAsync();
 
         if (_kubeconfigPath is not null && File.Exists(_kubeconfigPath))
@@ -97,43 +100,48 @@ public class K3sFixture : IAsyncInitializer, IAsyncDisposable
 
     private async Task ApplyCrd()
     {
-        var crdPath = FindCrdPath();
-        var crdYaml = await File.ReadAllTextAsync(crdPath);
-        var crd = KubernetesYaml.Deserialize<V1CustomResourceDefinition>(crdYaml);
+        var crdDirectory = FindCrdDirectory();
 
-        try
+        foreach (var crdFile in Directory.GetFiles(crdDirectory, "*.yaml"))
         {
-            await Client.ApiextensionsV1.CreateCustomResourceDefinitionAsync(crd);
-        }
-        catch (k8s.Autorest.HttpOperationException ex) when (ex.Response.StatusCode == System.Net.HttpStatusCode.Conflict)
-        {
-            // CRD already exists, update it
-            await Client.ApiextensionsV1.ReplaceCustomResourceDefinitionAsync(crd, crd.Metadata.Name);
+            var crdYaml = await File.ReadAllTextAsync(crdFile);
+            var crd = KubernetesYaml.Deserialize<V1CustomResourceDefinition>(crdYaml);
+
+            try
+            {
+                await Client.ApiextensionsV1.CreateCustomResourceDefinitionAsync(crd);
+            }
+            catch (HttpOperationException ex) when (ex.Response.StatusCode == HttpStatusCode.Conflict)
+            {
+                // CRD already exists, update it
+                await Client.ApiextensionsV1.ReplaceCustomResourceDefinitionAsync(crd, crd.Metadata.Name);
+            }
         }
     }
 
     private async Task WaitForCrdEstablished()
     {
-        await KubernetesHelper.WaitForConditionAsync(
-            async () =>
-            {
-                var crd = await Client.ApiextensionsV1.ReadCustomResourceDefinitionAsync(
-                    "minecraftservers.mc-operator.dhv.sh");
-                return crd.Status?.Conditions?.Any(c =>
-                    c.Type == "Established" && c.Status == "True") == true;
-            },
-            timeout: TimeSpan.FromSeconds(30),
-            description: "CRD to be established");
+        var crdNames = new[] { "minecraftservers.mc-operator.dhv.sh", "minecraftserverclusters.mc-operator.dhv.sh", };
+
+        foreach (var crdName in crdNames)
+        {
+            await KubernetesHelper.WaitForConditionAsync(
+                async () =>
+                {
+                    var crd = await Client.ApiextensionsV1.ReadCustomResourceDefinitionAsync(crdName);
+                    return crd.Status?.Conditions?.Any(c =>
+                        c.Type == "Established" && c.Status == "True") == true;
+                },
+                timeout: TimeSpan.FromSeconds(30),
+                description: $"CRD '{crdName}' to be established");
+        }
     }
 
     private async Task StartOperator()
     {
         // Build the operator host with the same configuration as Program.cs
         // but configured to use the k3s kubeconfig
-        var builder = WebApplication.CreateBuilder(new WebApplicationOptions
-        {
-            EnvironmentName = "IntegrationTest",
-        });
+        var builder = WebApplication.CreateBuilder(new WebApplicationOptions { EnvironmentName = "IntegrationTest", });
 
         // Point the KubeOps framework's internal Kubernetes client at our k3s cluster.
         // KubeOps reads KUBECONFIG from the environment when initializing its client.
@@ -150,11 +158,14 @@ public class K3sFixture : IAsyncInitializer, IAsyncDisposable
             {
                 settings.Name = "mc-operator";
                 // Disable leader election for testing — single instance
-                settings.LeaderElectionType = KubeOps.Abstractions.Builder.LeaderElectionType.Single;
+                settings.LeaderElectionType = LeaderElectionType.Single;
             })
             .AddController<MinecraftServerController, MinecraftServer>()
             .AddFinalizer<MinecraftServerFinalizer, MinecraftServer>(
-                "mc-operator.mc-operator.dhv.sh/finalizer");
+                "mc-operator.mc-operator.dhv.sh/finalizer")
+            .AddController<MinecraftServerClusterController, MinecraftServerCluster>()
+            .AddFinalizer<MinecraftServerClusterFinalizer, MinecraftServerCluster>(
+                "mc-operator.dhv.sh/cluster-finalizer");
 
         builder.Services.AddControllers();
 
@@ -170,32 +181,32 @@ public class K3sFixture : IAsyncInitializer, IAsyncDisposable
     }
 
     /// <summary>
-    /// Finds the CRD YAML file by walking up from the build output directory
+    /// Finds the CRD directory by walking up from the build output directory
     /// until we find the solution root (identified by McOperator.slnx).
     /// </summary>
-    private static string FindCrdPath()
+    private static string FindCrdDirectory()
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
 
         while (directory is not null)
         {
-            var crdFile = Path.Combine(directory.FullName, "manifests", "crd", "minecraftservers.yaml");
-            if (File.Exists(crdFile))
+            var crdDir = Path.Combine(directory.FullName, "manifests", "crd");
+            if (Directory.Exists(crdDir))
             {
-                return crdFile;
+                return crdDir;
             }
 
             // Check for solution file as a safety stop
             if (File.Exists(Path.Combine(directory.FullName, "McOperator.slnx")))
             {
-                throw new FileNotFoundException(
-                    $"Found solution root at {directory.FullName} but CRD file is missing at manifests/crd/minecraftservers.yaml");
+                throw new DirectoryNotFoundException(
+                    $"Found solution root at {directory.FullName} but CRD directory is missing at manifests/crd/");
             }
 
             directory = directory.Parent;
         }
 
-        throw new FileNotFoundException(
-            $"Could not find CRD file. Searched upward from {AppContext.BaseDirectory} for manifests/crd/minecraftservers.yaml");
+        throw new DirectoryNotFoundException(
+            $"Could not find CRD directory. Searched upward from {AppContext.BaseDirectory} for manifests/crd/");
     }
 }

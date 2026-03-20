@@ -9,7 +9,7 @@ import { Aside } from '@astrojs/starlight/components';
 
 ## Overview
 
-mc-operator is a [Kubernetes Operator](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/) built with .NET 10 and [KubeOps 10](https://github.com/buehler/dotnet-operator-sdk). It manages `MinecraftServer` custom resources through a continuous reconciliation loop, ensuring the actual cluster state matches the desired state expressed in the CRD spec.
+mc-operator is a [Kubernetes Operator](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/) built with .NET 10 and [KubeOps 10](https://github.com/buehler/dotnet-operator-sdk). It manages `MinecraftServer` and `MinecraftServerCluster` custom resources through continuous reconciliation loops, ensuring the actual cluster state matches the desired state expressed in the CRD specs.
 
 ### API group
 
@@ -30,7 +30,7 @@ mc-operator/
 ├── docs/                       # Astro Starlight documentation site
 ├── examples/                   # Example MinecraftServer manifests
 ├── manifests/
-│   ├── crd/                    # CustomResourceDefinition YAML
+│   ├── crd/                    # CustomResourceDefinition YAML (MinecraftServer + MinecraftServerCluster)
 │   ├── rbac/                   # ClusterRole + ClusterRoleBinding
 │   └── operator/               # Deployment, Service, webhook configs (Kustomize)
 └── src/
@@ -126,3 +126,65 @@ Reconcile(server):
 ```
 
 On error, the controller requeues after 30 seconds.
+
+## MinecraftServerCluster CRD
+
+The `MinecraftServerCluster` CRD (`mc-operator.dhv.sh/v1alpha1`) manages a fleet of backend MinecraftServer instances behind a Velocity proxy. It is fully documented in the [CRD reference](/mc-operator/reference/crd/#minecraftservercluster).
+
+### Cluster controller (reconciler)
+
+`MinecraftServerClusterController` implements `IEntityController<MinecraftServerCluster>`. On each reconcile it:
+
+1. Determines the desired server count from the scaling configuration
+2. Reconciles **backend MinecraftServer** instances (create, update, or delete to match the desired count)
+3. Builds the server address list for the Velocity configuration
+4. Reconciles the **proxy ConfigMap** (`velocity.toml` + `forwarding.secret`)
+5. Reconciles the **proxy Service** (the player-facing endpoint)
+6. Reconciles the **proxy Deployment** (the Velocity proxy workload)
+7. Updates the `status` subresource with backend server status, proxy endpoint, and conditions
+
+This order ensures backend servers exist before the proxy is configured to route to them.
+
+### Velocity proxy deployment strategy
+
+The Velocity proxy runs as a **Kubernetes Deployment**, not a StatefulSet. This is because the proxy is **stateless** — it maintains only in-memory player sessions and can be replaced at any time without data loss. A Deployment provides:
+
+- Rolling restarts without complex orchestration
+- Standard horizontal scaling (though the operator currently deploys 1 replica)
+- No need for PVCs or stable pod identities
+
+### Server auto-registration in velocity.toml
+
+When backend servers are created or removed, the cluster controller regenerates the `velocity.toml` configuration in a ConfigMap. The `[servers]` section lists all backend server addresses (using Kubernetes internal DNS), and the `[servers.try]` list controls the order players are assigned to servers.
+
+The proxy Deployment mounts this ConfigMap as a volume. Configuration changes trigger a pod restart via annotation-based rollout.
+
+### Forwarding secret management
+
+When the player forwarding mode is `Modern` or `BungeeGuard`, the operator generates a random forwarding secret (UUID) and stores it in the proxy ConfigMap as `forwarding.secret`. The same ConfigMap is mounted into the proxy pod. Backend servers are configured with `onlineMode: false` so that Velocity handles player authentication.
+
+### Cluster reconciliation model
+
+```
+Reconcile(cluster):
+  1. desiredCount = scaling.mode == Static ? scaling.replicas : scaling.minReplicas
+  2. Reconcile backend MinecraftServers (scale up/down, update template)
+  3. Build server address list from live MinecraftServer instances
+  4. ConfigMap: velocity.toml + forwarding.secret → get-or-create / update
+  5. Service:   proxy service → get-or-create / update
+  6. Deployment: Velocity proxy → get-or-create / update
+  7. Read backend server phases + proxy Deployment status
+     - If all servers Running + proxy ready → phase=Running
+     - If some servers not ready → phase=Degraded
+     - Else → phase=Provisioning
+  8. Update status (phase, endpoint, server statuses, conditions)
+  9. Requeue after 5m (drift detection)
+```
+
+On error, the cluster controller requeues after 30 seconds.
+
+### Cluster admission webhooks
+
+**Validating webhook** (`MinecraftServerClusterValidationWebhook`): Validates the template (same rules as MinecraftServer), scaling configuration (replicas ≥ 1 for Static, minReplicas ≤ maxReplicas for Dynamic, policy required for Dynamic), and proxy settings (port range, NodePort rules).
+
+**Mutating webhook** (`MinecraftServerClusterMutationWebhook`): Applies default MOTD, normalizes `levelType`, and trims whitespace — the same normalization as the MinecraftServer webhook, applied to the cluster template and proxy spec.
