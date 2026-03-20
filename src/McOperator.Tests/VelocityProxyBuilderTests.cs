@@ -1,7 +1,5 @@
 using McOperator.Builders;
 using McOperator.Entities;
-using McOperator.Extensions;
-using TUnit.Assertions.Extensions;
 
 namespace McOperator.Tests;
 
@@ -12,44 +10,38 @@ public class VelocityProxyBuilderTests
 {
     private static MinecraftServerCluster BuildCluster(Action<MinecraftServerClusterSpec>? configure = null)
     {
-        var cluster = new MinecraftServerCluster();
-        cluster.Metadata.Name = "test-cluster";
-        cluster.Metadata.NamespaceProperty = "default";
-        cluster.Metadata.Uid = "cluster-uid-1234";
-        cluster.Spec = new MinecraftServerClusterSpec
+        var cluster = new MinecraftServerCluster
         {
-            Template = new MinecraftServerTemplate
+            Metadata = { Name = "test-cluster", NamespaceProperty = "default", Uid = "cluster-uid-1234" },
+            Spec = new MinecraftServerClusterSpec
             {
-                AcceptEula = true,
-                Server = new ServerSpec { Type = ServerType.Paper, Version = "1.20.4" },
-                Properties = new ServerPropertiesSpec { ServerPort = 25565 },
-            },
-            Scaling = new ScalingSpec { Mode = ScalingMode.Static, Replicas = 3 },
-            Proxy = new VelocityProxySpec
-            {
-                ProxyPort = 25577,
-                MaxPlayers = 100,
-                OnlineMode = true,
-                PlayerForwardingMode = PlayerForwardingMode.Modern,
-                Service = new ServiceSpec { Type = ServiceType.ClusterIP },
-                Resources = new ResourcesSpec
+                Template = new MinecraftServerTemplate
                 {
-                    CpuRequest = "500m",
-                    MemoryRequest = "512Mi",
+                    AcceptEula = true,
+                    Server = new ServerSpec { Type = ServerType.Paper, Version = "1.20.4" },
+                    Properties = new ServerPropertiesSpec { ServerPort = 25565 },
                 },
-            },
+                Scaling = new ScalingSpec { Mode = ScalingMode.Static, Replicas = 3 },
+                Proxy = new VelocityProxySpec
+                {
+                    ProxyPort = 25577,
+                    MaxPlayers = 100,
+                    OnlineMode = true,
+                    PlayerForwardingMode = PlayerForwardingMode.Modern,
+                    Service = new ServiceSpec { Type = ServiceType.ClusterIP },
+                    Resources = new ResourcesSpec { CpuRequest = "500m", MemoryRequest = "512Mi", },
+                },
+            }
         };
         configure?.Invoke(cluster.Spec);
         return cluster;
     }
 
-    private static IList<ServerAddress> BuildServerAddresses(int count = 3)
+    private static List<ServerAddress> BuildServerAddresses(int count = 3)
     {
         return Enumerable.Range(0, count).Select(i => new ServerAddress
         {
-            Name = $"server-{i}",
-            Address = $"test-cluster-{i}",
-            Port = 25565,
+            Name = $"server-{i}", Address = $"test-cluster-{i}", Port = 25565,
         }).ToList();
     }
 
@@ -59,8 +51,7 @@ public class VelocityProxyBuilderTests
     public async Task BuildDeployment_HasCorrectName()
     {
         var cluster = BuildCluster();
-        var addresses = BuildServerAddresses();
-        var deployment = VelocityProxyBuilder.BuildDeployment(cluster, addresses);
+        var deployment = VelocityProxyBuilder.BuildDeployment(cluster);
 
         await Assert.That(deployment.Metadata.Name).IsEqualTo("test-cluster-proxy");
         await Assert.That(deployment.Metadata.NamespaceProperty).IsEqualTo("default");
@@ -70,8 +61,7 @@ public class VelocityProxyBuilderTests
     public async Task BuildDeployment_HasOwnerReference()
     {
         var cluster = BuildCluster();
-        var addresses = BuildServerAddresses();
-        var deployment = VelocityProxyBuilder.BuildDeployment(cluster, addresses);
+        var deployment = VelocityProxyBuilder.BuildDeployment(cluster);
 
         await Assert.That(deployment.Metadata.OwnerReferences.Count).IsEqualTo(1);
         await Assert.That(deployment.Metadata.OwnerReferences[0].Kind).IsEqualTo("MinecraftServerCluster");
@@ -84,8 +74,7 @@ public class VelocityProxyBuilderTests
     public async Task BuildDeployment_HasOneReplica()
     {
         var cluster = BuildCluster();
-        var addresses = BuildServerAddresses();
-        var deployment = VelocityProxyBuilder.BuildDeployment(cluster, addresses);
+        var deployment = VelocityProxyBuilder.BuildDeployment(cluster);
 
         await Assert.That(deployment.Spec.Replicas).IsEqualTo(1);
     }
@@ -94,8 +83,7 @@ public class VelocityProxyBuilderTests
     public async Task BuildDeployment_Container_HasCorrectImage_Default()
     {
         var cluster = BuildCluster();
-        var addresses = BuildServerAddresses();
-        var deployment = VelocityProxyBuilder.BuildDeployment(cluster, addresses);
+        var deployment = VelocityProxyBuilder.BuildDeployment(cluster);
 
         var container = deployment.Spec.Template.Spec.Containers[0];
         await Assert.That(container.Image).IsEqualTo("itzg/mc-proxy:latest");
@@ -105,8 +93,7 @@ public class VelocityProxyBuilderTests
     public async Task BuildDeployment_Container_UsesCustomImage_WhenSpecified()
     {
         var cluster = BuildCluster(s => s.Proxy.Image = "my-custom-proxy:1.0");
-        var addresses = BuildServerAddresses();
-        var deployment = VelocityProxyBuilder.BuildDeployment(cluster, addresses);
+        var deployment = VelocityProxyBuilder.BuildDeployment(cluster);
 
         var container = deployment.Spec.Template.Spec.Containers[0];
         await Assert.That(container.Image).IsEqualTo("my-custom-proxy:1.0");
@@ -116,8 +103,7 @@ public class VelocityProxyBuilderTests
     public async Task BuildDeployment_Container_HasTypeEnvVar()
     {
         var cluster = BuildCluster();
-        var addresses = BuildServerAddresses();
-        var deployment = VelocityProxyBuilder.BuildDeployment(cluster, addresses);
+        var deployment = VelocityProxyBuilder.BuildDeployment(cluster);
 
         var container = deployment.Spec.Template.Spec.Containers[0];
         var typeEnv = container.Env.FirstOrDefault(e => e.Name == "TYPE");
@@ -129,8 +115,7 @@ public class VelocityProxyBuilderTests
     public async Task BuildDeployment_Container_HasCorrectPort()
     {
         var cluster = BuildCluster(s => s.Proxy.ProxyPort = 25577);
-        var addresses = BuildServerAddresses();
-        var deployment = VelocityProxyBuilder.BuildDeployment(cluster, addresses);
+        var deployment = VelocityProxyBuilder.BuildDeployment(cluster);
 
         var container = deployment.Spec.Template.Spec.Containers[0];
         await Assert.That(container.Ports[0].ContainerPort).IsEqualTo(25577);
@@ -140,8 +125,7 @@ public class VelocityProxyBuilderTests
     public async Task BuildDeployment_Container_HasConfigVolumeMount()
     {
         var cluster = BuildCluster();
-        var addresses = BuildServerAddresses();
-        var deployment = VelocityProxyBuilder.BuildDeployment(cluster, addresses);
+        var deployment = VelocityProxyBuilder.BuildDeployment(cluster);
 
         var container = deployment.Spec.Template.Spec.Containers[0];
         var configMount = container.VolumeMounts.FirstOrDefault(m => m.MountPath == "/server/velocity.toml");
@@ -153,8 +137,7 @@ public class VelocityProxyBuilderTests
     public async Task BuildDeployment_Container_HasForwardingSecretVolumeMount()
     {
         var cluster = BuildCluster();
-        var addresses = BuildServerAddresses();
-        var deployment = VelocityProxyBuilder.BuildDeployment(cluster, addresses);
+        var deployment = VelocityProxyBuilder.BuildDeployment(cluster);
 
         var container = deployment.Spec.Template.Spec.Containers[0];
         var secretMount = container.VolumeMounts.FirstOrDefault(m => m.MountPath == "/server/forwarding.secret");
@@ -166,8 +149,7 @@ public class VelocityProxyBuilderTests
     public async Task BuildDeployment_Container_HasReadinessAndLivenessProbes()
     {
         var cluster = BuildCluster();
-        var addresses = BuildServerAddresses();
-        var deployment = VelocityProxyBuilder.BuildDeployment(cluster, addresses);
+        var deployment = VelocityProxyBuilder.BuildDeployment(cluster);
 
         var container = deployment.Spec.Template.Spec.Containers[0];
         await Assert.That(container.ReadinessProbe).IsNotNull();
@@ -182,8 +164,7 @@ public class VelocityProxyBuilderTests
             s.Proxy.Resources.CpuRequest = "500m";
             s.Proxy.Resources.MemoryRequest = "512Mi";
         });
-        var addresses = BuildServerAddresses();
-        var deployment = VelocityProxyBuilder.BuildDeployment(cluster, addresses);
+        var deployment = VelocityProxyBuilder.BuildDeployment(cluster);
 
         var container = deployment.Spec.Template.Spec.Containers[0];
         await Assert.That(container.Resources.Requests.ContainsKey("cpu")).IsTrue();
@@ -194,8 +175,7 @@ public class VelocityProxyBuilderTests
     public async Task BuildDeployment_HasProxyLabels()
     {
         var cluster = BuildCluster();
-        var addresses = BuildServerAddresses();
-        var deployment = VelocityProxyBuilder.BuildDeployment(cluster, addresses);
+        var deployment = VelocityProxyBuilder.BuildDeployment(cluster);
 
         await Assert.That(deployment.Metadata.Labels["app.kubernetes.io/name"]).IsEqualTo("velocity-proxy");
         await Assert.That(deployment.Metadata.Labels["app.kubernetes.io/component"]).IsEqualTo("proxy");

@@ -1,5 +1,8 @@
+using System.Net;
 using k8s;
+using k8s.Autorest;
 using k8s.Models;
+using KubeOps.Abstractions.Builder;
 using KubeOps.Operator;
 using McOperator.Controllers;
 using McOperator.Entities;
@@ -86,7 +89,7 @@ public class K3sFixture : IAsyncInitializer, IAsyncDisposable
         // Clean up the KUBECONFIG environment variable set during operator startup
         Environment.SetEnvironmentVariable("KUBECONFIG", null);
 
-        Client?.Dispose();
+        Client.Dispose();
         await _container.DisposeAsync();
 
         if (_kubeconfigPath is not null && File.Exists(_kubeconfigPath))
@@ -108,7 +111,7 @@ public class K3sFixture : IAsyncInitializer, IAsyncDisposable
             {
                 await Client.ApiextensionsV1.CreateCustomResourceDefinitionAsync(crd);
             }
-            catch (k8s.Autorest.HttpOperationException ex) when (ex.Response.StatusCode == System.Net.HttpStatusCode.Conflict)
+            catch (HttpOperationException ex) when (ex.Response.StatusCode == HttpStatusCode.Conflict)
             {
                 // CRD already exists, update it
                 await Client.ApiextensionsV1.ReplaceCustomResourceDefinitionAsync(crd, crd.Metadata.Name);
@@ -118,11 +121,7 @@ public class K3sFixture : IAsyncInitializer, IAsyncDisposable
 
     private async Task WaitForCrdEstablished()
     {
-        var crdNames = new[]
-        {
-            "minecraftservers.mc-operator.dhv.sh",
-            "minecraftserverclusters.mc-operator.dhv.sh",
-        };
+        var crdNames = new[] { "minecraftservers.mc-operator.dhv.sh", "minecraftserverclusters.mc-operator.dhv.sh", };
 
         foreach (var crdName in crdNames)
         {
@@ -142,10 +141,7 @@ public class K3sFixture : IAsyncInitializer, IAsyncDisposable
     {
         // Build the operator host with the same configuration as Program.cs
         // but configured to use the k3s kubeconfig
-        var builder = WebApplication.CreateBuilder(new WebApplicationOptions
-        {
-            EnvironmentName = "IntegrationTest",
-        });
+        var builder = WebApplication.CreateBuilder(new WebApplicationOptions { EnvironmentName = "IntegrationTest", });
 
         // Point the KubeOps framework's internal Kubernetes client at our k3s cluster.
         // KubeOps reads KUBECONFIG from the environment when initializing its client.
@@ -162,7 +158,7 @@ public class K3sFixture : IAsyncInitializer, IAsyncDisposable
             {
                 settings.Name = "mc-operator";
                 // Disable leader election for testing — single instance
-                settings.LeaderElectionType = KubeOps.Abstractions.Builder.LeaderElectionType.Single;
+                settings.LeaderElectionType = LeaderElectionType.Single;
             })
             .AddController<MinecraftServerController, MinecraftServer>()
             .AddFinalizer<MinecraftServerFinalizer, MinecraftServer>(

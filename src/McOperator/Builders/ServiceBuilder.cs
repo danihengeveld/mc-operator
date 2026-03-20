@@ -44,22 +44,14 @@ public static class ServiceBuilder
                 NamespaceProperty = ns,
                 Labels = labels,
                 Annotations = annotations.Count > 0 ? annotations : null,
-                OwnerReferences = new List<V1OwnerReference>
-                {
-                    server.MakeOwnerReference(),
-                },
+                OwnerReferences = new List<V1OwnerReference> { server.MakeOwnerReference(), },
             },
-            Spec = new V1ServiceSpec
-            {
-                Type = spec.Service.Type.ToString(),
-                Selector = selectorLabels,
-                Ports = ports,
-            },
+            Spec = new V1ServiceSpec { Type = spec.Service.Type.ToString(), Selector = selectorLabels, Ports = ports, },
         };
     }
 
-    private static IDictionary<string, string> BuildLabels(MinecraftServer server) =>
-        new Dictionary<string, string>
+    private static Dictionary<string, string> BuildLabels(MinecraftServer server) =>
+        new()
         {
             [OperatorConstants.AppNameLabel] = OperatorConstants.ServerAppName,
             [OperatorConstants.AppInstanceLabel] = server.Name(),
@@ -67,8 +59,8 @@ public static class ServiceBuilder
             [OperatorConstants.ServerNameLabel] = server.Name(),
         };
 
-    private static IDictionary<string, string> BuildSelectorLabels(MinecraftServer server) =>
-        new Dictionary<string, string>
+    private static Dictionary<string, string> BuildSelectorLabels(MinecraftServer server) =>
+        new()
         {
             [OperatorConstants.AppInstanceLabel] = server.Name(),
             [OperatorConstants.ServerNameLabel] = server.Name(),

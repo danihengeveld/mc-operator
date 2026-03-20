@@ -1,3 +1,4 @@
+using KubeOps.Abstractions.Builder;
 using KubeOps.Operator;
 using McOperator.Controllers;
 using McOperator.Entities;
@@ -13,7 +14,7 @@ builder.Services
     .AddKubernetesOperator(settings =>
     {
         settings.Name = OperatorConstants.OperatorName;
-        settings.LeaderElectionType = KubeOps.Abstractions.Builder.LeaderElectionType.Single;
+        settings.LeaderElectionType = LeaderElectionType.Single;
     })
     .AddController<MinecraftServerController, MinecraftServer>()
     .AddFinalizer<MinecraftServerFinalizer, MinecraftServer>(OperatorConstants.ServerFinalizer)

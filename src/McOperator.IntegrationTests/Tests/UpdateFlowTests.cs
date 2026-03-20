@@ -2,7 +2,6 @@ using System.Text.Json;
 using k8s;
 using McOperator.Builders;
 using McOperator.IntegrationTests.Infrastructure;
-using TUnit.Assertions.Extensions;
 
 namespace McOperator.IntegrationTests.Tests;
 
@@ -19,15 +18,17 @@ public class UpdateFlowTests
     [Timeout(120_000)]
     public async Task UpdateServerType_UpdatesStatefulSetEnvVars(CancellationToken cancellationToken)
     {
-        var ns = await KubernetesHelper.CreateTestNamespaceAsync(K3s.Client);
+        var ns = await KubernetesHelper.CreateTestNamespaceAsync(K3s.Client, cancellationToken: cancellationToken);
         try
         {
-            var serverName = "update-type";
-            await CreateMinecraftServer(K3s.Client, ns, serverName, serverType: "Vanilla", version: "1.20.4");
+            const string serverName = "update-type";
+            await CreateMinecraftServer(K3s.Client, ns, serverName, serverType: "Vanilla", version: "1.20.4",
+                cancellationToken: cancellationToken);
 
             // Wait for initial StatefulSet creation
             var sts = await KubernetesHelper.WaitForResourceAsync(
-                () => K3s.Client.AppsV1.ReadNamespacedStatefulSetAsync(serverName, ns),
+                () => K3s.Client.AppsV1.ReadNamespacedStatefulSetAsync(serverName, ns,
+                    cancellationToken: cancellationToken),
                 timeout: TimeSpan.FromSeconds(60),
                 description: $"StatefulSet '{serverName}' to be created");
 
@@ -44,18 +45,17 @@ public class UpdateFlowTests
                 {
                     ["spec"] = new Dictionary<string, object>
                     {
-                        ["server"] = new Dictionary<string, object>
-                        {
-                            ["type"] = "Paper",
-                        },
+                        ["server"] = new Dictionary<string, object> { ["type"] = "Paper", },
                     },
-                });
+                }, cancellationToken);
 
             // Wait for the StatefulSet to be updated with the new server type
             await KubernetesHelper.WaitForConditionAsync(
                 async () =>
                 {
-                    var updated = await K3s.Client.AppsV1.ReadNamespacedStatefulSetAsync(serverName, ns);
+                    var updated =
+                        await K3s.Client.AppsV1.ReadNamespacedStatefulSetAsync(serverName, ns,
+                            cancellationToken: cancellationToken);
                     var env = updated.Spec.Template.Spec.Containers[0].Env
                         .FirstOrDefault(e => e.Name == "TYPE");
                     return env?.Value == "PAPER";
@@ -64,7 +64,9 @@ public class UpdateFlowTests
                 description: "StatefulSet TYPE env var to be updated to PAPER");
 
             // Verify the update happened
-            var updatedSts = await K3s.Client.AppsV1.ReadNamespacedStatefulSetAsync(serverName, ns);
+            var updatedSts =
+                await K3s.Client.AppsV1.ReadNamespacedStatefulSetAsync(serverName, ns,
+                    cancellationToken: cancellationToken);
             var updatedTypeEnv = updatedSts.Spec.Template.Spec.Containers[0].Env
                 .FirstOrDefault(e => e.Name == "TYPE");
             await Assert.That(updatedTypeEnv!.Value).IsEqualTo("PAPER");
@@ -79,17 +81,18 @@ public class UpdateFlowTests
     [Timeout(120_000)]
     public async Task UpdateMaxPlayers_UpdatesConfigMap(CancellationToken cancellationToken)
     {
-        var ns = await KubernetesHelper.CreateTestNamespaceAsync(K3s.Client);
+        var ns = await KubernetesHelper.CreateTestNamespaceAsync(K3s.Client, cancellationToken: cancellationToken);
         try
         {
-            var serverName = "update-players";
+            const string serverName = "update-players";
             var configMapName = ConfigMapBuilder.ConfigMapName(serverName);
-            await CreateMinecraftServer(K3s.Client, ns, serverName);
+            await CreateMinecraftServer(K3s.Client, ns, serverName, cancellationToken: cancellationToken);
 
             // Wait for initial ConfigMap creation
             // The operator names ConfigMaps as "{serverName}-config"
             var cm = await KubernetesHelper.WaitForResourceAsync(
-                () => K3s.Client.CoreV1.ReadNamespacedConfigMapAsync(configMapName, ns),
+                () => K3s.Client.CoreV1.ReadNamespacedConfigMapAsync(configMapName, ns,
+                    cancellationToken: cancellationToken),
                 timeout: TimeSpan.FromSeconds(60),
                 description: $"ConfigMap '{configMapName}' to be created");
 
@@ -102,29 +105,29 @@ public class UpdateFlowTests
                 {
                     ["spec"] = new Dictionary<string, object>
                     {
-                        ["properties"] = new Dictionary<string, object>
-                        {
-                            ["maxPlayers"] = 50,
-                        },
+                        ["properties"] = new Dictionary<string, object> { ["maxPlayers"] = 50, },
                     },
-                });
+                }, cancellationToken);
 
             // Wait for the ConfigMap to be updated
             await KubernetesHelper.WaitForConditionAsync(
                 async () =>
                 {
-                    var updated = await K3s.Client.CoreV1.ReadNamespacedConfigMapAsync(configMapName, ns);
+                    var updated = await K3s.Client.CoreV1.ReadNamespacedConfigMapAsync(configMapName, ns,
+                        cancellationToken: cancellationToken);
                     return updated.Data["server.properties"].Contains("max-players=50");
                 },
                 timeout: TimeSpan.FromSeconds(60),
                 description: "ConfigMap to reflect maxPlayers=50");
 
-            var updatedCm = await K3s.Client.CoreV1.ReadNamespacedConfigMapAsync(configMapName, ns);
+            var updatedCm =
+                await K3s.Client.CoreV1.ReadNamespacedConfigMapAsync(configMapName, ns,
+                    cancellationToken: cancellationToken);
             await Assert.That(updatedCm.Data["server.properties"]).Contains("max-players=50");
         }
         finally
         {
-            await KubernetesHelper.DeleteNamespaceAsync(K3s.Client, ns);
+            await KubernetesHelper.DeleteNamespaceAsync(K3s.Client, ns, cancellationToken);
         }
     }
 
@@ -132,15 +135,16 @@ public class UpdateFlowTests
     [Timeout(120_000)]
     public async Task SetReplicasToZero_PausesServer(CancellationToken cancellationToken)
     {
-        var ns = await KubernetesHelper.CreateTestNamespaceAsync(K3s.Client);
+        var ns = await KubernetesHelper.CreateTestNamespaceAsync(K3s.Client, cancellationToken: cancellationToken);
         try
         {
-            var serverName = "update-pause";
-            await CreateMinecraftServer(K3s.Client, ns, serverName);
+            const string serverName = "update-pause";
+            await CreateMinecraftServer(K3s.Client, ns, serverName, cancellationToken: cancellationToken);
 
             // Wait for initial StatefulSet creation with replicas=1
             var sts = await KubernetesHelper.WaitForResourceAsync(
-                () => K3s.Client.AppsV1.ReadNamespacedStatefulSetAsync(serverName, ns),
+                () => K3s.Client.AppsV1.ReadNamespacedStatefulSetAsync(serverName, ns,
+                    cancellationToken: cancellationToken),
                 timeout: TimeSpan.FromSeconds(60),
                 description: $"StatefulSet '{serverName}' with replicas=1");
 
@@ -149,19 +153,16 @@ public class UpdateFlowTests
             // Pause the server by setting replicas to 0
             await KubernetesHelper.PatchMinecraftServerAsync(
                 K3s.Client, ns, serverName,
-                new Dictionary<string, object>
-                {
-                    ["spec"] = new Dictionary<string, object>
-                    {
-                        ["replicas"] = 0,
-                    },
-                });
+                new Dictionary<string, object> { ["spec"] = new Dictionary<string, object> { ["replicas"] = 0, }, },
+                cancellationToken);
 
             // Wait for the StatefulSet to scale to 0
             await KubernetesHelper.WaitForConditionAsync(
                 async () =>
                 {
-                    var updated = await K3s.Client.AppsV1.ReadNamespacedStatefulSetAsync(serverName, ns);
+                    var updated =
+                        await K3s.Client.AppsV1.ReadNamespacedStatefulSetAsync(serverName, ns,
+                            cancellationToken: cancellationToken);
                     return updated.Spec.Replicas == 0;
                 },
                 timeout: TimeSpan.FromSeconds(60),
@@ -171,7 +172,8 @@ public class UpdateFlowTests
             await KubernetesHelper.WaitForConditionAsync(
                 async () =>
                 {
-                    var server = await KubernetesHelper.GetMinecraftServerAsync(K3s.Client, ns, serverName);
+                    var server =
+                        await KubernetesHelper.GetMinecraftServerAsync(K3s.Client, ns, serverName, cancellationToken);
                     if (server is null) return false;
                     var json = ((JsonElement)server).GetRawText();
                     return json.Contains("\"Paused\"");
@@ -181,7 +183,7 @@ public class UpdateFlowTests
         }
         finally
         {
-            await KubernetesHelper.DeleteNamespaceAsync(K3s.Client, ns);
+            await KubernetesHelper.DeleteNamespaceAsync(K3s.Client, ns, cancellationToken);
         }
     }
 
@@ -190,26 +192,19 @@ public class UpdateFlowTests
         string namespaceName,
         string name,
         string serverType = "Vanilla",
-        string version = "1.20.4")
+        string version = "1.20.4",
+        CancellationToken cancellationToken = default)
     {
         var server = new Dictionary<string, object>
         {
             ["apiVersion"] = "mc-operator.dhv.sh/v1alpha1",
             ["kind"] = "MinecraftServer",
-            ["metadata"] = new Dictionary<string, object>
-            {
-                ["name"] = name,
-                ["namespace"] = namespaceName,
-            },
+            ["metadata"] = new Dictionary<string, object> { ["name"] = name, ["namespace"] = namespaceName, },
             ["spec"] = new Dictionary<string, object>
             {
                 ["acceptEula"] = true,
                 ["replicas"] = 1,
-                ["server"] = new Dictionary<string, object>
-                {
-                    ["type"] = serverType,
-                    ["version"] = version,
-                },
+                ["server"] = new Dictionary<string, object> { ["type"] = serverType, ["version"] = version, },
                 ["properties"] = new Dictionary<string, object>
                 {
                     ["difficulty"] = "Normal",
@@ -221,29 +216,15 @@ public class UpdateFlowTests
                     ["levelName"] = "world",
                     ["serverPort"] = 25565,
                 },
-                ["jvm"] = new Dictionary<string, object>
-                {
-                    ["initialMemory"] = "512m",
-                    ["maxMemory"] = "1G",
-                },
-                ["resources"] = new Dictionary<string, object>
-                {
-                    ["cpuRequest"] = "250m",
-                    ["memoryRequest"] = "512Mi",
-                },
-                ["storage"] = new Dictionary<string, object>
-                {
-                    ["enabled"] = true,
-                    ["size"] = "1Gi",
-                    ["mountPath"] = "/data",
-                },
-                ["service"] = new Dictionary<string, object>
-                {
-                    ["type"] = "ClusterIP",
-                },
+                ["jvm"] = new Dictionary<string, object> { ["initialMemory"] = "512m", ["maxMemory"] = "1G", },
+                ["resources"] =
+                    new Dictionary<string, object> { ["cpuRequest"] = "250m", ["memoryRequest"] = "512Mi", },
+                ["storage"] =
+                    new Dictionary<string, object> { ["enabled"] = true, ["size"] = "1Gi", ["mountPath"] = "/data", },
+                ["service"] = new Dictionary<string, object> { ["type"] = "ClusterIP", },
             },
         };
 
-        await KubernetesHelper.CreateMinecraftServerAsync(client, namespaceName, server);
+        await KubernetesHelper.CreateMinecraftServerAsync(client, namespaceName, server, cancellationToken);
     }
 }

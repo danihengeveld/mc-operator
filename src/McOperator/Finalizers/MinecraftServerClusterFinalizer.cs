@@ -3,7 +3,6 @@ using KubeOps.Abstractions.Reconciliation;
 using KubeOps.Abstractions.Reconciliation.Finalizer;
 using KubeOps.KubernetesClient;
 using McOperator.Entities;
-using McOperator.Extensions;
 
 namespace McOperator.Finalizers;
 

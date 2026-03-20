@@ -66,7 +66,7 @@ public class MinecraftServerClusterController : IEntityController<MinecraftServe
             var existingServers = await ReconcileBackendServers(cluster, desiredCount, cancellationToken);
 
             // 3. Build server address list from existing servers
-            var serverAddresses = BuildServerAddresses(cluster, existingServers);
+            var serverAddresses = BuildServerAddresses(existingServers);
 
             // 4. Reconcile Velocity proxy ConfigMap (must happen before Deployment)
             await ReconcileProxyConfigMap(cluster, serverAddresses, cancellationToken);
@@ -75,7 +75,7 @@ public class MinecraftServerClusterController : IEntityController<MinecraftServe
             await ReconcileProxyService(cluster, cancellationToken);
 
             // 6. Reconcile Velocity proxy Deployment
-            var deployment = await ReconcileProxyDeployment(cluster, serverAddresses, cancellationToken);
+            var deployment = await ReconcileProxyDeployment(cluster, cancellationToken);
 
             // 7. Update cluster status
             await UpdateStatus(cluster, existingServers, deployment, cancellationToken);
@@ -212,10 +212,7 @@ public class MinecraftServerClusterController : IEntityController<MinecraftServe
                 Name = serverName,
                 NamespaceProperty = ns,
                 Labels = BuildBackendServerLabels(cluster, serverName),
-                OwnerReferences = new List<V1OwnerReference>
-                {
-                    cluster.MakeOwnerReference(),
-                },
+                OwnerReferences = new List<V1OwnerReference> { cluster.MakeOwnerReference(), },
             },
             Spec = spec,
         };
@@ -251,15 +248,11 @@ public class MinecraftServerClusterController : IEntityController<MinecraftServe
         await _client.UpdateAsync(server, cancellationToken);
     }
 
-    private static IList<ServerAddress> BuildServerAddresses(
-        MinecraftServerCluster cluster,
-        IList<MinecraftServer> servers)
+    private static List<ServerAddress> BuildServerAddresses(IList<MinecraftServer> servers)
     {
         return servers.Select((s, i) => new ServerAddress
         {
-            Name = $"server-{i}",
-            Address = s.Name(),
-            Port = s.Spec.Properties.ServerPort,
+            Name = $"server-{i}", Address = s.Name(), Port = s.Spec.Properties.ServerPort,
         }).ToList();
     }
 
@@ -319,10 +312,9 @@ public class MinecraftServerClusterController : IEntityController<MinecraftServe
 
     private async Task<V1Deployment> ReconcileProxyDeployment(
         MinecraftServerCluster cluster,
-        IList<ServerAddress> serverAddresses,
         CancellationToken cancellationToken)
     {
-        var desired = VelocityProxyBuilder.BuildDeployment(cluster, serverAddresses);
+        var desired = VelocityProxyBuilder.BuildDeployment(cluster);
         var existing = await _client.GetAsync<V1Deployment>(desired.Name(), cluster.Namespace(), cancellationToken);
 
         if (existing is null)
@@ -374,11 +366,8 @@ public class MinecraftServerClusterController : IEntityController<MinecraftServe
         var proxyEndpoint = BuildProxyEndpointStatus(cluster, proxyService);
 
         // Build server statuses
-        var serverStatuses = servers.Select(s => new ClusterServerStatus
-        {
-            Name = s.Name(),
-            Phase = s.Status.Phase,
-        }).ToList();
+        var serverStatuses = servers.Select(s => new ClusterServerStatus { Name = s.Name(), Phase = s.Status.Phase, })
+            .ToList();
 
         cluster.Status.Phase = phase;
         cluster.Status.Message = message;
@@ -407,7 +396,7 @@ public class MinecraftServerClusterController : IEntityController<MinecraftServe
         }
 
         var port = cluster.Spec.Proxy.ProxyPort;
-        string? host = null;
+        string? host;
 
         if (cluster.Spec.Proxy.Service.Type == ServiceType.LoadBalancer)
         {
@@ -451,14 +440,14 @@ public class MinecraftServerClusterController : IEntityController<MinecraftServe
         }
     }
 
-    private static IList<V1Condition> BuildConditions(
+    private static List<V1Condition> BuildConditions(
         MinecraftServerClusterPhase phase,
         string message,
         long observedGeneration)
     {
-        var conditions = new List<V1Condition>
-        {
-            new()
+        return
+        [
+            new V1Condition
             {
                 Type = MinecraftServerClusterConditions.Available,
                 Status = phase == MinecraftServerClusterPhase.Running ? "True" : "False",
@@ -467,7 +456,7 @@ public class MinecraftServerClusterController : IEntityController<MinecraftServe
                 Reason = phase == MinecraftServerClusterPhase.Running ? "ClusterRunning" : "ClusterNotReady",
                 Message = message,
             },
-            new()
+            new V1Condition
             {
                 Type = MinecraftServerClusterConditions.Progressing,
                 Status = phase == MinecraftServerClusterPhase.Provisioning ? "True" : "False",
@@ -476,7 +465,7 @@ public class MinecraftServerClusterController : IEntityController<MinecraftServe
                 Reason = phase == MinecraftServerClusterPhase.Provisioning ? "Reconciling" : "Idle",
                 Message = message,
             },
-            new()
+            new V1Condition
             {
                 Type = MinecraftServerClusterConditions.Degraded,
                 Status = phase is MinecraftServerClusterPhase.Failed or MinecraftServerClusterPhase.Degraded
@@ -484,24 +473,23 @@ public class MinecraftServerClusterController : IEntityController<MinecraftServe
                     : "False",
                 ObservedGeneration = observedGeneration,
                 LastTransitionTime = DateTime.UtcNow,
-                Reason = phase == MinecraftServerClusterPhase.Failed
-                    ? "ReconcileError"
-                    : phase == MinecraftServerClusterPhase.Degraded
-                        ? "PartialAvailability"
-                        : "OK",
+                Reason = phase switch
+                {
+                    MinecraftServerClusterPhase.Failed => "ReconcileError",
+                    MinecraftServerClusterPhase.Degraded => "PartialAvailability",
+                    _ => "OK"
+                },
                 Message = phase is MinecraftServerClusterPhase.Failed or MinecraftServerClusterPhase.Degraded
                     ? message
                     : "No issues",
-            },
-        };
-
-        return conditions;
+            }
+        ];
     }
 
-    private static IDictionary<string, string> BuildBackendServerLabels(
+    private static Dictionary<string, string> BuildBackendServerLabels(
         MinecraftServerCluster cluster,
         string serverName) =>
-        new Dictionary<string, string>
+        new()
         {
             [OperatorConstants.AppNameLabel] = OperatorConstants.ServerAppName,
             [OperatorConstants.AppInstanceLabel] = serverName,

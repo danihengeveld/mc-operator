@@ -1,8 +1,6 @@
 using k8s.Models;
 using KubeOps.Abstractions.Entities;
 using KubeOps.Abstractions.Entities.Attributes;
-using System.ComponentModel.DataAnnotations;
-using System.Text.Json.Serialization;
 
 namespace McOperator.Entities;
 

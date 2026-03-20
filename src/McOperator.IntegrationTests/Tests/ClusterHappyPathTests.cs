@@ -1,7 +1,6 @@
 using System.Text.Json;
 using k8s;
 using McOperator.IntegrationTests.Infrastructure;
-using TUnit.Assertions.Extensions;
 
 namespace McOperator.IntegrationTests.Tests;
 
@@ -32,7 +31,7 @@ public class ClusterHappyPathTests
                         group: "mc-operator.dhv.sh",
                         version: "v1alpha1",
                         namespaceParameter: ns,
-                        plural: "minecraftservers");
+                        plural: "minecraftservers", cancellationToken: cancellationToken);
 
                     var jsonElement = (JsonElement)servers;
                     if (!jsonElement.TryGetProperty("items", out var items)) return false;
@@ -46,7 +45,7 @@ public class ClusterHappyPathTests
                 group: "mc-operator.dhv.sh",
                 version: "v1alpha1",
                 namespaceParameter: ns,
-                plural: "minecraftservers");
+                plural: "minecraftservers", cancellationToken: cancellationToken);
 
             var serverListJson = (JsonElement)serverList;
             var serverItems = serverListJson.GetProperty("items");
@@ -72,7 +71,7 @@ public class ClusterHappyPathTests
 
             // Wait for the proxy Deployment to be created by the operator
             var deployment = await KubernetesHelper.WaitForResourceAsync(
-                () => K3s.Client.AppsV1.ReadNamespacedDeploymentAsync(proxyDeploymentName, ns),
+                () => K3s.Client.AppsV1.ReadNamespacedDeploymentAsync(proxyDeploymentName, ns, cancellationToken: cancellationToken),
                 timeout: TimeSpan.FromSeconds(60),
                 description: $"Deployment '{proxyDeploymentName}' to be created");
 
@@ -99,7 +98,7 @@ public class ClusterHappyPathTests
 
             // Wait for the proxy Service to be created by the operator
             var svc = await KubernetesHelper.WaitForResourceAsync(
-                () => K3s.Client.CoreV1.ReadNamespacedServiceAsync(proxyServiceName, ns),
+                () => K3s.Client.CoreV1.ReadNamespacedServiceAsync(proxyServiceName, ns, cancellationToken: cancellationToken),
                 timeout: TimeSpan.FromSeconds(60),
                 description: $"Service '{proxyServiceName}' to be created");
 
@@ -126,7 +125,7 @@ public class ClusterHappyPathTests
 
             // Wait for the proxy ConfigMap to be created by the operator
             var cm = await KubernetesHelper.WaitForResourceAsync(
-                () => K3s.Client.CoreV1.ReadNamespacedConfigMapAsync(proxyConfigMapName, ns),
+                () => K3s.Client.CoreV1.ReadNamespacedConfigMapAsync(proxyConfigMapName, ns, cancellationToken: cancellationToken),
                 timeout: TimeSpan.FromSeconds(60),
                 description: $"ConfigMap '{proxyConfigMapName}' to be created");
 
@@ -195,21 +194,13 @@ public class ClusterHappyPathTests
         {
             ["apiVersion"] = "mc-operator.dhv.sh/v1alpha1",
             ["kind"] = "MinecraftServerCluster",
-            ["metadata"] = new Dictionary<string, object>
-            {
-                ["name"] = name,
-                ["namespace"] = namespaceName,
-            },
+            ["metadata"] = new Dictionary<string, object> { ["name"] = name, ["namespace"] = namespaceName, },
             ["spec"] = new Dictionary<string, object>
             {
                 ["template"] = new Dictionary<string, object>
                 {
                     ["acceptEula"] = true,
-                    ["server"] = new Dictionary<string, object>
-                    {
-                        ["type"] = "Paper",
-                        ["version"] = "1.20.4",
-                    },
+                    ["server"] = new Dictionary<string, object> { ["type"] = "Paper", ["version"] = "1.20.4", },
                     ["properties"] = new Dictionary<string, object>
                     {
                         ["maxPlayers"] = 10,
@@ -219,38 +210,23 @@ public class ClusterHappyPathTests
                         ["levelName"] = "world",
                         ["serverPort"] = 25565,
                     },
-                    ["jvm"] = new Dictionary<string, object>
-                    {
-                        ["initialMemory"] = "512m",
-                        ["maxMemory"] = "1G",
-                    },
-                    ["resources"] = new Dictionary<string, object>
-                    {
-                        ["cpuRequest"] = "250m",
-                        ["memoryRequest"] = "512Mi",
-                    },
-                    ["storage"] = new Dictionary<string, object>
-                    {
-                        ["enabled"] = true,
-                        ["size"] = "1Gi",
-                        ["mountPath"] = "/data",
-                    },
+                    ["jvm"] = new Dictionary<string, object> { ["initialMemory"] = "512m", ["maxMemory"] = "1G", },
+                    ["resources"] =
+                        new Dictionary<string, object> { ["cpuRequest"] = "250m", ["memoryRequest"] = "512Mi", },
+                    ["storage"] =
+                        new Dictionary<string, object>
+                        {
+                            ["enabled"] = true, ["size"] = "1Gi", ["mountPath"] = "/data",
+                        },
                 },
-                ["scaling"] = new Dictionary<string, object>
-                {
-                    ["mode"] = "Static",
-                    ["replicas"] = replicas,
-                },
+                ["scaling"] = new Dictionary<string, object> { ["mode"] = "Static", ["replicas"] = replicas, },
                 ["proxy"] = new Dictionary<string, object>
                 {
                     ["proxyPort"] = 25577,
                     ["maxPlayers"] = 20,
                     ["onlineMode"] = false,
                     ["playerForwardingMode"] = "Modern",
-                    ["service"] = new Dictionary<string, object>
-                    {
-                        ["type"] = "ClusterIP",
-                    },
+                    ["service"] = new Dictionary<string, object> { ["type"] = "ClusterIP", },
                 },
             },
         };

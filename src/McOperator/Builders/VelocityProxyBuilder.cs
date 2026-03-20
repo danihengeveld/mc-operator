@@ -27,16 +27,13 @@ public static class VelocityProxyBuilder
     /// <summary>
     /// Builds the Velocity proxy Deployment.
     /// </summary>
-    public static V1Deployment BuildDeployment(
-        MinecraftServerCluster cluster,
-        IList<ServerAddress> serverAddresses)
+    public static V1Deployment BuildDeployment(MinecraftServerCluster cluster)
     {
         var name = cluster.ProxyName();
         var ns = cluster.Namespace();
         var labels = BuildProxyLabels(cluster);
-        var spec = cluster.Spec.Proxy;
 
-        var container = BuildContainer(cluster, serverAddresses);
+        var container = BuildContainer(cluster);
 
         return new V1Deployment
         {
@@ -47,24 +44,15 @@ public static class VelocityProxyBuilder
                 Name = name,
                 NamespaceProperty = ns,
                 Labels = labels,
-                OwnerReferences = new List<V1OwnerReference>
-                {
-                    cluster.MakeOwnerReference(),
-                },
+                OwnerReferences = new List<V1OwnerReference> { cluster.MakeOwnerReference(), },
             },
             Spec = new V1DeploymentSpec
             {
                 Replicas = 1,
-                Selector = new V1LabelSelector
-                {
-                    MatchLabels = labels,
-                },
+                Selector = new V1LabelSelector { MatchLabels = labels, },
                 Template = new V1PodTemplateSpec
                 {
-                    Metadata = new V1ObjectMeta
-                    {
-                        Labels = labels,
-                    },
+                    Metadata = new V1ObjectMeta { Labels = labels, },
                     Spec = new V1PodSpec
                     {
                         Containers = new List<V1Container> { container },
@@ -111,17 +99,9 @@ public static class VelocityProxyBuilder
                 NamespaceProperty = ns,
                 Labels = labels,
                 Annotations = annotations.Count > 0 ? annotations : null,
-                OwnerReferences = new List<V1OwnerReference>
-                {
-                    cluster.MakeOwnerReference(),
-                },
+                OwnerReferences = new List<V1OwnerReference> { cluster.MakeOwnerReference(), },
             },
-            Spec = new V1ServiceSpec
-            {
-                Type = spec.Service.Type.ToString(),
-                Selector = selectorLabels,
-                Ports = ports,
-            },
+            Spec = new V1ServiceSpec { Type = spec.Service.Type.ToString(), Selector = selectorLabels, Ports = ports, },
         };
     }
 
@@ -136,7 +116,6 @@ public static class VelocityProxyBuilder
         var name = cluster.ProxyConfigMapName();
         var ns = cluster.Namespace();
         var labels = BuildProxyLabels(cluster);
-        var spec = cluster.Spec.Proxy;
 
         var velocityToml = BuildVelocityToml(cluster, serverAddresses);
 
@@ -149,15 +128,11 @@ public static class VelocityProxyBuilder
                 Name = name,
                 NamespaceProperty = ns,
                 Labels = labels,
-                OwnerReferences = new List<V1OwnerReference>
-                {
-                    cluster.MakeOwnerReference(),
-                },
+                OwnerReferences = new List<V1OwnerReference> { cluster.MakeOwnerReference(), },
             },
             Data = new Dictionary<string, string>
             {
-                ["velocity.toml"] = velocityToml,
-                ["forwarding.secret"] = forwardingSecret,
+                ["velocity.toml"] = velocityToml, ["forwarding.secret"] = forwardingSecret,
             },
         };
     }
@@ -241,17 +216,12 @@ public static class VelocityProxyBuilder
     }
 
     private static V1Container BuildContainer(
-        MinecraftServerCluster cluster,
-        IList<ServerAddress> serverAddresses)
+        MinecraftServerCluster cluster)
     {
         var spec = cluster.Spec.Proxy;
         var image = ResolveImage(spec);
 
-        var env = new List<V1EnvVar>
-        {
-            Env("TYPE", "VELOCITY"),
-            Env("VELOCITY_VERSION", spec.Version),
-        };
+        var env = new List<V1EnvVar> { Env("TYPE", "VELOCITY"), Env("VELOCITY_VERSION", spec.Version), };
 
         var ports = new List<V1ContainerPort>
         {
@@ -308,21 +278,18 @@ public static class VelocityProxyBuilder
     {
         var configMapName = cluster.ProxyConfigMapName();
 
-        return new List<V1Volume>
-        {
-            new()
+        return
+        [
+            new V1Volume
             {
                 Name = ConfigVolumeName,
                 ConfigMap = new V1ConfigMapVolumeSource
                 {
                     Name = configMapName,
-                    Items = new List<V1KeyToPath>
-                    {
-                        new() { Key = "velocity.toml", Path = "velocity.toml" },
-                    },
+                    Items = new List<V1KeyToPath> { new() { Key = "velocity.toml", Path = "velocity.toml" }, },
                 },
             },
-            new()
+            new V1Volume
             {
                 Name = SecretVolumeName,
                 ConfigMap = new V1ConfigMapVolumeSource
@@ -333,8 +300,8 @@ public static class VelocityProxyBuilder
                         new() { Key = "forwarding.secret", Path = "forwarding.secret" },
                     },
                 },
-            },
-        };
+            }
+        ];
     }
 
     private static V1ResourceRequirements BuildResourceRequirements(ResourcesSpec resources)
@@ -366,8 +333,7 @@ public static class VelocityProxyBuilder
 
         return new V1ResourceRequirements
         {
-            Requests = req.Count > 0 ? req : null,
-            Limits = limits.Count > 0 ? limits : null,
+            Requests = req.Count > 0 ? req : null, Limits = limits.Count > 0 ? limits : null,
         };
     }
 

@@ -1,6 +1,5 @@
 using McOperator.Entities;
 using McOperator.Extensions;
-using TUnit.Assertions.Extensions;
 
 namespace McOperator.Tests;
 

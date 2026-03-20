@@ -78,7 +78,7 @@ public class MinecraftServerClusterValidationWebhook : ValidationWebhook<Minecra
 
         // Storage validation
         var storage = template.Storage;
-        if (storage.Enabled && !MinecraftServerValidationWebhook.IsValidK8sQuantity(storage.Size))
+        if (storage.Enabled && !MinecraftServerValidationWebhook.IsValidKubernetesQuantity(storage.Size))
         {
             errors.Add($"spec.template.storage.size '{storage.Size}' is not a valid Kubernetes quantity.");
         }
@@ -183,12 +183,9 @@ public class MinecraftServerClusterValidationWebhook : ValidationWebhook<Minecra
                 "spec.proxy.service.nodePort is only valid when spec.proxy.service.type is 'NodePort'.");
         }
 
-        if (svc.Type == ServiceType.NodePort && svc.NodePort.HasValue)
+        if (svc is { Type: ServiceType.NodePort, NodePort: < 30000 or > 32767 })
         {
-            if (svc.NodePort.Value < 30000 || svc.NodePort.Value > 32767)
-            {
-                errors.Add($"spec.proxy.service.nodePort ({svc.NodePort}) must be in the range 30000-32767.");
-            }
+            errors.Add($"spec.proxy.service.nodePort ({svc.NodePort}) must be in the range 30000-32767.");
         }
     }
 }

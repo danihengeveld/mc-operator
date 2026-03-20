@@ -1,6 +1,5 @@
 using McOperator.Entities;
 using McOperator.Webhooks;
-using TUnit.Assertions.Extensions;
 
 namespace McOperator.Tests;
 
@@ -20,17 +19,8 @@ public class ClusterValidationWebhookTests
                     AcceptEula = true,
                     Server = new ServerSpec { Type = ServerType.Paper, Version = "1.20.4" },
                     Jvm = new JvmSpec { InitialMemory = "512m", MaxMemory = "1G" },
-                    Resources = new ResourcesSpec
-                    {
-                        CpuRequest = "500m",
-                        MemoryRequest = "1Gi",
-                    },
-                    Storage = new StorageSpec
-                    {
-                        Enabled = true,
-                        Size = "10Gi",
-                        MountPath = "/data",
-                    },
+                    Resources = new ResourcesSpec { CpuRequest = "500m", MemoryRequest = "1Gi", },
+                    Storage = new StorageSpec { Enabled = true, Size = "10Gi", MountPath = "/data", },
                     Properties = new ServerPropertiesSpec
                     {
                         ServerPort = 25565,
@@ -40,11 +30,7 @@ public class ClusterValidationWebhookTests
                         LevelName = "world",
                     },
                 },
-                Scaling = new ScalingSpec
-                {
-                    Mode = ScalingMode.Static,
-                    Replicas = 3,
-                },
+                Scaling = new ScalingSpec { Mode = ScalingMode.Static, Replicas = 3, },
                 Proxy = new VelocityProxySpec
                 {
                     ProxyPort = 25577,
@@ -176,11 +162,7 @@ public class ClusterValidationWebhookTests
             s.Scaling.Mode = ScalingMode.Dynamic;
             s.Scaling.MinReplicas = 1;
             s.Scaling.MaxReplicas = 10;
-            s.Scaling.Policy = new ScalingPolicy
-            {
-                Metric = ScalingMetric.PlayerCount,
-                TargetPercentage = 80,
-            };
+            s.Scaling.Policy = new ScalingPolicy { Metric = ScalingMetric.PlayerCount, TargetPercentage = 80, };
         });
 
         var result = webhook.Create(cluster, dryRun: false);

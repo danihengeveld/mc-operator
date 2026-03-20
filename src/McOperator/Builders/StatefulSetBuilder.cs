@@ -29,9 +29,9 @@ public static class StatefulSetBuilder
         var labels = BuildLabels(server);
         var spec = server.Spec;
 
-        var container = BuildContainer(server);
-        var podSpec = BuildPodSpec(spec, container);
-        var volumeClaimTemplates = BuildVolumeClaimTemplates(server);
+        var container = BuildContainer(spec);
+        var podSpec = BuildPodSpec(container);
+        var volumeClaimTemplates = BuildVolumeClaimTemplates(spec);
 
         return new V1StatefulSet
         {
@@ -42,41 +42,26 @@ public static class StatefulSetBuilder
                 Name = name,
                 NamespaceProperty = ns,
                 Labels = labels,
-                OwnerReferences = new List<V1OwnerReference>
-                {
-                    server.MakeOwnerReference(),
-                },
+                OwnerReferences = new List<V1OwnerReference> { server.MakeOwnerReference(), },
             },
             Spec = new V1StatefulSetSpec
             {
                 ServiceName = name,
                 Replicas = spec.Replicas,
-                Selector = new V1LabelSelector
-                {
-                    MatchLabels = labels,
-                },
-                Template = new V1PodTemplateSpec
-                {
-                    Metadata = new V1ObjectMeta
-                    {
-                        Labels = labels,
-                    },
-                    Spec = podSpec,
-                },
+                Selector = new V1LabelSelector { MatchLabels = labels, },
+                Template = new V1PodTemplateSpec { Metadata = new V1ObjectMeta { Labels = labels, }, Spec = podSpec, },
                 VolumeClaimTemplates = volumeClaimTemplates,
                 // Retain PVC by default - do not delete volumes on scale down
                 PersistentVolumeClaimRetentionPolicy = new V1StatefulSetPersistentVolumeClaimRetentionPolicy
                 {
-                    WhenDeleted = spec.Storage.DeleteWithServer ? "Delete" : "Retain",
-                    WhenScaled = "Retain",
+                    WhenDeleted = spec.Storage.DeleteWithServer ? "Delete" : "Retain", WhenScaled = "Retain",
                 },
             },
         };
     }
 
-    private static V1Container BuildContainer(MinecraftServer server)
+    private static V1Container BuildContainer(MinecraftServerSpec spec)
     {
-        var spec = server.Spec;
         var image = ResolveImage(spec);
         var env = BuildEnvironmentVariables(spec);
         var ports = new List<V1ContainerPort>
@@ -87,11 +72,7 @@ public static class StatefulSetBuilder
         var volumeMounts = new List<V1VolumeMount>();
         if (spec.Storage.Enabled)
         {
-            volumeMounts.Add(new V1VolumeMount
-            {
-                Name = DataVolumeName,
-                MountPath = spec.Storage.MountPath,
-            });
+            volumeMounts.Add(new V1VolumeMount { Name = DataVolumeName, MountPath = spec.Storage.MountPath, });
         }
 
         var resources = BuildResourceRequirements(spec.Resources, spec.Jvm);
@@ -124,25 +105,19 @@ public static class StatefulSetBuilder
         };
     }
 
-    private static V1PodSpec BuildPodSpec(MinecraftServerSpec spec, V1Container container)
+    private static V1PodSpec BuildPodSpec(V1Container container)
     {
         return new V1PodSpec
         {
             Containers = new List<V1Container> { container },
             // Security: run as non-root user (itzg/minecraft-server uses uid 1000)
-            SecurityContext = new V1PodSecurityContext
-            {
-                RunAsNonRoot = true,
-                RunAsUser = 1000,
-                FsGroup = 1000,
-            },
+            SecurityContext = new V1PodSecurityContext { RunAsNonRoot = true, RunAsUser = 1000, FsGroup = 1000, },
             TerminationGracePeriodSeconds = 60,
         };
     }
 
-    private static IList<V1PersistentVolumeClaim>? BuildVolumeClaimTemplates(MinecraftServer server)
+    private static List<V1PersistentVolumeClaim>? BuildVolumeClaimTemplates(MinecraftServerSpec spec)
     {
-        var spec = server.Spec;
         if (!spec.Storage.Enabled)
         {
             return null;
@@ -150,10 +125,7 @@ public static class StatefulSetBuilder
 
         var pvc = new V1PersistentVolumeClaim
         {
-            Metadata = new V1ObjectMeta
-            {
-                Name = DataVolumeName,
-            },
+            Metadata = new V1ObjectMeta { Name = DataVolumeName, },
             Spec = new V1PersistentVolumeClaimSpec
             {
                 AccessModes = new List<string> { "ReadWriteOnce" },
@@ -161,14 +133,14 @@ public static class StatefulSetBuilder
                 {
                     Requests = new Dictionary<string, ResourceQuantity>
                     {
-                        ["storage"] = new ResourceQuantity(spec.Storage.Size),
+                        ["storage"] = new(spec.Storage.Size),
                     },
                 },
                 StorageClassName = spec.Storage.StorageClassName,
             },
         };
 
-        return new List<V1PersistentVolumeClaim> { pvc };
+        return [pvc];
     }
 
     private static V1ResourceRequirements BuildResourceRequirements(ResourcesSpec resources, JvmSpec jvm)
@@ -201,8 +173,7 @@ public static class StatefulSetBuilder
 
         return new V1ResourceRequirements
         {
-            Requests = req.Count > 0 ? req : null,
-            Limits = limits.Count > 0 ? limits : null,
+            Requests = req.Count > 0 ? req : null, Limits = limits.Count > 0 ? limits : null,
         };
     }
 
@@ -269,11 +240,7 @@ public static class StatefulSetBuilder
 
     private static string BuildJvmOpts(JvmSpec jvm)
     {
-        var parts = new List<string>
-        {
-            $"-Xms{jvm.InitialMemory}",
-            $"-Xmx{jvm.MaxMemory}",
-        };
+        var parts = new List<string> { $"-Xms{jvm.InitialMemory}", $"-Xmx{jvm.MaxMemory}", };
         parts.AddRange(jvm.ExtraJvmArgs);
         return string.Join(" ", parts);
     }
@@ -290,19 +257,13 @@ public static class StatefulSetBuilder
     /// </summary>
     public static string ResolveImage(MinecraftServerSpec spec)
     {
-        if (!string.IsNullOrEmpty(spec.Image))
-        {
-            return spec.Image;
-        }
-
-        // The itzg/minecraft-server image is the de facto standard for
-        // containerized Minecraft servers. It supports all distributions we
-        // care about (Vanilla, Paper, Spigot, Bukkit) via env vars.
-        return OperatorConstants.DefaultServerImage;
+        return !string.IsNullOrEmpty(spec.Image)
+            ? spec.Image
+            : OperatorConstants.DefaultServerImage;
     }
 
-    private static IDictionary<string, string> BuildLabels(MinecraftServer server) =>
-        new Dictionary<string, string>
+    private static Dictionary<string, string> BuildLabels(MinecraftServer server) =>
+        new()
         {
             [OperatorConstants.AppNameLabel] = OperatorConstants.ServerAppName,
             [OperatorConstants.AppInstanceLabel] = server.Name(),

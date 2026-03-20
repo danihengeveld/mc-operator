@@ -1,7 +1,6 @@
 using System.Text.Json;
 using k8s;
 using McOperator.IntegrationTests.Infrastructure;
-using TUnit.Assertions.Extensions;
 
 namespace McOperator.IntegrationTests.Tests;
 
@@ -18,17 +17,17 @@ public class StatusConditionTests
     [Timeout(120_000)]
     public async Task RunningServer_HasProvisioningOrRunningPhase(CancellationToken cancellationToken)
     {
-        var ns = await KubernetesHelper.CreateTestNamespaceAsync(K3s.Client);
+        var ns = await KubernetesHelper.CreateTestNamespaceAsync(K3s.Client, cancellationToken: cancellationToken);
         try
         {
-            var serverName = "status-phase";
-            await CreateValidMinecraftServer(K3s.Client, ns, serverName);
+            const string serverName = "status-phase";
+            await CreateValidMinecraftServer(K3s.Client, ns, serverName, cancellationToken);
 
             // Wait for the status to contain a recognized phase
             await KubernetesHelper.WaitForConditionAsync(
                 async () =>
                 {
-                    var server = await KubernetesHelper.GetMinecraftServerAsync(K3s.Client, ns, serverName);
+                    var server = await KubernetesHelper.GetMinecraftServerAsync(K3s.Client, ns, serverName, cancellationToken);
                     if (server is null) return false;
                     var json = ((JsonElement)server).GetRawText();
                     return json.Contains("\"Provisioning\"") || json.Contains("\"Running\"");
@@ -36,16 +35,16 @@ public class StatusConditionTests
                 timeout: TimeSpan.FromSeconds(60),
                 description: "MinecraftServer to have Provisioning or Running phase");
 
-            var result = await KubernetesHelper.GetMinecraftServerAsync(K3s.Client, ns, serverName);
+            var result = await KubernetesHelper.GetMinecraftServerAsync(K3s.Client, ns, serverName, cancellationToken);
             var jsonElement = (JsonElement)result!;
             var phase = jsonElement.GetProperty("status").GetProperty("phase").GetString();
 
             // Phase should be Provisioning (pods starting) or Running (if pod came up fast)
-            await Assert.That(new[] { "Provisioning", "Running" }).Contains(phase!);
+            await Assert.That(["Provisioning", "Running"]).Contains(phase!);
         }
         finally
         {
-            await KubernetesHelper.DeleteNamespaceAsync(K3s.Client, ns);
+            await KubernetesHelper.DeleteNamespaceAsync(K3s.Client, ns, cancellationToken);
         }
     }
 
@@ -53,17 +52,17 @@ public class StatusConditionTests
     [Timeout(120_000)]
     public async Task RunningServer_HasConditions(CancellationToken cancellationToken)
     {
-        var ns = await KubernetesHelper.CreateTestNamespaceAsync(K3s.Client);
+        var ns = await KubernetesHelper.CreateTestNamespaceAsync(K3s.Client, cancellationToken: cancellationToken);
         try
         {
-            var serverName = "status-cond";
-            await CreateValidMinecraftServer(K3s.Client, ns, serverName);
+            const string serverName = "status-cond";
+            await CreateValidMinecraftServer(K3s.Client, ns, serverName, cancellationToken);
 
             // Wait for conditions to be set
             await KubernetesHelper.WaitForConditionAsync(
                 async () =>
                 {
-                    var server = await KubernetesHelper.GetMinecraftServerAsync(K3s.Client, ns, serverName);
+                    var server = await KubernetesHelper.GetMinecraftServerAsync(K3s.Client, ns, serverName, cancellationToken);
                     if (server is null) return false;
                     var jsonElement = (JsonElement)server;
                     if (!jsonElement.TryGetProperty("status", out var status)) return false;
@@ -73,7 +72,7 @@ public class StatusConditionTests
                 timeout: TimeSpan.FromSeconds(60),
                 description: "MinecraftServer to have conditions");
 
-            var result = await KubernetesHelper.GetMinecraftServerAsync(K3s.Client, ns, serverName);
+            var result = await KubernetesHelper.GetMinecraftServerAsync(K3s.Client, ns, serverName, cancellationToken);
             var jsonElement = (JsonElement)result!;
             var conditions = jsonElement.GetProperty("status").GetProperty("conditions");
 
@@ -90,7 +89,7 @@ public class StatusConditionTests
         }
         finally
         {
-            await KubernetesHelper.DeleteNamespaceAsync(K3s.Client, ns);
+            await KubernetesHelper.DeleteNamespaceAsync(K3s.Client, ns, cancellationToken);
         }
     }
 
@@ -98,17 +97,17 @@ public class StatusConditionTests
     [Timeout(120_000)]
     public async Task RunningServer_HasCurrentImageInStatus(CancellationToken cancellationToken)
     {
-        var ns = await KubernetesHelper.CreateTestNamespaceAsync(K3s.Client);
+        var ns = await KubernetesHelper.CreateTestNamespaceAsync(K3s.Client, cancellationToken: cancellationToken);
         try
         {
-            var serverName = "status-image";
-            await CreateValidMinecraftServer(K3s.Client, ns, serverName);
+            const string serverName = "status-image";
+            await CreateValidMinecraftServer(K3s.Client, ns, serverName, cancellationToken);
 
             // Wait for currentImage to be set in status
             await KubernetesHelper.WaitForConditionAsync(
                 async () =>
                 {
-                    var server = await KubernetesHelper.GetMinecraftServerAsync(K3s.Client, ns, serverName);
+                    var server = await KubernetesHelper.GetMinecraftServerAsync(K3s.Client, ns, serverName, cancellationToken);
                     if (server is null) return false;
                     var jsonElement = (JsonElement)server;
                     if (!jsonElement.TryGetProperty("status", out var status)) return false;
@@ -118,7 +117,7 @@ public class StatusConditionTests
                 timeout: TimeSpan.FromSeconds(60),
                 description: "MinecraftServer status to have currentImage");
 
-            var result = await KubernetesHelper.GetMinecraftServerAsync(K3s.Client, ns, serverName);
+            var result = await KubernetesHelper.GetMinecraftServerAsync(K3s.Client, ns, serverName, cancellationToken);
             var jsonElement = (JsonElement)result!;
             var currentImage = jsonElement.GetProperty("status").GetProperty("currentImage").GetString();
             var currentVersion = jsonElement.GetProperty("status").GetProperty("currentVersion").GetString();
@@ -128,7 +127,7 @@ public class StatusConditionTests
         }
         finally
         {
-            await KubernetesHelper.DeleteNamespaceAsync(K3s.Client, ns);
+            await KubernetesHelper.DeleteNamespaceAsync(K3s.Client, ns, cancellationToken);
         }
     }
 
@@ -136,30 +135,22 @@ public class StatusConditionTests
     [Timeout(120_000)]
     public async Task PausedServer_HasPausedPhaseAndAvailableFalse(CancellationToken cancellationToken)
     {
-        var ns = await KubernetesHelper.CreateTestNamespaceAsync(K3s.Client);
+        var ns = await KubernetesHelper.CreateTestNamespaceAsync(K3s.Client, cancellationToken: cancellationToken);
         try
         {
-            var serverName = "status-paused";
+            const string serverName = "status-paused";
 
             // Create a server with replicas=0 (paused from the start)
             var server = new Dictionary<string, object>
             {
                 ["apiVersion"] = "mc-operator.dhv.sh/v1alpha1",
                 ["kind"] = "MinecraftServer",
-                ["metadata"] = new Dictionary<string, object>
-                {
-                    ["name"] = serverName,
-                    ["namespace"] = ns,
-                },
+                ["metadata"] = new Dictionary<string, object> { ["name"] = serverName, ["namespace"] = ns, },
                 ["spec"] = new Dictionary<string, object>
                 {
                     ["acceptEula"] = true,
                     ["replicas"] = 0,
-                    ["server"] = new Dictionary<string, object>
-                    {
-                        ["type"] = "Vanilla",
-                        ["version"] = "1.20.4",
-                    },
+                    ["server"] = new Dictionary<string, object> { ["type"] = "Vanilla", ["version"] = "1.20.4", },
                     ["properties"] = new Dictionary<string, object>
                     {
                         ["maxPlayers"] = 10,
@@ -168,36 +159,25 @@ public class StatusConditionTests
                         ["levelName"] = "world",
                         ["serverPort"] = 25565,
                     },
-                    ["jvm"] = new Dictionary<string, object>
-                    {
-                        ["initialMemory"] = "512m",
-                        ["maxMemory"] = "1G",
-                    },
-                    ["resources"] = new Dictionary<string, object>
-                    {
-                        ["cpuRequest"] = "250m",
-                        ["memoryRequest"] = "512Mi",
-                    },
-                    ["storage"] = new Dictionary<string, object>
-                    {
-                        ["enabled"] = true,
-                        ["size"] = "1Gi",
-                        ["mountPath"] = "/data",
-                    },
-                    ["service"] = new Dictionary<string, object>
-                    {
-                        ["type"] = "ClusterIP",
-                    },
+                    ["jvm"] = new Dictionary<string, object> { ["initialMemory"] = "512m", ["maxMemory"] = "1G", },
+                    ["resources"] =
+                        new Dictionary<string, object> { ["cpuRequest"] = "250m", ["memoryRequest"] = "512Mi", },
+                    ["storage"] =
+                        new Dictionary<string, object>
+                        {
+                            ["enabled"] = true, ["size"] = "1Gi", ["mountPath"] = "/data",
+                        },
+                    ["service"] = new Dictionary<string, object> { ["type"] = "ClusterIP", },
                 },
             };
 
-            await KubernetesHelper.CreateMinecraftServerAsync(K3s.Client, ns, server);
+            await KubernetesHelper.CreateMinecraftServerAsync(K3s.Client, ns, server, cancellationToken);
 
             // Wait for the status to show Paused
             await KubernetesHelper.WaitForConditionAsync(
                 async () =>
                 {
-                    var result = await KubernetesHelper.GetMinecraftServerAsync(K3s.Client, ns, serverName);
+                    var result = await KubernetesHelper.GetMinecraftServerAsync(K3s.Client, ns, serverName, cancellationToken);
                     if (result is null) return false;
                     var json = ((JsonElement)result).GetRawText();
                     return json.Contains("\"Paused\"");
@@ -205,7 +185,7 @@ public class StatusConditionTests
                 timeout: TimeSpan.FromSeconds(60),
                 description: "MinecraftServer phase to be Paused");
 
-            var finalResult = await KubernetesHelper.GetMinecraftServerAsync(K3s.Client, ns, serverName);
+            var finalResult = await KubernetesHelper.GetMinecraftServerAsync(K3s.Client, ns, serverName, cancellationToken);
             var jsonElement = (JsonElement)finalResult!;
             var phase = jsonElement.GetProperty("status").GetProperty("phase").GetString();
             await Assert.That(phase).IsEqualTo("Paused");
@@ -218,33 +198,26 @@ public class StatusConditionTests
         }
         finally
         {
-            await KubernetesHelper.DeleteNamespaceAsync(K3s.Client, ns);
+            await KubernetesHelper.DeleteNamespaceAsync(K3s.Client, ns, cancellationToken);
         }
     }
 
     private static async Task CreateValidMinecraftServer(
         IKubernetes client,
         string namespaceName,
-        string name)
+        string name,
+        CancellationToken cancellationToken = default)
     {
         var server = new Dictionary<string, object>
         {
             ["apiVersion"] = "mc-operator.dhv.sh/v1alpha1",
             ["kind"] = "MinecraftServer",
-            ["metadata"] = new Dictionary<string, object>
-            {
-                ["name"] = name,
-                ["namespace"] = namespaceName,
-            },
+            ["metadata"] = new Dictionary<string, object> { ["name"] = name, ["namespace"] = namespaceName, },
             ["spec"] = new Dictionary<string, object>
             {
                 ["acceptEula"] = true,
                 ["replicas"] = 1,
-                ["server"] = new Dictionary<string, object>
-                {
-                    ["type"] = "Vanilla",
-                    ["version"] = "1.20.4",
-                },
+                ["server"] = new Dictionary<string, object> { ["type"] = "Vanilla", ["version"] = "1.20.4", },
                 ["properties"] = new Dictionary<string, object>
                 {
                     ["difficulty"] = "Normal",
@@ -256,29 +229,15 @@ public class StatusConditionTests
                     ["levelName"] = "world",
                     ["serverPort"] = 25565,
                 },
-                ["jvm"] = new Dictionary<string, object>
-                {
-                    ["initialMemory"] = "512m",
-                    ["maxMemory"] = "1G",
-                },
-                ["resources"] = new Dictionary<string, object>
-                {
-                    ["cpuRequest"] = "250m",
-                    ["memoryRequest"] = "512Mi",
-                },
-                ["storage"] = new Dictionary<string, object>
-                {
-                    ["enabled"] = true,
-                    ["size"] = "1Gi",
-                    ["mountPath"] = "/data",
-                },
-                ["service"] = new Dictionary<string, object>
-                {
-                    ["type"] = "ClusterIP",
-                },
+                ["jvm"] = new Dictionary<string, object> { ["initialMemory"] = "512m", ["maxMemory"] = "1G", },
+                ["resources"] =
+                    new Dictionary<string, object> { ["cpuRequest"] = "250m", ["memoryRequest"] = "512Mi", },
+                ["storage"] =
+                    new Dictionary<string, object> { ["enabled"] = true, ["size"] = "1Gi", ["mountPath"] = "/data", },
+                ["service"] = new Dictionary<string, object> { ["type"] = "ClusterIP", },
             },
         };
 
-        await KubernetesHelper.CreateMinecraftServerAsync(client, namespaceName, server);
+        await KubernetesHelper.CreateMinecraftServerAsync(client, namespaceName, server, cancellationToken);
     }
 }

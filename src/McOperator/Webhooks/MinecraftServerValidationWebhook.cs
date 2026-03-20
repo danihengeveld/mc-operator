@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using KubeOps.Operator.Web.Webhooks.Admission.Validation;
 using McOperator.Entities;
 
@@ -8,14 +9,20 @@ namespace McOperator.Webhooks;
 /// Rejects invalid configurations before they reach the reconciler.
 /// </summary>
 [ValidationWebhook(typeof(MinecraftServer))]
-public class MinecraftServerValidationWebhook : ValidationWebhook<MinecraftServer>
+public partial class MinecraftServerValidationWebhook : ValidationWebhook<MinecraftServer>
 {
     private static readonly HashSet<string> ValidLevelTypes = new(StringComparer.OrdinalIgnoreCase)
     {
         // Note: "LARGBIOMES" (without E) is the correct value used by itzg/minecraft-server
         // and the original Minecraft server. "LARGEBIOMES" is a common misspelling.
-        "DEFAULT", "FLAT", "LARGBIOMES", "AMPLIFIED", "BUFFET", "SINGLE_BIOME_SURFACE",
-        "SINGLE_BIOME_CAVES", "SINGLE_BIOME_FLOATING_ISLANDS",
+        "DEFAULT",
+        "FLAT",
+        "LARGBIOMES",
+        "AMPLIFIED",
+        "BUFFET",
+        "SINGLE_BIOME_SURFACE",
+        "SINGLE_BIOME_CAVES",
+        "SINGLE_BIOME_FLOATING_ISLANDS",
     };
 
     public override ValidationResult Create(MinecraftServer server, bool dryRun)
@@ -113,22 +120,22 @@ public class MinecraftServerValidationWebhook : ValidationWebhook<MinecraftServe
     {
         var res = server.Spec.Resources;
 
-        if (res.MemoryRequest is not null && !IsValidK8sQuantity(res.MemoryRequest))
+        if (res.MemoryRequest is not null && !IsValidKubernetesQuantity(res.MemoryRequest))
         {
             errors.Add($"spec.resources.memoryRequest '{res.MemoryRequest}' is not a valid Kubernetes quantity.");
         }
 
-        if (res.MemoryLimit is not null && !IsValidK8sQuantity(res.MemoryLimit))
+        if (res.MemoryLimit is not null && !IsValidKubernetesQuantity(res.MemoryLimit))
         {
             errors.Add($"spec.resources.memoryLimit '{res.MemoryLimit}' is not a valid Kubernetes quantity.");
         }
 
-        if (res.CpuRequest is not null && !IsValidK8sQuantity(res.CpuRequest))
+        if (res.CpuRequest is not null && !IsValidKubernetesQuantity(res.CpuRequest))
         {
             errors.Add($"spec.resources.cpuRequest '{res.CpuRequest}' is not a valid Kubernetes quantity.");
         }
 
-        if (res.CpuLimit is not null && !IsValidK8sQuantity(res.CpuLimit))
+        if (res.CpuLimit is not null && !IsValidKubernetesQuantity(res.CpuLimit))
         {
             errors.Add($"spec.resources.cpuLimit '{res.CpuLimit}' is not a valid Kubernetes quantity.");
         }
@@ -140,7 +147,7 @@ public class MinecraftServerValidationWebhook : ValidationWebhook<MinecraftServe
     private static void ValidateStorage(MinecraftServer server, List<string> errors)
     {
         var storage = server.Spec.Storage;
-        if (storage.Enabled && !IsValidK8sQuantity(storage.Size))
+        if (storage.Enabled && !IsValidKubernetesQuantity(storage.Size))
         {
             errors.Add($"spec.storage.size '{storage.Size}' is not a valid Kubernetes quantity. " +
                        "Examples: '10Gi', '100Gi'.");
@@ -172,13 +179,10 @@ public class MinecraftServerValidationWebhook : ValidationWebhook<MinecraftServe
                 $"Current type is '{svc.Type}'.");
         }
 
-        if (svc.Type == ServiceType.NodePort && svc.NodePort.HasValue)
+        if (svc is { Type: ServiceType.NodePort, NodePort: < 30000 or > 32767 })
         {
-            if (svc.NodePort.Value < 30000 || svc.NodePort.Value > 32767)
-            {
-                errors.Add(
-                    $"spec.service.nodePort ({svc.NodePort}) must be in the range 30000-32767.");
-            }
+            errors.Add(
+                $"spec.service.nodePort ({svc.NodePort}) must be in the range 30000-32767.");
         }
     }
 
@@ -287,17 +291,14 @@ public class MinecraftServerValidationWebhook : ValidationWebhook<MinecraftServe
     /// Validates that a Kubernetes resource quantity string is non-empty and plausibly valid.
     /// Full Kubernetes quantity parsing is complex; this is a best-effort check.
     /// </summary>
-    public static bool IsValidK8sQuantity(string? value)
+    public static bool IsValidKubernetesQuantity(string? value)
     {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return false;
-        }
-
-        // Accept common suffixes: m, k, K, M, G, T, P, E, Ki, Mi, Gi, Ti, Pi, Ei
-        // and plain integer values
-        return System.Text.RegularExpressions.Regex.IsMatch(
-            value.Trim(),
-            @"^[0-9]+(\.[0-9]+)?([mkKMGTPEi]|[KMGTPE]i|m)?$");
+        return !string.IsNullOrWhiteSpace(value) &&
+               // Accept common suffixes: m, k, K, M, G, T, P, E, Ki, Mi, Gi, Ti, Pi, Ei
+               // and plain integer values
+               KubernetesQuantityRegex().IsMatch(value.Trim());
     }
+
+    [GeneratedRegex(@"^[0-9]+(\.[0-9]+)?([mkKMGTPEi]|[KMGTPE]i|m)?$", RegexOptions.Compiled)]
+    private static partial Regex KubernetesQuantityRegex();
 }

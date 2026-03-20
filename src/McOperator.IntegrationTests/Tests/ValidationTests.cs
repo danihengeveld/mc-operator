@@ -1,7 +1,5 @@
-using k8s;
 using k8s.Autorest;
 using McOperator.IntegrationTests.Infrastructure;
-using TUnit.Assertions.Extensions;
 
 namespace McOperator.IntegrationTests.Tests;
 
@@ -23,7 +21,7 @@ public class ValidationTests
     [Timeout(120_000)]
     public async Task InvalidServerType_IsRejectedByCrdSchema(CancellationToken cancellationToken)
     {
-        var ns = await KubernetesHelper.CreateTestNamespaceAsync(K3s.Client);
+        var ns = await KubernetesHelper.CreateTestNamespaceAsync(K3s.Client, cancellationToken: cancellationToken);
         try
         {
             // "Forge" is not in the CRD enum (only Vanilla, Paper, Spigot, Bukkit)
@@ -31,31 +29,23 @@ public class ValidationTests
             {
                 ["apiVersion"] = "mc-operator.dhv.sh/v1alpha1",
                 ["kind"] = "MinecraftServer",
-                ["metadata"] = new Dictionary<string, object>
-                {
-                    ["name"] = "invalid-type",
-                    ["namespace"] = ns,
-                },
+                ["metadata"] = new Dictionary<string, object> { ["name"] = "invalid-type", ["namespace"] = ns, },
                 ["spec"] = new Dictionary<string, object>
                 {
                     ["acceptEula"] = true,
-                    ["server"] = new Dictionary<string, object>
-                    {
-                        ["type"] = "Forge",
-                        ["version"] = "1.20.4",
-                    },
+                    ["server"] = new Dictionary<string, object> { ["type"] = "Forge", ["version"] = "1.20.4", },
                 },
             };
 
-            var ex = await Assert.ThrowsAsync<HttpOperationException>(
-                () => KubernetesHelper.CreateMinecraftServerAsync(K3s.Client, ns, server));
+            var ex = await Assert.ThrowsAsync<HttpOperationException>(() =>
+                KubernetesHelper.CreateMinecraftServerAsync(K3s.Client, ns, server, cancellationToken));
 
             // The API server should reject this with a 422 Unprocessable Entity
             await Assert.That((int)ex!.Response!.StatusCode).IsEqualTo(422);
         }
         finally
         {
-            await KubernetesHelper.DeleteNamespaceAsync(K3s.Client, ns);
+            await KubernetesHelper.DeleteNamespaceAsync(K3s.Client, ns, cancellationToken);
         }
     }
 
@@ -63,7 +53,7 @@ public class ValidationTests
     [Timeout(120_000)]
     public async Task MissingRequiredServerField_IsRejectedByCrdSchema(CancellationToken cancellationToken)
     {
-        var ns = await KubernetesHelper.CreateTestNamespaceAsync(K3s.Client);
+        var ns = await KubernetesHelper.CreateTestNamespaceAsync(K3s.Client, cancellationToken: cancellationToken);
         try
         {
             // Missing required 'server' field
@@ -71,25 +61,18 @@ public class ValidationTests
             {
                 ["apiVersion"] = "mc-operator.dhv.sh/v1alpha1",
                 ["kind"] = "MinecraftServer",
-                ["metadata"] = new Dictionary<string, object>
-                {
-                    ["name"] = "missing-server",
-                    ["namespace"] = ns,
-                },
-                ["spec"] = new Dictionary<string, object>
-                {
-                    ["acceptEula"] = true,
-                },
+                ["metadata"] = new Dictionary<string, object> { ["name"] = "missing-server", ["namespace"] = ns, },
+                ["spec"] = new Dictionary<string, object> { ["acceptEula"] = true, },
             };
 
-            var ex = await Assert.ThrowsAsync<HttpOperationException>(
-                () => KubernetesHelper.CreateMinecraftServerAsync(K3s.Client, ns, server));
+            var ex = await Assert.ThrowsAsync<HttpOperationException>(() =>
+                KubernetesHelper.CreateMinecraftServerAsync(K3s.Client, ns, server, cancellationToken));
 
             await Assert.That((int)ex!.Response!.StatusCode).IsEqualTo(422);
         }
         finally
         {
-            await KubernetesHelper.DeleteNamespaceAsync(K3s.Client, ns);
+            await KubernetesHelper.DeleteNamespaceAsync(K3s.Client, ns, cancellationToken);
         }
     }
 
@@ -97,7 +80,7 @@ public class ValidationTests
     [Timeout(120_000)]
     public async Task InvalidServiceType_IsRejectedByCrdSchema(CancellationToken cancellationToken)
     {
-        var ns = await KubernetesHelper.CreateTestNamespaceAsync(K3s.Client);
+        var ns = await KubernetesHelper.CreateTestNamespaceAsync(K3s.Client, cancellationToken: cancellationToken);
         try
         {
             // "ExternalName" is not in the CRD enum (only ClusterIP, NodePort, LoadBalancer)
@@ -105,34 +88,23 @@ public class ValidationTests
             {
                 ["apiVersion"] = "mc-operator.dhv.sh/v1alpha1",
                 ["kind"] = "MinecraftServer",
-                ["metadata"] = new Dictionary<string, object>
-                {
-                    ["name"] = "invalid-svc-type",
-                    ["namespace"] = ns,
-                },
+                ["metadata"] = new Dictionary<string, object> { ["name"] = "invalid-svc-type", ["namespace"] = ns, },
                 ["spec"] = new Dictionary<string, object>
                 {
                     ["acceptEula"] = true,
-                    ["server"] = new Dictionary<string, object>
-                    {
-                        ["type"] = "Vanilla",
-                        ["version"] = "1.20.4",
-                    },
-                    ["service"] = new Dictionary<string, object>
-                    {
-                        ["type"] = "ExternalName",
-                    },
+                    ["server"] = new Dictionary<string, object> { ["type"] = "Vanilla", ["version"] = "1.20.4", },
+                    ["service"] = new Dictionary<string, object> { ["type"] = "ExternalName", },
                 },
             };
 
-            var ex = await Assert.ThrowsAsync<HttpOperationException>(
-                () => KubernetesHelper.CreateMinecraftServerAsync(K3s.Client, ns, server));
+            var ex = await Assert.ThrowsAsync<HttpOperationException>(() =>
+                KubernetesHelper.CreateMinecraftServerAsync(K3s.Client, ns, server, cancellationToken));
 
             await Assert.That((int)ex!.Response!.StatusCode).IsEqualTo(422);
         }
         finally
         {
-            await KubernetesHelper.DeleteNamespaceAsync(K3s.Client, ns);
+            await KubernetesHelper.DeleteNamespaceAsync(K3s.Client, ns, cancellationToken);
         }
     }
 
@@ -140,38 +112,30 @@ public class ValidationTests
     [Timeout(120_000)]
     public async Task InvalidImagePullPolicy_IsRejectedByCrdSchema(CancellationToken cancellationToken)
     {
-        var ns = await KubernetesHelper.CreateTestNamespaceAsync(K3s.Client);
+        var ns = await KubernetesHelper.CreateTestNamespaceAsync(K3s.Client, cancellationToken: cancellationToken);
         try
         {
             var server = new Dictionary<string, object>
             {
                 ["apiVersion"] = "mc-operator.dhv.sh/v1alpha1",
                 ["kind"] = "MinecraftServer",
-                ["metadata"] = new Dictionary<string, object>
-                {
-                    ["name"] = "invalid-pull",
-                    ["namespace"] = ns,
-                },
+                ["metadata"] = new Dictionary<string, object> { ["name"] = "invalid-pull", ["namespace"] = ns, },
                 ["spec"] = new Dictionary<string, object>
                 {
                     ["acceptEula"] = true,
-                    ["server"] = new Dictionary<string, object>
-                    {
-                        ["type"] = "Vanilla",
-                        ["version"] = "1.20.4",
-                    },
+                    ["server"] = new Dictionary<string, object> { ["type"] = "Vanilla", ["version"] = "1.20.4", },
                     ["imagePullPolicy"] = "InvalidPolicy",
                 },
             };
 
-            var ex = await Assert.ThrowsAsync<HttpOperationException>(
-                () => KubernetesHelper.CreateMinecraftServerAsync(K3s.Client, ns, server));
+            var ex = await Assert.ThrowsAsync<HttpOperationException>(() =>
+                KubernetesHelper.CreateMinecraftServerAsync(K3s.Client, ns, server, cancellationToken));
 
             await Assert.That((int)ex!.Response!.StatusCode).IsEqualTo(422);
         }
         finally
         {
-            await KubernetesHelper.DeleteNamespaceAsync(K3s.Client, ns);
+            await KubernetesHelper.DeleteNamespaceAsync(K3s.Client, ns, cancellationToken);
         }
     }
 }

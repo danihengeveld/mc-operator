@@ -8,52 +8,55 @@ namespace McOperator.Extensions;
 /// </summary>
 public static class MinecraftServerClusterExtensions
 {
-    /// <summary>
-    /// Creates an owner reference from a MinecraftServerCluster for use in child resources.
-    /// </summary>
-    public static V1OwnerReference MakeOwnerReference(this MinecraftServerCluster cluster)
+    extension(MinecraftServerCluster cluster)
     {
-        return new V1OwnerReference
+        /// <summary>
+        /// Creates an owner reference from a MinecraftServerCluster for use in child resources.
+        /// </summary>
+        public V1OwnerReference MakeOwnerReference()
         {
-            ApiVersion = OperatorConstants.ApiVersion,
-            Kind = OperatorConstants.ClusterKind,
-            Name = cluster.Name(),
-            Uid = cluster.Uid(),
-            BlockOwnerDeletion = true,
-            Controller = true,
-        };
-    }
+            return new V1OwnerReference
+            {
+                ApiVersion = OperatorConstants.ApiVersion,
+                Kind = OperatorConstants.ClusterKind,
+                Name = cluster.Name(),
+                Uid = cluster.Uid(),
+                BlockOwnerDeletion = true,
+                Controller = true,
+            };
+        }
 
-    /// <summary>
-    /// Returns the name of the backend MinecraftServer for a given index.
-    /// </summary>
-    public static string ServerName(this MinecraftServerCluster cluster, int index)
-    {
-        return $"{cluster.Name()}-{index}";
-    }
+        /// <summary>
+        /// Returns the name of the backend MinecraftServer for a given index.
+        /// </summary>
+        public string ServerName(int index)
+        {
+            return $"{cluster.Name()}-{index}";
+        }
 
-    /// <summary>
-    /// Returns the name of the Velocity proxy Deployment.
-    /// </summary>
-    public static string ProxyName(this MinecraftServerCluster cluster)
-    {
-        return $"{cluster.Name()}-proxy";
-    }
+        /// <summary>
+        /// Returns the name of the Velocity proxy Deployment.
+        /// </summary>
+        public string ProxyName()
+        {
+            return $"{cluster.Name()}-proxy";
+        }
 
-    /// <summary>
-    /// Returns the name of the Velocity proxy ConfigMap.
-    /// </summary>
-    public static string ProxyConfigMapName(this MinecraftServerCluster cluster)
-    {
-        return $"{cluster.Name()}-proxy-config";
-    }
+        /// <summary>
+        /// Returns the name of the Velocity proxy ConfigMap.
+        /// </summary>
+        public string ProxyConfigMapName()
+        {
+            return $"{cluster.Name()}-proxy-config";
+        }
 
-    /// <summary>
-    /// Returns the name of the Velocity proxy Service.
-    /// </summary>
-    public static string ProxyServiceName(this MinecraftServerCluster cluster)
-    {
-        return $"{cluster.Name()}-proxy";
+        /// <summary>
+        /// Returns the name of the Velocity proxy Service.
+        /// </summary>
+        public string ProxyServiceName()
+        {
+            return $"{cluster.Name()}-proxy";
+        }
     }
 
     /// <summary>

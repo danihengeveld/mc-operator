@@ -40,10 +40,7 @@ public static class ConfigMapBuilder
                 Name = name,
                 NamespaceProperty = ns,
                 Labels = labels,
-                OwnerReferences = new List<V1OwnerReference>
-                {
-                    server.MakeOwnerReference(),
-                },
+                OwnerReferences = new List<V1OwnerReference> { server.MakeOwnerReference(), },
             },
             Data = data,
         };
@@ -99,8 +96,8 @@ public static class ConfigMapBuilder
         return string.Join("\n", lines);
     }
 
-    private static IDictionary<string, string> BuildLabels(MinecraftServer server) =>
-        new Dictionary<string, string>
+    private static Dictionary<string, string> BuildLabels(MinecraftServer server) =>
+        new()
         {
             [OperatorConstants.AppNameLabel] = OperatorConstants.ServerAppName,
             [OperatorConstants.AppInstanceLabel] = server.Name(),
