@@ -43,7 +43,7 @@ public class MinecraftServerClusterFinalizer : IEntityFinalizer<MinecraftServerC
             cluster.Namespace(), cancellationToken: cancellationToken);
         var ownedServers = allServers
             .Where(s => s.Metadata.OwnerReferences?.Any(o =>
-                o.Kind == "MinecraftServerCluster" && o.Name == cluster.Name()) == true)
+                o.Kind == OperatorConstants.ClusterKind && o.Name == cluster.Name()) == true)
             .ToList();
 
         if (ownedServers.Count > 0)

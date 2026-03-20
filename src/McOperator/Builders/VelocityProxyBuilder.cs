@@ -22,7 +22,7 @@ public static class VelocityProxyBuilder
     private const string ContainerName = "velocity-proxy";
     private const string ConfigVolumeName = "proxy-config";
     private const string SecretVolumeName = "forwarding-secret";
-    private const string DefaultImage = "itzg/mc-proxy:latest";
+    private const string DefaultImage = OperatorConstants.DefaultProxyImage;
 
     /// <summary>
     /// Builds the Velocity proxy Deployment.
@@ -398,18 +398,18 @@ public static class VelocityProxyBuilder
     private static IDictionary<string, string> BuildProxyLabels(MinecraftServerCluster cluster) =>
         new Dictionary<string, string>
         {
-            ["app.kubernetes.io/name"] = "velocity-proxy",
-            ["app.kubernetes.io/instance"] = cluster.ProxyName(),
-            ["app.kubernetes.io/managed-by"] = "mc-operator",
-            ["app.kubernetes.io/component"] = "proxy",
-            ["mc-operator.dhv.sh/cluster-name"] = cluster.Name(),
+            [OperatorConstants.AppNameLabel] = OperatorConstants.ProxyAppName,
+            [OperatorConstants.AppInstanceLabel] = cluster.ProxyName(),
+            [OperatorConstants.AppManagedByLabel] = OperatorConstants.OperatorName,
+            [OperatorConstants.AppComponentLabel] = OperatorConstants.ComponentProxy,
+            [OperatorConstants.ClusterNameLabel] = cluster.Name(),
         };
 
     private static IDictionary<string, string> BuildProxySelectorLabels(MinecraftServerCluster cluster) =>
         new Dictionary<string, string>
         {
-            ["app.kubernetes.io/instance"] = cluster.ProxyName(),
-            ["mc-operator.dhv.sh/cluster-name"] = cluster.Name(),
+            [OperatorConstants.AppInstanceLabel] = cluster.ProxyName(),
+            [OperatorConstants.ClusterNameLabel] = cluster.Name(),
         };
 }
 

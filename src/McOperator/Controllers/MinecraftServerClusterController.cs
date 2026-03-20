@@ -136,7 +136,7 @@ public class MinecraftServerClusterController : IEntityController<MinecraftServe
         var allServers = await _client.ListAsync<MinecraftServer>(ns, cancellationToken: cancellationToken);
         var ownedServers = allServers
             .Where(s => s.Metadata.OwnerReferences?.Any(o =>
-                o.Kind == "MinecraftServerCluster" && o.Name == clusterName) == true)
+                o.Kind == OperatorConstants.ClusterKind && o.Name == clusterName) == true)
             .OrderBy(s => s.Name())
             .ToList();
 
@@ -180,7 +180,7 @@ public class MinecraftServerClusterController : IEntityController<MinecraftServe
         var updatedServers = await _client.ListAsync<MinecraftServer>(ns, cancellationToken: cancellationToken);
         return updatedServers
             .Where(s => s.Metadata.OwnerReferences?.Any(o =>
-                o.Kind == "MinecraftServerCluster" && o.Name == clusterName) == true)
+                o.Kind == OperatorConstants.ClusterKind && o.Name == clusterName) == true)
             .OrderBy(s => s.Name())
             .ToList();
     }
@@ -205,6 +205,8 @@ public class MinecraftServerClusterController : IEntityController<MinecraftServe
 
         var server = new MinecraftServer
         {
+            ApiVersion = OperatorConstants.ApiVersion,
+            Kind = OperatorConstants.ServerKind,
             Metadata = new V1ObjectMeta
             {
                 Name = serverName,
@@ -501,11 +503,11 @@ public class MinecraftServerClusterController : IEntityController<MinecraftServe
         string serverName) =>
         new Dictionary<string, string>
         {
-            ["app.kubernetes.io/name"] = "minecraft-server",
-            ["app.kubernetes.io/instance"] = serverName,
-            ["app.kubernetes.io/managed-by"] = "mc-operator",
-            ["app.kubernetes.io/component"] = "backend",
-            ["mc-operator.dhv.sh/cluster-name"] = cluster.Name(),
-            ["mc-operator.dhv.sh/server-name"] = serverName,
+            [OperatorConstants.AppNameLabel] = OperatorConstants.ServerAppName,
+            [OperatorConstants.AppInstanceLabel] = serverName,
+            [OperatorConstants.AppManagedByLabel] = OperatorConstants.OperatorName,
+            [OperatorConstants.AppComponentLabel] = OperatorConstants.ComponentBackend,
+            [OperatorConstants.ClusterNameLabel] = cluster.Name(),
+            [OperatorConstants.ServerNameLabel] = serverName,
         };
 }

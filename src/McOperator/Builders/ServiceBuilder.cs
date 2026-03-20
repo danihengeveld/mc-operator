@@ -61,16 +61,16 @@ public static class ServiceBuilder
     private static IDictionary<string, string> BuildLabels(MinecraftServer server) =>
         new Dictionary<string, string>
         {
-            ["app.kubernetes.io/name"] = "minecraft-server",
-            ["app.kubernetes.io/instance"] = server.Name(),
-            ["app.kubernetes.io/managed-by"] = "mc-operator",
-            ["mc-operator.dhv.sh/server-name"] = server.Name(),
+            [OperatorConstants.AppNameLabel] = OperatorConstants.ServerAppName,
+            [OperatorConstants.AppInstanceLabel] = server.Name(),
+            [OperatorConstants.AppManagedByLabel] = OperatorConstants.OperatorName,
+            [OperatorConstants.ServerNameLabel] = server.Name(),
         };
 
     private static IDictionary<string, string> BuildSelectorLabels(MinecraftServer server) =>
         new Dictionary<string, string>
         {
-            ["app.kubernetes.io/instance"] = server.Name(),
-            ["mc-operator.dhv.sh/server-name"] = server.Name(),
+            [OperatorConstants.AppInstanceLabel] = server.Name(),
+            [OperatorConstants.ServerNameLabel] = server.Name(),
         };
 }

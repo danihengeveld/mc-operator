@@ -11,8 +11,8 @@ namespace McOperator.Entities;
 /// The cluster automatically deploys a Velocity proxy and registers/deregisters backend
 /// MinecraftServer instances as they scale.
 /// </summary>
-[KubernetesEntity(Group = "mc-operator.dhv.sh", ApiVersion = "v1alpha1", Kind = "MinecraftServerCluster",
-    PluralName = "minecraftserverclusters")]
+[KubernetesEntity(Group = OperatorConstants.Group, ApiVersion = OperatorConstants.Version,
+    Kind = OperatorConstants.ClusterKind, PluralName = OperatorConstants.ClusterPluralName)]
 [KubernetesEntityShortNames("mcsc")]
 [GenericAdditionalPrinterColumn(".status.phase", "Phase", "string", Description = "Cluster phase")]
 [GenericAdditionalPrinterColumn(".status.readyServers", "Ready", "integer",

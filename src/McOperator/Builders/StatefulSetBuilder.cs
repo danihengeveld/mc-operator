@@ -298,15 +298,15 @@ public static class StatefulSetBuilder
         // The itzg/minecraft-server image is the de facto standard for
         // containerized Minecraft servers. It supports all distributions we
         // care about (Vanilla, Paper, Spigot, Bukkit) via env vars.
-        return "itzg/minecraft-server:latest";
+        return OperatorConstants.DefaultServerImage;
     }
 
     private static IDictionary<string, string> BuildLabels(MinecraftServer server) =>
         new Dictionary<string, string>
         {
-            ["app.kubernetes.io/name"] = "minecraft-server",
-            ["app.kubernetes.io/instance"] = server.Name(),
-            ["app.kubernetes.io/managed-by"] = "mc-operator",
-            ["mc-operator.dhv.sh/server-name"] = server.Name(),
+            [OperatorConstants.AppNameLabel] = OperatorConstants.ServerAppName,
+            [OperatorConstants.AppInstanceLabel] = server.Name(),
+            [OperatorConstants.AppManagedByLabel] = OperatorConstants.OperatorName,
+            [OperatorConstants.ServerNameLabel] = server.Name(),
         };
 }

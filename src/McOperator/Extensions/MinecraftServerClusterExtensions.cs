@@ -15,8 +15,8 @@ public static class MinecraftServerClusterExtensions
     {
         return new V1OwnerReference
         {
-            ApiVersion = "mc-operator.dhv.sh/v1alpha1",
-            Kind = "MinecraftServerCluster",
+            ApiVersion = OperatorConstants.ApiVersion,
+            Kind = OperatorConstants.ClusterKind,
             Name = cluster.Name(),
             Uid = cluster.Uid(),
             BlockOwnerDeletion = true,

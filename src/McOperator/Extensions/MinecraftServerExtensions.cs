@@ -15,8 +15,8 @@ public static class MinecraftServerExtensions
     {
         return new V1OwnerReference
         {
-            ApiVersion = $"mc-operator.dhv.sh/v1alpha1",
-            Kind = "MinecraftServer",
+            ApiVersion = OperatorConstants.ApiVersion,
+            Kind = OperatorConstants.ServerKind,
             Name = server.Name(),
             Uid = server.Uid(),
             BlockOwnerDeletion = true,
