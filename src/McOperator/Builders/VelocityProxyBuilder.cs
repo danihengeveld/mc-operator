@@ -164,6 +164,8 @@ public static class VelocityProxyBuilder
 
     /// <summary>
     /// Generates the velocity.toml configuration file content.
+    /// Note: config-version "2.7" corresponds to Velocity 3.x format.
+    /// If a future Velocity release requires a new config format, this will need updating.
     /// </summary>
     public static string BuildVelocityToml(
         MinecraftServerCluster cluster,

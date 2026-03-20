@@ -54,6 +54,14 @@ public class MinecraftServerClusterController : IEntityController<MinecraftServe
             // 1. Determine desired server count
             var desiredCount = GetDesiredServerCount(cluster);
 
+            if (cluster.Spec.Scaling.Mode == ScalingMode.Dynamic)
+            {
+                _logger.LogWarning(
+                    "MinecraftServerCluster {Namespace}/{Name}: Dynamic scaling is configured but auto-scaling " +
+                    "is not yet fully implemented. Running with minReplicas={MinReplicas}.",
+                    cluster.Namespace(), cluster.Name(), cluster.Spec.Scaling.MinReplicas);
+            }
+
             // 2. Reconcile backend MinecraftServer instances
             var existingServers = await ReconcileBackendServers(cluster, desiredCount, cancellationToken);
 
@@ -109,10 +117,10 @@ public class MinecraftServerClusterController : IEntityController<MinecraftServe
             return scaling.Replicas;
         }
 
-        // For dynamic mode, start with minReplicas.
-        // Full auto-scaling logic (reading metrics, scaling decisions) would be implemented
-        // in a future iteration. For now, we default to minReplicas and let the requeue
-        // cycle handle scaling adjustments.
+        // Dynamic scaling: start with minReplicas.
+        // Full auto-scaling (reading player count metrics, computing desired replicas)
+        // is not yet implemented. The cluster will run at minReplicas until auto-scaling
+        // support is added in a future release.
         return scaling.MinReplicas;
     }
 
@@ -231,22 +239,13 @@ public class MinecraftServerClusterController : IEntityController<MinecraftServe
         // Backend servers always use ClusterIP
         desiredSpec.Service = new ServiceSpec { Type = ServiceType.ClusterIP };
 
-        // Only update if there are meaningful changes
-        // Compare key fields to avoid unnecessary updates
-        if (server.Spec.Server.Type == desiredSpec.Server.Type &&
-            server.Spec.Server.Version == desiredSpec.Server.Version &&
-            server.Spec.Jvm.InitialMemory == desiredSpec.Jvm.InitialMemory &&
-            server.Spec.Jvm.MaxMemory == desiredSpec.Jvm.MaxMemory &&
-            server.Spec.AcceptEula == desiredSpec.AcceptEula &&
-            server.Spec.Image == desiredSpec.Image)
-        {
-            return;
-        }
-
+        // Update the server spec to match the template.
+        // We always apply the desired spec rather than diffing individual fields,
+        // to prevent configuration drift when any template field changes.
         server.Spec = desiredSpec;
         server.Metadata.Labels = BuildBackendServerLabels(cluster, server.Name());
 
-        _logger.LogInformation("Updating backend server {Name} in {Namespace}", server.Name(), server.Namespace());
+        _logger.LogDebug("Updating backend server {Name} in {Namespace}", server.Name(), server.Namespace());
         await _client.UpdateAsync(server, cancellationToken);
     }
 
