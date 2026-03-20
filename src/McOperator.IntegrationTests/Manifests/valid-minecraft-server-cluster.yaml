@@ -1,0 +1,38 @@
+# Valid MinecraftServerCluster for integration tests.
+apiVersion: mc-operator.dhv.sh/v1alpha1
+kind: MinecraftServerCluster
+metadata:
+  name: test-cluster
+spec:
+  template:
+    acceptEula: true
+    server:
+      type: Paper
+      version: "1.20.4"
+    properties:
+      maxPlayers: 10
+      onlineMode: false
+      viewDistance: 10
+      simulationDistance: 10
+      levelName: world
+      serverPort: 25565
+    jvm:
+      initialMemory: "512m"
+      maxMemory: "1G"
+    resources:
+      cpuRequest: "250m"
+      memoryRequest: "512Mi"
+    storage:
+      enabled: true
+      size: "1Gi"
+      mountPath: /data
+  scaling:
+    mode: Static
+    replicas: 2
+  proxy:
+    proxyPort: 25577
+    maxPlayers: 20
+    onlineMode: false
+    playerForwardingMode: Modern
+    service:
+      type: ClusterIP

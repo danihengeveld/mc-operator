@@ -191,4 +191,66 @@ public static class KubernetesHelper
             // Already deleted
         }
     }
+
+    /// <summary>
+    /// Creates a MinecraftServerCluster custom resource in the specified namespace.
+    /// </summary>
+    public static async Task<object> CreateMinecraftServerClusterAsync(
+        IKubernetes client,
+        string namespaceName,
+        object clusterSpec)
+    {
+        return await client.CustomObjects.CreateNamespacedCustomObjectAsync(
+            body: clusterSpec,
+            group: "mc-operator.dhv.sh",
+            version: "v1alpha1",
+            namespaceParameter: namespaceName,
+            plural: "minecraftserverclusters");
+    }
+
+    /// <summary>
+    /// Gets a MinecraftServerCluster custom resource.
+    /// </summary>
+    public static async Task<object?> GetMinecraftServerClusterAsync(
+        IKubernetes client,
+        string namespaceName,
+        string name)
+    {
+        try
+        {
+            return await client.CustomObjects.GetNamespacedCustomObjectAsync(
+                group: "mc-operator.dhv.sh",
+                version: "v1alpha1",
+                namespaceParameter: namespaceName,
+                plural: "minecraftserverclusters",
+                name: name);
+        }
+        catch (k8s.Autorest.HttpOperationException ex) when (ex.Response.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Deletes a MinecraftServerCluster custom resource.
+    /// </summary>
+    public static async Task DeleteMinecraftServerClusterAsync(
+        IKubernetes client,
+        string namespaceName,
+        string name)
+    {
+        try
+        {
+            await client.CustomObjects.DeleteNamespacedCustomObjectAsync(
+                group: "mc-operator.dhv.sh",
+                version: "v1alpha1",
+                namespaceParameter: namespaceName,
+                plural: "minecraftserverclusters",
+                name: name);
+        }
+        catch (k8s.Autorest.HttpOperationException ex) when (ex.Response.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            // Already deleted
+        }
+    }
 }
