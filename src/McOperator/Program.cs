@@ -16,7 +16,10 @@ builder.Services
         settings.LeaderElectionType = KubeOps.Abstractions.Builder.LeaderElectionType.Single;
     })
     .AddController<MinecraftServerController, MinecraftServer>()
-    .AddFinalizer<MinecraftServerFinalizer, MinecraftServer>("mc-operator.dhv.sh/finalizer");
+    .AddFinalizer<MinecraftServerFinalizer, MinecraftServer>("mc-operator.dhv.sh/finalizer")
+    .AddController<MinecraftServerClusterController, MinecraftServerCluster>()
+    .AddFinalizer<MinecraftServerClusterFinalizer, MinecraftServerCluster>(
+        "mc-operator.dhv.sh/cluster-finalizer");
 
 // AddControllers registers webhook endpoints (they are ASP.NET Core controllers)
 builder.Services.AddControllers();
