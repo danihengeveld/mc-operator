@@ -189,3 +189,87 @@ properties:
   generateStructures: true
   allowNether: true
 ```
+
+## Cluster configuration
+
+The `MinecraftServerCluster` resource manages multiple backend servers behind a Velocity proxy. This section covers common configuration patterns for clusters.
+
+### Proxy exposure
+
+The proxy is the player-facing entry point. Configure it the same way you would a standalone server's service:
+
+**LoadBalancer** (cloud environments):
+```yaml
+proxy:
+  service:
+    type: LoadBalancer
+    annotations:
+      service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+```
+
+**NodePort** (home labs):
+```yaml
+proxy:
+  service:
+    type: NodePort
+    nodePort: 30577
+```
+
+**ClusterIP** (internal access only):
+```yaml
+proxy:
+  service:
+    type: ClusterIP
+```
+
+The proxy endpoint appears in `status.proxyEndpoint` once provisioned.
+
+### Forwarding mode selection
+
+Player forwarding controls how the proxy passes player identity (IP, UUID, skin) to backend servers.
+
+| Mode | Description | Recommended for |
+|------|-------------|-----------------|
+| `Modern` | Velocity native forwarding with shared secret | Paper backends (recommended) |
+| `BungeeGuard` | BungeeGuard-style token verification | Servers with BungeeGuard plugin |
+| `Legacy` | BungeeCord-style IP forwarding (less secure) | Legacy setups |
+| `None` | No forwarding | Testing only |
+
+<Aside type="tip">
+`Modern` forwarding is the most secure option and is recommended for all Paper-based clusters. The operator automatically generates the forwarding secret and configures backend servers with `onlineMode: false`.
+</Aside>
+
+### Try order configuration
+
+The `tryOrder` field controls which backend server a player connects to first. Values are zero-based indices of the backend servers:
+
+```yaml
+proxy:
+  tryOrder: [0, 2, 1]   # Try server 0 first, then 2, then 1
+```
+
+When omitted, servers are tried in ascending index order (`0, 1, 2, ...`). This is suitable for most load-balancing scenarios.
+
+### Scaling mode selection
+
+**Static mode** — fixed number of servers:
+```yaml
+scaling:
+  mode: Static
+  replicas: 3
+```
+
+**Dynamic mode** — auto-scale between bounds (framework ready, metric collection pending):
+```yaml
+scaling:
+  mode: Dynamic
+  minReplicas: 1
+  maxReplicas: 5
+  policy:
+    metric: PlayerCount
+    targetPercentage: 75
+```
+
+<Aside type="note">
+In `Dynamic` mode, the cluster currently provisions `minReplicas` servers. Metric-driven scaling will be added in a future release once player count collection is implemented.
+</Aside>

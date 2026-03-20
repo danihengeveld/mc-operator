@@ -17,10 +17,11 @@ import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
 
 ## Install the CRD
 
-The `MinecraftServer` CRD must be installed before the operator:
+The `MinecraftServer` and `MinecraftServerCluster` CRDs must be installed before the operator:
 
 ```bash
 kubectl apply -f https://raw.githubusercontent.com/danihengeveld/mc-operator/main/manifests/crd/minecraftservers.yaml
+kubectl apply -f https://raw.githubusercontent.com/danihengeveld/mc-operator/main/manifests/crd/minecraftserverclusters.yaml
 ```
 
 <Aside type="caution">
@@ -62,6 +63,7 @@ Apply the bundled Kustomize manifests directly:
 
 ```bash
 kubectl apply -f manifests/crd/minecraftservers.yaml
+kubectl apply -f manifests/crd/minecraftserverclusters.yaml
 kubectl apply -f manifests/rbac/
 kubectl apply -k manifests/operator/
 ```
@@ -77,8 +79,9 @@ You can use Kustomize overlays to customize the deployment for your environment.
 # Operator pod should be Running
 kubectl get pods -n mc-operator-system
 
-# CRD should be established
+# CRDs should be established
 kubectl get crd minecraftservers.mc-operator.dhv.sh
+kubectl get crd minecraftserverclusters.mc-operator.dhv.sh
 ```
 
 ## Helm values reference

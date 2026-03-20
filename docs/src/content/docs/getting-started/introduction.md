@@ -47,6 +47,7 @@ All distributions are backed by the community-standard [`itzg/minecraft-server`]
 ## Key capabilities
 
 - **CRD-driven**: `MinecraftServer` is a first-class Kubernetes resource with a typed spec and status.
+- **Cluster management**: `MinecraftServerCluster` manages multiple backend servers behind a Velocity proxy with automatic server registration and forwarding secret management.
 - **Admission webhooks**: A validating webhook rejects invalid configurations before they reach the cluster. A mutating webhook applies sensible defaults.
 - **Safe data handling**: PVCs are retained by default when a server is deleted, preventing accidental data loss.
 - **Pause/resume**: Set `spec.replicas: 0` to pause a server and retain all world data. Set back to `1` to resume.
@@ -61,6 +62,5 @@ mc-operator is a **lifecycle manager** — it manages server infrastructure, not
 - Install or manage plugins
 - Handle automated world backups
 - Provide RCON command routing
-- Support multi-server proxy topologies (BungeeCord, Velocity)
 
-These are intentional v1 scope decisions. See the [Roadmap](/mc-operator/about/roadmap/) for future plans.
+These are intentional scope decisions. See the [Roadmap](/mc-operator/about/roadmap/) for future plans.
