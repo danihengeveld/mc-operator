@@ -69,3 +69,23 @@ rules:
   - get
   - update
   - patch
+- apiGroups:
+  - mc-operator.dhv.sh
+  resources:
+  - minecraftserverclusters
+  verbs:
+  - '*'
+- apiGroups:
+  - mc-operator.dhv.sh
+  resources:
+  - minecraftserverclusters/status
+  verbs:
+  - get
+  - update
+  - patch
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  verbs:
+  - '*'

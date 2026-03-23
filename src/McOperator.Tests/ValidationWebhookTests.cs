@@ -1,6 +1,5 @@
 using McOperator.Entities;
 using McOperator.Webhooks;
-using TUnit.Assertions.Extensions;
 
 namespace McOperator.Tests;
 
@@ -17,31 +16,11 @@ public class ValidationWebhookTests
             Spec = new MinecraftServerSpec
             {
                 AcceptEula = true,
-                Server = new ServerSpec
-                {
-                    Type = ServerType.Paper,
-                    Version = "1.20.4",
-                },
-                Jvm = new JvmSpec
-                {
-                    InitialMemory = "512m",
-                    MaxMemory = "1G",
-                },
-                Resources = new ResourcesSpec
-                {
-                    CpuRequest = "500m",
-                    MemoryRequest = "1Gi",
-                },
-                Storage = new StorageSpec
-                {
-                    Enabled = true,
-                    Size = "10Gi",
-                    MountPath = "/data",
-                },
-                Service = new ServiceSpec
-                {
-                    Type = ServiceType.ClusterIP,
-                },
+                Server = new ServerSpec { Type = ServerType.Paper, Version = "1.20.4", },
+                Jvm = new JvmSpec { InitialMemory = "512m", MaxMemory = "1G", },
+                Resources = new ResourcesSpec { CpuRequest = "500m", MemoryRequest = "1Gi", },
+                Storage = new StorageSpec { Enabled = true, Size = "10Gi", MountPath = "/data", },
+                Service = new ServiceSpec { Type = ServiceType.ClusterIP, },
                 Properties = new ServerPropertiesSpec
                 {
                     ServerPort = 25565,

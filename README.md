@@ -1,6 +1,6 @@
 # mc-operator
 
-A production-grade Kubernetes Operator for managing Minecraft server deployments, built with .NET 10 and [KubeOps](https://github.com/buehler/dotnet-operator-sdk).
+A production-grade Kubernetes Operator for managing Minecraft server deployments and multi-server clusters with Velocity proxy support, built with .NET 10 and [KubeOps](https://github.com/buehler/dotnet-operator-sdk).
 
 **API group**: `mc-operator.dhv.sh` · **Docs**: [mc-operator.dhv.sh](https://mc-operator.dhv.sh) · **Maintained by**: [dani.hengeveld.dev](https://dani.hengeveld.dev)
 
@@ -20,9 +20,9 @@ mc-operator/
 │   └── mc-operator/            # Helm chart (OCI-published to GHCR)
 ├── docs/                       # Astro Starlight site (Bun)
 │                               # Deployed to mc-operator.dhv.sh
-├── examples/                   # Example MinecraftServer manifests
+├── examples/                   # Example MinecraftServer and MinecraftServerCluster manifests
 ├── manifests/
-│   ├── crd/                    # CustomResourceDefinition YAML
+│   ├── crd/                    # CustomResourceDefinition YAML (MinecraftServer + MinecraftServerCluster)
 │   ├── rbac/                   # ClusterRole + ClusterRoleBinding
 │   └── operator/               # Deployment, Service, webhooks (Kustomize)
 └── src/
@@ -33,8 +33,9 @@ mc-operator/
 ## Quick install
 
 ```bash
-# Install the CRD
+# Install the CRDs
 kubectl apply -f https://raw.githubusercontent.com/danihengeveld/mc-operator/main/manifests/crd/minecraftservers.yaml
+kubectl apply -f https://raw.githubusercontent.com/danihengeveld/mc-operator/main/manifests/crd/minecraftserverclusters.yaml
 
 # Install the operator via Helm (OCI chart)
 helm install mc-operator oci://ghcr.io/danihengeveld/charts/mc-operator \
@@ -61,6 +62,34 @@ spec:
     maxMemory: "4G"
   storage:
     size: "20Gi"
+```
+
+Or deploy a multi-server cluster with a Velocity proxy:
+
+```yaml
+apiVersion: mc-operator.dhv.sh/v1alpha1
+kind: MinecraftServerCluster
+metadata:
+  name: survival-cluster
+  namespace: minecraft
+spec:
+  template:
+    acceptEula: true
+    server:
+      type: Paper
+      version: "1.20.4"
+    jvm:
+      maxMemory: "3G"
+    storage:
+      size: "20Gi"
+  scaling:
+    mode: Static
+    replicas: 3
+  proxy:
+    maxPlayers: 150
+    playerForwardingMode: Modern
+    service:
+      type: LoadBalancer
 ```
 
 ## Container image

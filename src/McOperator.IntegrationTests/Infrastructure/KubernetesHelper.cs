@@ -1,4 +1,6 @@
+using System.Net;
 using k8s;
+using k8s.Autorest;
 using k8s.Models;
 
 namespace McOperator.IntegrationTests.Infrastructure;
@@ -13,35 +15,33 @@ public static class KubernetesHelper
     /// <summary>
     /// Creates a unique namespace for test isolation and returns its name.
     /// </summary>
-    public static async Task<string> CreateTestNamespaceAsync(IKubernetes client, string prefix = "test")
+    public static async Task<string> CreateTestNamespaceAsync(IKubernetes client, string prefix = "test",
+        CancellationToken cancellationToken = default)
     {
         var name = $"{prefix}-{Guid.NewGuid():N}"[..32];
         var ns = new V1Namespace
         {
             Metadata = new V1ObjectMeta
             {
-                Name = name,
-                Labels = new Dictionary<string, string>
-                {
-                    ["mc-operator-test"] = "true",
-                },
+                Name = name, Labels = new Dictionary<string, string> { ["mc-operator-test"] = "true", },
             },
         };
 
-        await client.CoreV1.CreateNamespaceAsync(ns);
+        await client.CoreV1.CreateNamespaceAsync(ns, cancellationToken: cancellationToken);
         return name;
     }
 
     /// <summary>
     /// Deletes a namespace and all resources in it.
     /// </summary>
-    public static async Task DeleteNamespaceAsync(IKubernetes client, string namespaceName)
+    public static async Task DeleteNamespaceAsync(IKubernetes client, string namespaceName,
+        CancellationToken cancellationToken = default)
     {
         try
         {
-            await client.CoreV1.DeleteNamespaceAsync(namespaceName);
+            await client.CoreV1.DeleteNamespaceAsync(namespaceName, cancellationToken: cancellationToken);
         }
-        catch (k8s.Autorest.HttpOperationException ex) when (ex.Response.StatusCode == System.Net.HttpStatusCode.NotFound)
+        catch (HttpOperationException ex) when (ex.Response.StatusCode == HttpStatusCode.NotFound)
         {
             // Already deleted
         }
@@ -100,7 +100,7 @@ public static class KubernetesHelper
                     result = await getter();
                     return result is not null;
                 }
-                catch (k8s.Autorest.HttpOperationException ex) when (ex.Response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                catch (HttpOperationException ex) when (ex.Response.StatusCode == HttpStatusCode.NotFound)
                 {
                     return false;
                 }
@@ -117,14 +117,15 @@ public static class KubernetesHelper
     public static async Task<object> CreateMinecraftServerAsync(
         IKubernetes client,
         string namespaceName,
-        object serverSpec)
+        object serverSpec,
+        CancellationToken cancellationToken = default)
     {
         return await client.CustomObjects.CreateNamespacedCustomObjectAsync(
             body: serverSpec,
             group: "mc-operator.dhv.sh",
             version: "v1alpha1",
             namespaceParameter: namespaceName,
-            plural: "minecraftservers");
+            plural: "minecraftservers", cancellationToken: cancellationToken);
     }
 
     /// <summary>
@@ -133,7 +134,8 @@ public static class KubernetesHelper
     public static async Task<object?> GetMinecraftServerAsync(
         IKubernetes client,
         string namespaceName,
-        string name)
+        string name,
+        CancellationToken cancellationToken = default)
     {
         try
         {
@@ -142,9 +144,9 @@ public static class KubernetesHelper
                 version: "v1alpha1",
                 namespaceParameter: namespaceName,
                 plural: "minecraftservers",
-                name: name);
+                name: name, cancellationToken: cancellationToken);
         }
-        catch (k8s.Autorest.HttpOperationException ex) when (ex.Response.StatusCode == System.Net.HttpStatusCode.NotFound)
+        catch (HttpOperationException ex) when (ex.Response.StatusCode == HttpStatusCode.NotFound)
         {
             return null;
         }
@@ -157,7 +159,8 @@ public static class KubernetesHelper
         IKubernetes client,
         string namespaceName,
         string name,
-        object patchBody)
+        object patchBody,
+        CancellationToken cancellationToken = default)
     {
         var patch = new V1Patch(patchBody, V1Patch.PatchType.MergePatch);
         return await client.CustomObjects.PatchNamespacedCustomObjectAsync(
@@ -166,29 +169,47 @@ public static class KubernetesHelper
             version: "v1alpha1",
             namespaceParameter: namespaceName,
             plural: "minecraftservers",
-            name: name);
+            name: name, cancellationToken: cancellationToken);
     }
 
     /// <summary>
-    /// Deletes a MinecraftServer custom resource.
+    /// Creates a MinecraftServerCluster custom resource in the specified namespace.
     /// </summary>
-    public static async Task DeleteMinecraftServerAsync(
+    public static async Task CreateMinecraftServerClusterAsync(
         IKubernetes client,
         string namespaceName,
-        string name)
+        object clusterSpec,
+        CancellationToken cancellationToken = default)
+    {
+        await client.CustomObjects.CreateNamespacedCustomObjectAsync(
+            body: clusterSpec,
+            group: "mc-operator.dhv.sh",
+            version: "v1alpha1",
+            namespaceParameter: namespaceName,
+            plural: "minecraftserverclusters", cancellationToken: cancellationToken);
+    }
+
+    /// <summary>
+    /// Gets a MinecraftServerCluster custom resource.
+    /// </summary>
+    public static async Task<object?> GetMinecraftServerClusterAsync(
+        IKubernetes client,
+        string namespaceName,
+        string name,
+        CancellationToken cancellationToken = default)
     {
         try
         {
-            await client.CustomObjects.DeleteNamespacedCustomObjectAsync(
+            return await client.CustomObjects.GetNamespacedCustomObjectAsync(
                 group: "mc-operator.dhv.sh",
                 version: "v1alpha1",
                 namespaceParameter: namespaceName,
-                plural: "minecraftservers",
-                name: name);
+                plural: "minecraftserverclusters",
+                name: name, cancellationToken: cancellationToken);
         }
-        catch (k8s.Autorest.HttpOperationException ex) when (ex.Response.StatusCode == System.Net.HttpStatusCode.NotFound)
+        catch (HttpOperationException ex) when (ex.Response.StatusCode == HttpStatusCode.NotFound)
         {
-            // Already deleted
+            return null;
         }
     }
 }

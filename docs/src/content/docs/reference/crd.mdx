@@ -1,6 +1,6 @@
 ---
 title: CRD Reference
-description: Complete reference for the MinecraftServer custom resource — spec, status, and all fields.
+description: Complete reference for the MinecraftServer and MinecraftServerCluster custom resources — spec, status, and all fields.
 sidebar:
   order: 1
 ---
@@ -170,3 +170,118 @@ Pending → Provisioning → Running
 ```
 
 On deletion, the phase transitions to `Terminating` while the finalizer runs.
+
+---
+
+## MinecraftServerCluster
+
+**API Group/Version**: `mc-operator.dhv.sh/v1alpha1`  
+**Kind**: `MinecraftServerCluster`  
+**Short name**: `mcsc`  
+**Scope**: Namespaced
+
+---
+
+## Cluster Spec
+
+### Top-level fields
+
+| Field | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| `template` | `MinecraftServerTemplate` | ✅ | — | Template for backend MinecraftServer instances. Each server created by the cluster uses this template. |
+| `scaling` | `ScalingSpec` | ✅ | — | Scaling configuration for the backend servers. |
+| `proxy` | `VelocityProxySpec` | | defaults | Velocity proxy configuration for routing players to backend servers. |
+
+---
+
+### `template`
+
+The template contains the same types used by a standalone `MinecraftServer`, minus the `replicas` and `service` fields (which are managed by the cluster's scaling and proxy configuration respectively).
+
+| Field | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| `acceptEula` | `boolean` | ✅ | `false` | Must be `true` to start the servers. You accept the [Minecraft EULA](https://www.minecraft.net/en-us/eula). |
+| `server` | `ServerSpec` | ✅ | — | Server distribution and version. See [server](#server) above. |
+| `properties` | `ServerPropertiesSpec` | | defaults | Game settings (`server.properties`). See [properties](#properties) above. |
+| `jvm` | `JvmSpec` | | defaults | JVM heap and flags. See [jvm](#jvm) above. |
+| `resources` | `ResourcesSpec` | | defaults | Kubernetes resource requests/limits. See [resources](#resources) above. |
+| `storage` | `StorageSpec` | | defaults | Persistent storage configuration. See [storage](#storage) above. |
+| `image` | `string` | | — | Override the container image. If unset, uses `itzg/minecraft-server:latest`. |
+| `imagePullPolicy` | `string` | | `IfNotPresent` | `Always`, `IfNotPresent`, or `Never`. |
+
+---
+
+### `scaling`
+
+| Field | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| `mode` | `string` | | `Static` | `Static` (fixed replica count) or `Dynamic` (auto-scale between min and max). |
+| `replicas` | `integer` | | `1` | Number of backend servers for `Static` mode (1–100). |
+| `minReplicas` | `integer` | | `1` | Minimum number of backend servers for `Dynamic` mode (1–100). |
+| `maxReplicas` | `integer` | | `10` | Maximum number of backend servers for `Dynamic` mode (1–100). Must be ≥ `minReplicas`. |
+| `policy` | `ScalingPolicy` | | — | Scaling policy for `Dynamic` mode. Required when `mode: Dynamic`. |
+
+#### `scaling.policy`
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `metric` | `string` | `PlayerCount` | The metric to use for scaling decisions. Currently only `PlayerCount` is supported. |
+| `targetPercentage` | `integer` | `80` | Target utilization percentage (1–100). When average utilization exceeds this value, the cluster scales up. For `PlayerCount`: percentage of `maxPlayers` occupied across all servers. |
+
+<Aside type="note">
+Dynamic scaling mode is currently a framework — the scaling policy is validated and stored, but metric collection is not yet implemented. In `Dynamic` mode, the cluster provisions `minReplicas` servers until metric-driven scaling is added.
+</Aside>
+
+---
+
+### `proxy`
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `proxyPort` | `integer` | `25577` | The port the Velocity proxy listens on (1024–65535). |
+| `maxPlayers` | `integer` | `100` | Maximum number of players the proxy reports in the server list (1–10000). |
+| `onlineMode` | `boolean` | `true` | Whether the proxy authenticates players with Mojang. |
+| `playerForwardingMode` | `string` | `Modern` | Player info forwarding mode: `None`, `Legacy`, `BungeeGuard`, `Modern`. Modern is recommended for Paper backends. |
+| `motd` | `string` | — | Message of the day displayed in the server list. |
+| `tryOrder` | `integer[]` | `[]` | Ordered list of server indices (zero-based) that players try to connect to. Empty = ascending index order. |
+| `version` | `string` | `LATEST` | Velocity version. |
+| `image` | `string` | — | Override the proxy container image. Defaults to `itzg/mc-proxy:latest`. |
+| `imagePullPolicy` | `string` | `IfNotPresent` | `Always`, `IfNotPresent`, or `Never`. |
+| `service` | `ServiceSpec` | defaults | Service type and exposure settings for the proxy. |
+| `resources` | `ResourcesSpec` | defaults | Kubernetes resource requests/limits for the proxy container. |
+
+<Aside type="tip">
+When using `Modern` or `BungeeGuard` forwarding, the operator automatically sets `onlineMode: false` on backend servers. Player authentication is handled by the proxy, not the backend servers.
+</Aside>
+
+---
+
+## Cluster Status
+
+The `status` subresource is managed by the operator and reflects the current observed state.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `phase` | `string` | Lifecycle phase: `Pending`, `Provisioning`, `Running`, `Degraded`, `Failed`, `Terminating`. |
+| `message` | `string` | Human-readable description of the current state. |
+| `observedGeneration` | `integer` | The spec generation that was last reconciled. |
+| `readyServers` | `integer` | Number of backend servers in the `Running` phase. |
+| `totalServers` | `integer` | Total number of backend servers managed by the cluster. |
+| `readyProxyReplicas` | `integer` | Number of ready Velocity proxy replicas. |
+| `proxyEndpoint.host` | `string` | IP address or hostname for connecting to the proxy. |
+| `proxyEndpoint.port` | `integer` | Port for the Minecraft protocol (proxy). |
+| `proxyEndpoint.connectionString` | `string` | `host:port` connection string. |
+| `servers` | `ClusterServerStatus[]` | Status of each backend server (`name`, `phase`). |
+| `conditions` | `Condition[]` | Standard Kubernetes conditions (`Available`, `Progressing`, `Degraded`, `ProxyReady`). |
+
+### Cluster phase lifecycle
+
+```
+Pending → Provisioning → Running
+                       ↘
+                        Degraded  (some servers not ready)
+                       ↓
+                      Failed  (unrecoverable error)
+```
+
+On deletion, the phase transitions to `Terminating` while the finalizer runs and child resources are garbage-collected.

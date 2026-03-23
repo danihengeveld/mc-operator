@@ -1,3 +1,4 @@
+using KubeOps.Abstractions.Builder;
 using KubeOps.Operator;
 using McOperator.Controllers;
 using McOperator.Entities;
@@ -12,11 +13,14 @@ builder.Logging.SetMinimumLevel(LogLevel.Information);
 builder.Services
     .AddKubernetesOperator(settings =>
     {
-        settings.Name = "mc-operator";
-        settings.LeaderElectionType = KubeOps.Abstractions.Builder.LeaderElectionType.Single;
+        settings.Name = OperatorConstants.OperatorName;
+        settings.LeaderElectionType = LeaderElectionType.Single;
     })
     .AddController<MinecraftServerController, MinecraftServer>()
-    .AddFinalizer<MinecraftServerFinalizer, MinecraftServer>("mc-operator.dhv.sh/finalizer");
+    .AddFinalizer<MinecraftServerFinalizer, MinecraftServer>(OperatorConstants.ServerFinalizer)
+    .AddController<MinecraftServerClusterController, MinecraftServerCluster>()
+    .AddFinalizer<MinecraftServerClusterFinalizer, MinecraftServerCluster>(
+        OperatorConstants.ClusterFinalizer);
 
 // AddControllers registers webhook endpoints (they are ASP.NET Core controllers)
 builder.Services.AddControllers();

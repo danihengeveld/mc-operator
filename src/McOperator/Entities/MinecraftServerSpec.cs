@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
-using KubeOps.Abstractions.Entities.Attributes;
 
 namespace McOperator.Entities;
 
@@ -12,7 +11,7 @@ public class MinecraftServerSpec
     /// <summary>
     /// Server distribution and version settings.
     /// </summary>
-    [System.ComponentModel.DataAnnotations.Required]
+    [Required]
     public ServerSpec Server { get; set; } = new();
 
     /// <summary>
@@ -43,7 +42,7 @@ public class MinecraftServerSpec
     /// <summary>
     /// Whether to accept the Minecraft EULA. Must be true to start the server.
     /// </summary>
-    [System.ComponentModel.DataAnnotations.Required]
+    [Required]
     public bool AcceptEula { get; set; } = false;
 
     /// <summary>
@@ -73,7 +72,7 @@ public class ServerSpec
     /// <summary>
     /// The Minecraft server distribution type.
     /// </summary>
-    [System.ComponentModel.DataAnnotations.Required]
+    [Required]
     public ServerType Type { get; set; } = ServerType.Vanilla;
 
     /// <summary>

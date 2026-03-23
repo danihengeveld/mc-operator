@@ -5,7 +5,6 @@ using KubeOps.Abstractions.Reconciliation.Controller;
 using KubeOps.KubernetesClient;
 using McOperator.Builders;
 using McOperator.Entities;
-using McOperator.Extensions;
 
 namespace McOperator.Controllers;
 
@@ -207,7 +206,7 @@ public class MinecraftServerController : IEntityController<MinecraftServer>
         }
 
         var port = server.Spec.Properties.ServerPort;
-        string? host = null;
+        string? host;
 
         if (server.Spec.Service.Type == ServiceType.LoadBalancer)
         {
@@ -280,47 +279,43 @@ public class MinecraftServerController : IEntityController<MinecraftServer>
         }
     }
 
-    private static IList<V1Condition> BuildConditions(
+    private static List<V1Condition> BuildConditions(
         MinecraftServerPhase phase,
         string message,
         long observedGeneration)
     {
-        var now = DateTime.UtcNow.ToString("o");
-        var conditions = new List<V1Condition>();
-
-        // Available condition
-        conditions.Add(new V1Condition
-        {
-            Type = MinecraftServerConditions.Available,
-            Status = phase == MinecraftServerPhase.Running ? "True" : "False",
-            ObservedGeneration = observedGeneration,
-            LastTransitionTime = DateTime.UtcNow,
-            Reason = phase == MinecraftServerPhase.Running ? "ServerRunning" : "ServerNotReady",
-            Message = message,
-        });
-
-        // Progressing condition
-        conditions.Add(new V1Condition
-        {
-            Type = MinecraftServerConditions.Progressing,
-            Status = phase == MinecraftServerPhase.Provisioning ? "True" : "False",
-            ObservedGeneration = observedGeneration,
-            LastTransitionTime = DateTime.UtcNow,
-            Reason = phase == MinecraftServerPhase.Provisioning ? "Reconciling" : "Idle",
-            Message = message,
-        });
-
-        // Degraded condition
-        conditions.Add(new V1Condition
-        {
-            Type = MinecraftServerConditions.Degraded,
-            Status = phase == MinecraftServerPhase.Failed ? "True" : "False",
-            ObservedGeneration = observedGeneration,
-            LastTransitionTime = DateTime.UtcNow,
-            Reason = phase == MinecraftServerPhase.Failed ? "ReconcileError" : "OK",
-            Message = phase == MinecraftServerPhase.Failed ? message : "No issues",
-        });
-
-        return conditions;
+        var now = DateTime.UtcNow;
+        return
+        [
+            new V1Condition
+            {
+                Type = MinecraftServerConditions.Available,
+                Status = phase == MinecraftServerPhase.Running ? "True" : "False",
+                ObservedGeneration = observedGeneration,
+                LastTransitionTime = now,
+                Reason = phase == MinecraftServerPhase.Running ? "ServerRunning" : "ServerNotReady",
+                Message = message,
+            },
+            // Progressing condition
+            new V1Condition
+            {
+                Type = MinecraftServerConditions.Progressing,
+                Status = phase == MinecraftServerPhase.Provisioning ? "True" : "False",
+                ObservedGeneration = observedGeneration,
+                LastTransitionTime = now,
+                Reason = phase == MinecraftServerPhase.Provisioning ? "Reconciling" : "Idle",
+                Message = message,
+            },
+            // Degraded condition
+            new V1Condition
+            {
+                Type = MinecraftServerConditions.Degraded,
+                Status = phase == MinecraftServerPhase.Failed ? "True" : "False",
+                ObservedGeneration = observedGeneration,
+                LastTransitionTime = now,
+                Reason = phase == MinecraftServerPhase.Failed ? "ReconcileError" : "OK",
+                Message = phase == MinecraftServerPhase.Failed ? message : "No issues",
+            }
+        ];
     }
 }
