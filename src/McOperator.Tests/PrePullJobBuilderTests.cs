@@ -8,6 +8,7 @@ namespace McOperator.Tests;
 /// </summary>
 public class PrePullJobBuilderTests
 {
+    // Default server: no custom image, storage enabled → jar-download mode.
     private static MinecraftServer BuildServer(string name = "test-server", string ns = "default")
     {
         var server = new MinecraftServer();
@@ -19,6 +20,22 @@ public class PrePullJobBuilderTests
             AcceptEula = true,
             Server = new ServerSpec { Type = ServerType.Paper, Version = "1.20.4" },
         };
+        return server;
+    }
+
+    // Server with a custom image override → OCI-only mode.
+    private static MinecraftServer BuildServerWithCustomImage(string name = "test-server", string ns = "default")
+    {
+        var server = BuildServer(name, ns);
+        server.Spec.Image = "custom/image:v1";
+        return server;
+    }
+
+    // Server with storage disabled → OCI-only mode even for the default itzg image.
+    private static MinecraftServer BuildServerWithStorageDisabled(string name = "test-server", string ns = "default")
+    {
+        var server = BuildServer(name, ns);
+        server.Spec.Storage = new StorageSpec { Enabled = false };
         return server;
     }
 
@@ -83,16 +100,154 @@ public class PrePullJobBuilderTests
         await Assert.That(container.ImagePullPolicy).IsEqualTo("IfNotPresent");
     }
 
+    // -----------------------------------------------------------------------
+    // OCI-only mode (custom image)
+    // -----------------------------------------------------------------------
+
     [Test]
-    public async Task Build_Container_OverridesEntrypointToExitImmediately()
+    public async Task Build_Container_WithCustomImage_ExitsImmediately()
     {
+        var server = BuildServerWithCustomImage();
+        var job = PrePullJobBuilder.Build(server, "custom/image:v1", null);
+
+        var container = job.Spec.Template.Spec.Containers[0];
+        await Assert.That(container.Command).IsNotNull();
+        // The command must include "exit 0" so no server logic ever runs.
+        await Assert.That(string.Join(" ", container.Command)).Contains("exit 0");
+    }
+
+    [Test]
+    public async Task Build_Container_WithStorageDisabled_ExitsImmediately()
+    {
+        var server = BuildServerWithStorageDisabled();
+        var job = PrePullJobBuilder.Build(server, "itzg/minecraft-server:latest", null);
+
+        var container = job.Spec.Template.Spec.Containers[0];
+        await Assert.That(container.Command).IsNotNull();
+        await Assert.That(string.Join(" ", container.Command)).Contains("exit 0");
+    }
+
+    [Test]
+    public async Task Build_Container_WithCustomImage_HasNoVolumeMount()
+    {
+        var server = BuildServerWithCustomImage();
+        var job = PrePullJobBuilder.Build(server, "custom/image:v1", null);
+
+        var container = job.Spec.Template.Spec.Containers[0];
+        var hasMount = container.VolumeMounts?.Any() == true;
+        await Assert.That(hasMount).IsFalse();
+    }
+
+    [Test]
+    public async Task Build_PodSpec_WithCustomImage_HasNoVolumes()
+    {
+        var server = BuildServerWithCustomImage();
+        var job = PrePullJobBuilder.Build(server, "custom/image:v1", null);
+
+        var hasVolumes = job.Spec.Template.Spec.Volumes?.Any() == true;
+        await Assert.That(hasVolumes).IsFalse();
+    }
+
+    // -----------------------------------------------------------------------
+    // Jar-download mode (default itzg image + storage enabled)
+    // -----------------------------------------------------------------------
+
+    [Test]
+    public async Task Build_Container_WithDefaultImage_RunsStartupWithFakeJava()
+    {
+        // Default server has no custom image and storage enabled → jar-download mode.
         var server = BuildServer();
         var job = PrePullJobBuilder.Build(server, "itzg/minecraft-server:latest", null);
 
         var container = job.Spec.Template.Spec.Containers[0];
         await Assert.That(container.Command).IsNotNull();
-        await Assert.That(container.Command).Contains("exit 0");
+
+        var fullCommand = string.Join(" ", container.Command);
+        // Verifies the fake java stub is set up and the itzg start script is invoked.
+        await Assert.That(fullCommand).Contains("JAVA_CMD");
+        await Assert.That(fullCommand).Contains("/start");
     }
+
+    [Test]
+    public async Task Build_Container_WithDefaultImage_HasDataVolumeMount()
+    {
+        var server = BuildServer();
+        var job = PrePullJobBuilder.Build(server, "itzg/minecraft-server:latest", null);
+
+        var container = job.Spec.Template.Spec.Containers[0];
+        var dataMount = container.VolumeMounts?.FirstOrDefault(m => m.Name == "data");
+        await Assert.That(dataMount).IsNotNull();
+        await Assert.That(dataMount!.MountPath).IsEqualTo(server.Spec.Storage.MountPath);
+    }
+
+    [Test]
+    public async Task Build_PodSpec_WithDefaultImage_HasDataVolume()
+    {
+        var server = BuildServer();
+        var job = PrePullJobBuilder.Build(server, "itzg/minecraft-server:latest", null);
+
+        var dataVolume = job.Spec.Template.Spec.Volumes?.FirstOrDefault(v => v.Name == "data");
+        await Assert.That(dataVolume).IsNotNull();
+        // The claim name follows the StatefulSet convention: data-<server>-0
+        await Assert.That(dataVolume!.PersistentVolumeClaim!.ClaimName).IsEqualTo("data-test-server-0");
+    }
+
+    [Test]
+    public async Task Build_Container_WithDefaultImage_HasEulaEnvVar()
+    {
+        var server = BuildServer();
+        var job = PrePullJobBuilder.Build(server, "itzg/minecraft-server:latest", null);
+
+        var container = job.Spec.Template.Spec.Containers[0];
+        var eulaEnv = container.Env?.FirstOrDefault(e => e.Name == "EULA");
+        await Assert.That(eulaEnv).IsNotNull();
+        await Assert.That(eulaEnv!.Value).IsEqualTo("TRUE");
+    }
+
+    [Test]
+    public async Task Build_Container_WithDefaultImage_HasTypeAndVersionEnvVars()
+    {
+        var server = BuildServer();
+        server.Spec.Server.Type = ServerType.Paper;
+        server.Spec.Server.Version = "1.20.4";
+        var job = PrePullJobBuilder.Build(server, "itzg/minecraft-server:latest", null);
+
+        var container = job.Spec.Template.Spec.Containers[0];
+        var typeEnv = container.Env?.FirstOrDefault(e => e.Name == "TYPE");
+        var versionEnv = container.Env?.FirstOrDefault(e => e.Name == "VERSION");
+
+        await Assert.That(typeEnv).IsNotNull();
+        await Assert.That(typeEnv!.Value).IsEqualTo("PAPER");
+        await Assert.That(versionEnv).IsNotNull();
+        await Assert.That(versionEnv!.Value).IsEqualTo("1.20.4");
+    }
+
+    [Test]
+    public async Task Build_Container_WithDefaultImage_HasSkipServerPropertiesEnvVar()
+    {
+        var server = BuildServer();
+        var job = PrePullJobBuilder.Build(server, "itzg/minecraft-server:latest", null);
+
+        var container = job.Spec.Template.Spec.Containers[0];
+        var skipEnv = container.Env?.FirstOrDefault(e => e.Name == "SKIP_SERVER_PROPERTIES");
+        await Assert.That(skipEnv).IsNotNull();
+        await Assert.That(skipEnv!.Value).IsEqualTo("true");
+    }
+
+    [Test]
+    public async Task Build_Container_WithDefaultImage_WorkingDirIsStorageMountPath()
+    {
+        var server = BuildServer();
+        server.Spec.Storage.MountPath = "/data";
+        var job = PrePullJobBuilder.Build(server, "itzg/minecraft-server:latest", null);
+
+        var container = job.Spec.Template.Spec.Containers[0];
+        await Assert.That(container.WorkingDir).IsEqualTo("/data");
+    }
+
+    // -----------------------------------------------------------------------
+    // Common job spec
+    // -----------------------------------------------------------------------
 
     [Test]
     public async Task Build_Job_HasBackoffLimitZero()
@@ -191,7 +346,7 @@ public class PrePullJobBuilderTests
     }
 
     [Test]
-    public async Task Build_Container_HasMinimalResourceRequests()
+    public async Task Build_Container_HasResourceRequests()
     {
         var server = BuildServer();
         var job = PrePullJobBuilder.Build(server, "itzg/minecraft-server:latest", null);

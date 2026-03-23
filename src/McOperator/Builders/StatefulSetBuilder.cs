@@ -128,7 +128,7 @@ public static class StatefulSetBuilder
             Metadata = new V1ObjectMeta { Name = DataVolumeName, },
             Spec = new V1PersistentVolumeClaimSpec
             {
-                AccessModes = new List<string> { "ReadWriteOnce" },
+                AccessModes = new List<string> { "ReadWriteMany" },
                 Resources = new V1VolumeResourceRequirements
                 {
                     Requests = new Dictionary<string, ResourceQuantity>
