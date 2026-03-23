@@ -50,6 +50,7 @@ All distributions are backed by the community-standard [`itzg/minecraft-server`]
 - **Cluster management**: `MinecraftServerCluster` manages multiple backend servers behind a Velocity proxy with automatic server registration and forwarding secret management.
 - **Admission webhooks**: A validating webhook rejects invalid configurations before they reach the cluster. A mutating webhook applies sensible defaults.
 - **Safe data handling**: PVCs are retained by default when a server is deleted, preventing accidental data loss.
+- **Zero-downtime version upgrades**: When a server version is changed, the operator pre-pulls the new container image and pre-downloads the Minecraft server jar to the data volume while the server is still running. The rolling update then only waits for the server process to start — not for any downloads.
 - **Pause/resume**: Set `spec.replicas: 0` to pause a server and retain all world data. Set back to `1` to resume.
 - **Status reporting**: The operator continuously reports the server's phase (`Pending`, `Provisioning`, `Running`, `Paused`, `Failed`), connection endpoint, and PVC status.
 - **Leader election**: Deploy multiple operator replicas safely using built-in leader election.

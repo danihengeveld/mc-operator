@@ -254,6 +254,8 @@ The chart creates a `ClusterRole` granting the operator permissions to manage:
 | `statefulsets` | `apps` | `*` |
 | `deployments` | `apps` | `*` |
 | `services`, `configmaps`, `persistentvolumeclaims` | `""` | `*` |
+| `pods` | `""` | `get` |
+| `jobs` | `batch` | `create`, `get`, `delete` |
 | `events` | `""` | `get`, `list`, `create`, `update`, `patch` |
 | `leases` | `coordination.k8s.io` | `*` |
 | `minecraftservers` | `mc-operator.dhv.sh` | `*` |

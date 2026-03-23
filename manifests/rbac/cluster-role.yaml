@@ -28,6 +28,22 @@ rules:
   - create
   - patch
 - apiGroups:
+  - ""
+  nonResourceURLs: []
+  resources:
+  - pods
+  verbs:
+  - get
+- apiGroups:
+  - batch
+  nonResourceURLs: []
+  resources:
+  - jobs
+  verbs:
+  - create
+  - get
+  - delete
+- apiGroups:
   - coordination.k8s.io
   nonResourceURLs: []
   resources:

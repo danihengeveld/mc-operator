@@ -28,6 +28,7 @@ It deliberately does **not** include game-content concerns (plugins, modpacks, b
 |---------|-------|
 | Multi-server proxy (Velocity) | `MinecraftServerCluster` CRD with managed Velocity proxy, Modern forwarding, and automatic server registration |
 | Scaling framework | Static mode (fixed replicas) and Dynamic mode structure (min/max/policy) — metric-driven scaling pending |
+| Zero-downtime version upgrades | Pre-pull Job pulls new OCI image layers and pre-downloads the Minecraft server jar to the data PVC while the server is still running; rolling update only waits for server startup |
 
 ## Planned for future releases
 

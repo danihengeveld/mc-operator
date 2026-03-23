@@ -121,19 +121,21 @@ These are rough guidelines. Profile your specific server (plugins, world size, c
 
 ## Storage class selection
 
-Use a high-throughput, low-latency StorageClass for Minecraft world data. World I/O is write-heavy (chunk saving):
+Use a high-throughput, low-latency StorageClass for Minecraft world data. World I/O is write-heavy (chunk saving).
+
+mc-operator uses **`ReadWriteMany`** PVCs so that a short-lived pre-pull Job can mount the data volume simultaneously with the running server pod during version upgrades. Ensure your StorageClass supports `ReadWriteMany`:
 
 ```yaml
 storage:
-  storageClassName: "premium-rwo"   # Cloud-provider SSD class
+  storageClassName: "premium-rwx"   # Cloud-provider SSD class with RWX support
   size: "30Gi"
 ```
 
-Common StorageClass names:
-- **GKE**: `premium-rwo` (SSD persistent disk)
-- **EKS**: `gp3` (with the EBS CSI driver)
-- **AKS**: `managed-premium` (Azure Premium SSD)
-- **On-prem**: Depends on your CSI driver (Longhorn, Rook-Ceph, etc.)
+Common StorageClass options with `ReadWriteMany` support:
+- **GKE**: Filestore (`ReadWriteMany`) or standard Persistent Disk in single-node clusters
+- **EKS**: EFS (with the EFS CSI driver)
+- **AKS**: Azure Files (`azurefile-csi`)
+- **On-prem**: Longhorn, Rook-Ceph (CephFS), NFS-based CSI drivers
 
 ## Namespace strategy
 
@@ -177,7 +179,16 @@ kubectl patch minecraftserver paper-survival -n minecraft \
   --type merge -p '{"spec": {"server": {"version": "1.21.0"}}}'
 ```
 
-The operator reconciles the StatefulSet with the new `VERSION` environment variable. The pod restarts and the `itzg/minecraft-server` image downloads the new version.
+The operator detects the image change and begins a **zero-downtime upgrade sequence**:
+
+1. A short-lived `batch/v1` pre-pull Job is created on the server's current node. It mounts the data PVC and runs the itzg startup scripts with a fake `java` stub — this downloads the new server jar to the PVC while the old server is still running, then exits 0.
+2. Once the Job completes, the StatefulSet rolling update is applied. Because both the OCI image layers and the server jar are already present, the new pod starts almost immediately.
+
+The server status message shows `"Pre-pulling image: <image>"` during step 1. You can watch the upgrade:
+
+```bash
+kubectl get minecraftserver paper-survival -n minecraft -w
+```
 
 <Aside type="caution">
 Always back up world data before upgrading Minecraft versions. Some updates include chunk format changes that are irreversible.

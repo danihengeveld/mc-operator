@@ -48,7 +48,7 @@ This avoids:
 
 ## Decision 3: PVC Lifecycle and Data Safety
 
-**Choice: Retain by default (`deleteWithServer: false`)**
+**Choice: `ReadWriteMany` access mode, retain by default (`deleteWithServer: false`)**
 
 Minecraft world data is irreplaceable. By default:
 - When a `MinecraftServer` is deleted, the PVC is **not** deleted
@@ -57,9 +57,9 @@ Minecraft world data is irreplaceable. By default:
 
 Users must explicitly opt in to PVC deletion by setting `spec.storage.deleteWithServer: true`.
 
-This decision prioritizes **safety over convenience**. The operational cost of a retained PVC is minor (some storage cost), but the cost of accidentally deleted world data is catastrophic and unrecoverable.
+**`ReadWriteMany` access mode** is used so that the running server pod and a short-lived pre-pull Job can both mount the same PVC simultaneously during a version upgrade (see Decision 15). This requires a storage backend that supports `ReadWriteMany` — most production CSI drivers (NFS, Longhorn, Rook-Ceph, and many cloud block storage providers with the right StorageClass) support this. On vanilla single-node setups (e.g. k3s with local-path), `ReadWriteMany` is also supported since a single node can mount the same volume from multiple pods.
 
-**The finalizer** handles PVC cleanup in the `deleteWithServer: true` case. It runs before the StatefulSet is garbage-collected (via owner reference), ensuring the PVC is only deleted after the workload is stopped.
+This decision prioritizes **safety over convenience**. The operational cost of a retained PVC is minor (some storage cost), but the cost of accidentally deleted world data is catastrophic and unrecoverable.
 
 ---
 
@@ -253,7 +253,7 @@ mc-operator/
 │   └── operator/               # Deployment, Service, webhooks (Kustomize)
 └── src/
     ├── McOperator/             # .NET 10 operator application
-    │   ├── Builders/           # Resource builders (StatefulSet, Service, ConfigMap, VelocityProxy)
+    │   ├── Builders/           # Resource builders (StatefulSet, Service, ConfigMap, VelocityProxy, PrePullJob)
     │   ├── Controllers/        # Reconciliation controllers (MinecraftServer, MinecraftServerCluster)
     │   ├── Entities/           # CRD entity types (spec, status for both resources)
     │   ├── Extensions/         # Extension methods
@@ -264,10 +264,39 @@ mc-operator/
         ├── ValidationWebhookTests.cs
         ├── ClusterValidationWebhookTests.cs
         ├── StatefulSetBuilderTests.cs
+        ├── PrePullJobBuilderTests.cs
         ├── VelocityProxyBuilderTests.cs
         ├── ServiceBuilderTests.cs
         ├── ConfigMapBuilderTests.cs
         ├── ClusterExtensionsTests.cs
         └── MemoryParsingTests.cs
 ```
+
+---
+
+## Decision 15: Zero-Downtime Version Upgrades via Pre-Pull Jobs
+
+**Choice: Short-lived Kubernetes Job to pre-pull image and pre-download server jar before rolling update**
+
+When a `MinecraftServer` version or image is changed, the operator creates a one-shot `batch/v1` Job (`<server-name>-prepull`) **before** applying the StatefulSet rolling update. This keeps server downtime to the absolute minimum — only the Minecraft process restart time, not the OCI image download or server jar fetch.
+
+**Why this matters:** The default itzg/minecraft-server OCI image is ~700 MB compressed. The Minecraft server jar (e.g. vanilla 1.21.0) is ~50 MB. Without pre-pull, both downloads happen after the old pod is terminated, adding significant latency to every upgrade.
+
+**Two modes depending on server configuration:**
+
+| Mode | Condition | What the Job does |
+|------|-----------|-------------------|
+| Jar-download | Default itzg image + `storage.enabled = true` | Mounts the data PVC (`ReadWriteMany`), runs the itzg `/start` script with a fake `java` stub so startup scripts download the server jar to the PVC, then exits 0 |
+| OCI-only | Custom `spec.image` or `storage.enabled = false` | Runs `sh -c "exit 0"` — forces the OCI image layers to be cached on the node, no jar download |
+
+**Fake JVM stub technique (jar-download mode):** A tiny shell script (`#!/bin/sh\nexit 0`) is written to `/tmp/fj/java` and placed ahead of the real JVM in both `$PATH` and `$JAVA_CMD`. The itzg startup scripts resolve the Minecraft version and download the server jar to the mounted `/data` PVC exactly as they would in production. When they eventually try to launch the JVM, the stub exits 0, completing the Job cleanly without ever starting a Minecraft process. `SKIP_SERVER_PROPERTIES=true` prevents the startup scripts from overwriting `server.properties` that the live server is actively using.
+
+**Pre-pull is skipped when:**
+- No `status.currentImage` (fresh deployment — no existing version to compare)
+- Desired image matches `status.currentImage` (no version change)
+- `spec.replicas == 0` (server is paused)
+
+**Failure handling:** If the pre-pull Job fails (bad image ref, registry auth issue, network error), the upgrade proceeds anyway. Pre-pull failure is a warning, not a blocker — the server pod will still start, it just won't benefit from the pre-pull optimisation.
+
+**RBAC additions:** The operator requires `batch/jobs: *` and `pods: get` cluster-level permissions to create pre-pull Jobs and read the node assignment of the current server pod.
 

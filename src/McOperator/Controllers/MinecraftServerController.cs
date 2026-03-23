@@ -20,7 +20,7 @@ namespace McOperator.Controllers;
 [GenericRbac(Groups = [""], Resources = ["services", "configmaps", "persistentvolumeclaims"], Verbs = RbacVerb.All)]
 [GenericRbac(Groups = [""], Resources = ["events"], Verbs = RbacVerb.Create | RbacVerb.Patch)]
 [GenericRbac(Groups = [""], Resources = ["pods"], Verbs = RbacVerb.Get)]
-[GenericRbac(Groups = ["batch"], Resources = ["jobs"], Verbs = RbacVerb.All)]
+[GenericRbac(Groups = ["batch"], Resources = ["jobs"], Verbs = RbacVerb.Get | RbacVerb.Create | RbacVerb.Delete)]
 [GenericRbac(Groups = ["coordination.k8s.io"], Resources = ["leases"], Verbs = RbacVerb.All)]
 public class MinecraftServerController : IEntityController<MinecraftServer>
 {
