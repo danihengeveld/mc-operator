@@ -78,11 +78,13 @@ jobs:
         with:
           dockerfile: Dockerfile
 
-  lint-chart:
-    name: Lint Helm Chart
+  lint-and-test-chart:
+    name: Lint & Test Helm Chart
     needs: changes
     if: needs.changes.outputs.chart == 'true'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v6
 
@@ -91,6 +93,12 @@ jobs:
 
       - name: Lint chart
         run: helm lint charts/mc-operator --strict
+
+      - name: Install helm-unittest plugin
+        run: helm plugin install https://github.com/helm-unittest/helm-unittest
+
+      - name: Run chart unit tests
+        run: helm unittest charts/mc-operator
 
   build-docs:
     name: Build Docs

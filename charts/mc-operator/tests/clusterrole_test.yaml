@@ -1,0 +1,175 @@
+suite: ClusterRole
+templates:
+  - clusterrole.yaml
+release:
+  name: mc-operator
+  namespace: mc-operator-system
+tests:
+  - it: renders a ClusterRole
+    asserts:
+      - isKind:
+          of: ClusterRole
+      - equal:
+          path: metadata.name
+          value: mc-operator-role
+
+  - it: grants StatefulSet permissions
+    asserts:
+      - contains:
+          path: rules
+          content:
+            apiGroups:
+              - apps
+            resources:
+              - statefulsets
+            verbs:
+              - '*'
+
+  - it: grants Service, ConfigMap, and PVC permissions
+    asserts:
+      - contains:
+          path: rules
+          content:
+            apiGroups:
+              - ""
+            resources:
+              - services
+              - configmaps
+              - persistentvolumeclaims
+            verbs:
+              - '*'
+
+  - it: grants Pod get permission for pre-pull node lookup
+    asserts:
+      - contains:
+          path: rules
+          content:
+            apiGroups:
+              - ""
+            resources:
+              - pods
+            verbs:
+              - get
+
+  - it: grants batch/jobs create, get, delete for pre-pull Jobs
+    asserts:
+      - contains:
+          path: rules
+          content:
+            apiGroups:
+              - batch
+            resources:
+              - jobs
+            verbs:
+              - create
+              - get
+              - delete
+
+  - it: grants MinecraftServer CRD permissions
+    asserts:
+      - contains:
+          path: rules
+          content:
+            apiGroups:
+              - mc-operator.dhv.sh
+            resources:
+              - minecraftservers
+            verbs:
+              - '*'
+
+  - it: grants MinecraftServer status permissions
+    asserts:
+      - contains:
+          path: rules
+          content:
+            apiGroups:
+              - mc-operator.dhv.sh
+            resources:
+              - minecraftservers/status
+            verbs:
+              - get
+              - update
+              - patch
+
+  - it: grants MinecraftServerCluster CRD permissions
+    asserts:
+      - contains:
+          path: rules
+          content:
+            apiGroups:
+              - mc-operator.dhv.sh
+            resources:
+              - minecraftserverclusters
+            verbs:
+              - '*'
+
+  - it: grants MinecraftServerCluster status permissions
+    asserts:
+      - contains:
+          path: rules
+          content:
+            apiGroups:
+              - mc-operator.dhv.sh
+            resources:
+              - minecraftserverclusters/status
+            verbs:
+              - get
+              - update
+              - patch
+
+  - it: grants Deployment permissions for Velocity proxy
+    asserts:
+      - contains:
+          path: rules
+          content:
+            apiGroups:
+              - apps
+            resources:
+              - deployments
+            verbs:
+              - '*'
+
+  - it: grants event permissions
+    asserts:
+      - contains:
+          path: rules
+          content:
+            apiGroups:
+              - ""
+            resources:
+              - events
+            verbs:
+              - get
+              - list
+              - create
+              - update
+              - patch
+
+  - it: grants lease permissions for leader election
+    asserts:
+      - contains:
+          path: rules
+          content:
+            apiGroups:
+              - coordination.k8s.io
+            resources:
+              - leases
+            verbs:
+              - '*'
+
+  - it: includes common labels
+    asserts:
+      - exists:
+          path: metadata.labels["helm.sh/chart"]
+      - exists:
+          path: metadata.labels["app.kubernetes.io/name"]
+      - exists:
+          path: metadata.labels["app.kubernetes.io/instance"]
+
+  - it: applies fullnameOverride to role name
+    set:
+      fullnameOverride: custom-operator
+    asserts:
+      - equal:
+          path: metadata.name
+          value: custom-operator-role
