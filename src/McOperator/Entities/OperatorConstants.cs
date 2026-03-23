@@ -27,6 +27,7 @@ public static class OperatorConstants
     public const string ServerNameLabel = $"{Group}/server-name";
     public const string ClusterNameLabel = $"{Group}/cluster-name";
     public const string ConfigLabel = $"{Group}/config";
+    public const string PrePullLabel = $"{Group}/pre-pull";
 
     // Kubernetes well-known label keys
     public const string AppNameLabel = "app.kubernetes.io/name";
