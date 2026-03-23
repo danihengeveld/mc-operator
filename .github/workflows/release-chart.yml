@@ -54,7 +54,7 @@ jobs:
         run: helm lint ${{ env.CHART_PATH }} --strict
 
       - name: Install helm-unittest plugin
-        run: helm plugin install https://github.com/helm-unittest/helm-unittest
+        run: helm plugin install --verify=false https://github.com/helm-unittest/helm-unittest
 
       - name: Run chart unit tests
         run: helm unittest ${{ env.CHART_PATH }}
