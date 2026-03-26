@@ -61,7 +61,7 @@ public class MinecraftServerController : IEntityController<MinecraftServer>
             // 3. Pre-pull the new image on the server's node before applying the
             //    StatefulSet update so that pod restart time is minimised.
             var desiredImage = StatefulSetBuilder.ResolveImage(server.Spec);
-            if (!await EnsureImagePrePulled(server, desiredImage, cancellationToken))
+            if (server.Spec.PrePull && !await EnsureImagePrePulled(server, desiredImage, cancellationToken))
             {
                 await UpdatePhase(
                     server,

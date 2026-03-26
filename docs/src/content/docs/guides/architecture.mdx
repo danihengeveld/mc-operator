@@ -51,7 +51,7 @@ The `MinecraftServer` CRD (`mc-operator.dhv.sh/v1alpha1`) is the operator's publ
 1. Sets the status phase to `Provisioning`
 2. Reconciles the **ConfigMap** (audit-visible `server.properties`)
 3. Reconciles the **Service** (ClusterIP/NodePort/LoadBalancer)
-4. **Pre-pulls** the new image and server jar (see [Pre-pull Jobs](#pre-pull-jobs) below)
+4. **Pre-pulls** the new image and server jar when `spec.prePull: true` (see [Pre-pull Jobs](#pre-pull-jobs) below)
 5. Reconciles the **StatefulSet** (the actual server workload)
 6. Reads StatefulSet status to determine the current phase
 7. Updates the `status` subresource with endpoint and PVC info
@@ -102,7 +102,7 @@ Users can override with `spec.image` for full control (e.g. custom images with p
 
 ### Data safety defaults
 
-PVCs use **`ReadWriteMany`** access mode so the running server pod and a short-lived pre-pull Job can both mount the same volume simultaneously during a version upgrade. Most production CSI drivers (NFS, Longhorn, Rook-Ceph, cloud block storage) and single-node setups (k3s local-path) support this mode.
+PVCs use **`ReadWriteOnce`** access mode by default. When `spec.prePull: true` is set, the access mode is switched to `ReadWriteMany` so the running server pod and a short-lived pre-pull Job can both mount the same volume simultaneously during a version upgrade. Most production CSI drivers (NFS, Longhorn, Rook-Ceph, cloud block storage) and single-node setups (k3s local-path) support `ReadWriteMany`.
 
 PVCs are **retained by default** on deletion (`deleteWithServer: false`). World data is irreplaceable; the operational cost of a retained PVC is negligible compared to the risk of accidental deletion.
 
@@ -119,7 +119,7 @@ Reconcile(server):
   1. status.phase = Provisioning
   2. ConfigMap: get-or-create / update
   3. Service:   get-or-create / update
-  4. Pre-pull:  if image changed on an active server →
+  4. Pre-pull:  if spec.prePull is true and image changed on an active server →
                   create Job (mounts PVC, pulls image + downloads jar)
                   requeue 30s until Job complete, then proceed
   5. StatefulSet: get-or-create / update
@@ -135,7 +135,7 @@ On error, the controller requeues after 30 seconds.
 
 ## Pre-pull Jobs
 
-When a `MinecraftServer` version or image is changed, the operator creates a short-lived `batch/v1` Job (`<server-name>-prepull`) before updating the StatefulSet. This minimises downtime by ensuring the new image layers and server jar are already present when the rolling update begins.
+When `spec.prePull: true` is set and a `MinecraftServer` version or image is changed, the operator creates a short-lived `batch/v1` Job (`<server-name>-prepull`) before updating the StatefulSet. This minimises downtime by ensuring the new image layers and server jar are already present when the rolling update begins. Pre-pull is disabled by default.
 
 The Job runs in one of two modes:
 
@@ -146,7 +146,7 @@ The Job runs in one of two modes:
 
 The Job targets the specific node where the server pod is running (`spec.nodeName`), so cached image layers are available on exactly the right node. `SKIP_SERVER_PROPERTIES=true` prevents the startup scripts from overwriting config files that the live server is actively using.
 
-Pre-pull is skipped when `status.currentImage` is unset (fresh server), the desired image matches the current image, or `spec.replicas == 0` (paused server). If the Job fails, the upgrade proceeds anyway — pre-pull failure is a warning, not a blocker.
+Pre-pull is skipped when `spec.prePull` is `false` (the default), `status.currentImage` is unset (fresh server), the desired image matches the current image, or `spec.replicas == 0` (paused server). If the Job fails, the upgrade proceeds anyway — pre-pull failure is a warning, not a blocker.
 
 ## MinecraftServerCluster CRD
 

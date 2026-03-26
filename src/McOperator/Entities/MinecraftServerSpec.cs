@@ -62,6 +62,14 @@ public class MinecraftServerSpec
     /// </summary>
     [Range(0, 1)]
     public int Replicas { get; set; } = 1;
+
+    /// <summary>
+    /// Whether to pre-pull the container image (and server jar for the default itzg
+    /// image) on the target node before applying a rolling update.  When enabled the
+    /// data PVC is created with <c>ReadWriteMany</c> access so the pre-pull Job can
+    /// mount it alongside the running server pod.  Defaults to <c>false</c>.
+    /// </summary>
+    public bool PrePull { get; set; } = false;
 }
 
 /// <summary>

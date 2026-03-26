@@ -267,6 +267,8 @@ spec:
               replicas:
                 format: int32
                 type: integer
+              prePull:
+                type: boolean
             required:
             - server
             - acceptEula

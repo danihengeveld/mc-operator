@@ -48,7 +48,7 @@ This avoids:
 
 ## Decision 3: PVC Lifecycle and Data Safety
 
-**Choice: `ReadWriteMany` access mode, retain by default (`deleteWithServer: false`)**
+**Choice: `ReadWriteOnce` access mode by default, `ReadWriteMany` when pre-pull is enabled, retain by default (`deleteWithServer: false`)**
 
 Minecraft world data is irreplaceable. By default:
 - When a `MinecraftServer` is deleted, the PVC is **not** deleted
@@ -57,7 +57,7 @@ Minecraft world data is irreplaceable. By default:
 
 Users must explicitly opt in to PVC deletion by setting `spec.storage.deleteWithServer: true`.
 
-**`ReadWriteMany` access mode** is used so that the running server pod and a short-lived pre-pull Job can both mount the same PVC simultaneously during a version upgrade (see Decision 15). This requires a storage backend that supports `ReadWriteMany` — most production CSI drivers (NFS, Longhorn, Rook-Ceph, and many cloud block storage providers with the right StorageClass) support this. On vanilla single-node setups (e.g. k3s with local-path), `ReadWriteMany` is also supported since a single node can mount the same volume from multiple pods.
+**PVC access mode** defaults to `ReadWriteOnce` for maximum storage backend compatibility. When `spec.prePull: true` is set, the access mode is switched to `ReadWriteMany` so the running server pod and a short-lived pre-pull Job can both mount the same PVC simultaneously during a version upgrade (see Decision 15). `ReadWriteMany` requires a storage backend that supports it — most production CSI drivers (NFS, Longhorn, Rook-Ceph, and many cloud block storage providers with the right StorageClass) support this. On vanilla single-node setups (e.g. k3s with local-path), `ReadWriteMany` is also supported since a single node can mount the same volume from multiple pods.
 
 This decision prioritizes **safety over convenience**. The operational cost of a retained PVC is minor (some storage cost), but the cost of accidentally deleted world data is catastrophic and unrecoverable.
 
@@ -276,9 +276,11 @@ mc-operator/
 
 ## Decision 15: Zero-Downtime Version Upgrades via Pre-Pull Jobs
 
-**Choice: Short-lived Kubernetes Job to pre-pull image and pre-download server jar before rolling update**
+**Choice: Opt-in short-lived Kubernetes Job to pre-pull image and pre-download server jar before rolling update**
 
-When a `MinecraftServer` version or image is changed, the operator creates a one-shot `batch/v1` Job (`<server-name>-prepull`) **before** applying the StatefulSet rolling update. This keeps server downtime to the absolute minimum — only the Minecraft process restart time, not the OCI image download or server jar fetch.
+When `spec.prePull: true` is set and a `MinecraftServer` version or image is changed, the operator creates a one-shot `batch/v1` Job (`<server-name>-prepull`) **before** applying the StatefulSet rolling update. This keeps server downtime to the absolute minimum — only the Minecraft process restart time, not the OCI image download or server jar fetch.
+
+**Pre-pull is disabled by default** because it requires `ReadWriteMany` PVC access (see Decision 3), which not all storage backends support out of the box. Users opt in by setting `spec.prePull: true` on the MinecraftServer resource.
 
 **Why this matters:** The default itzg/minecraft-server OCI image is ~700 MB compressed. The Minecraft server jar (e.g. vanilla 1.21.0) is ~50 MB. Without pre-pull, both downloads happen after the old pod is terminated, adding significant latency to every upgrade.
 
@@ -292,6 +294,7 @@ When a `MinecraftServer` version or image is changed, the operator creates a one
 **Fake JVM stub technique (jar-download mode):** A tiny shell script (`#!/bin/sh\nexit 0`) is written to `/tmp/fj/java` and placed ahead of the real JVM in both `$PATH` and `$JAVA_CMD`. The itzg startup scripts resolve the Minecraft version and download the server jar to the mounted `/data` PVC exactly as they would in production. When they eventually try to launch the JVM, the stub exits 0, completing the Job cleanly without ever starting a Minecraft process. `SKIP_SERVER_PROPERTIES=true` prevents the startup scripts from overwriting `server.properties` that the live server is actively using.
 
 **Pre-pull is skipped when:**
+- `spec.prePull` is `false` (the default — opt-in only)
 - No `status.currentImage` (fresh deployment — no existing version to compare)
 - Desired image matches `status.currentImage` (no version change)
 - `spec.replicas == 0` (server is paused)

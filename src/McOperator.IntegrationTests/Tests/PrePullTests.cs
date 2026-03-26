@@ -325,6 +325,42 @@ public class PrePullTests
         }
     }
 
+    [Test]
+    [Timeout(120_000)]
+    public async Task PrePullDisabled_ImageChange_DoesNotCreatePrePullJob(CancellationToken cancellationToken)
+    {
+        var ns = await KubernetesHelper.CreateTestNamespaceAsync(K3s.Client, cancellationToken: cancellationToken);
+        try
+        {
+            const string serverName = "prepull-skip-disabled";
+            var jobName = $"{serverName}-prepull";
+
+            // Create server with prePull explicitly disabled.
+            await CreateServerWithImage(K3s.Client, ns, serverName, InitialImage, cancellationToken,
+                prePull: false);
+            await WaitForCurrentImage(K3s.Client, ns, serverName, InitialImage, cancellationToken);
+
+            // Change the image.
+            await KubernetesHelper.PatchMinecraftServerAsync(
+                K3s.Client, ns, serverName,
+                new Dictionary<string, object>
+                {
+                    ["spec"] = new Dictionary<string, object> { ["image"] = UpgradedImage, },
+                }, cancellationToken);
+
+            // Allow time for reconciliation.
+            await Task.Delay(TimeSpan.FromSeconds(10), cancellationToken);
+
+            // No pre-pull Job should be created when prePull is disabled.
+            var job = await TryGetJobAsync(K3s.Client, ns, jobName, cancellationToken);
+            await Assert.That(job).IsNull();
+        }
+        finally
+        {
+            await KubernetesHelper.DeleteNamespaceAsync(K3s.Client, ns, cancellationToken);
+        }
+    }
+
     // --------------------------------------------------------------------------
     // Helpers
     // --------------------------------------------------------------------------
@@ -338,7 +374,8 @@ public class PrePullTests
         string name,
         string image,
         CancellationToken cancellationToken,
-        int replicas = 1)
+        int replicas = 1,
+        bool prePull = true)
     {
         var server = new Dictionary<string, object>
         {
@@ -350,6 +387,7 @@ public class PrePullTests
                 ["acceptEula"] = true,
                 ["replicas"] = replicas,
                 ["image"] = image,
+                ["prePull"] = prePull,
                 ["server"] = new Dictionary<string, object> { ["type"] = "Vanilla", ["version"] = "1.20.4", },
                 ["properties"] = new Dictionary<string, object>
                 {
