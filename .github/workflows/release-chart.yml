@@ -31,7 +31,7 @@ jobs:
           fetch-depth: 0
 
       - name: Setup Helm
-        uses: azure/setup-helm@v4
+        uses: azure/setup-helm@v5
 
       # Strip the "chart/v" prefix to get a clean semver string (e.g. "1.2.3")
       - name: Resolve chart version from tag
