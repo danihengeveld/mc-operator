@@ -16,10 +16,11 @@ FROM node:24-alpine AS final
 
 WORKDIR /app
 
-# Copy built output and production node_modules
+# Copy built output, production server, and node_modules
 COPY --from=build /build/dist ./dist
 COPY --from=build /build/node_modules ./node_modules
 COPY --from=build /build/package.json ./
+COPY --from=build /build/start.mjs ./
 
 # Run as non-root user
 RUN addgroup -g 1001 -S dashboard && \
@@ -31,4 +32,4 @@ EXPOSE 3000
 ENV HOST=0.0.0.0
 ENV PORT=3000
 
-ENTRYPOINT ["node", "dist/server/server.js"]
+ENTRYPOINT ["node", "start.mjs"]

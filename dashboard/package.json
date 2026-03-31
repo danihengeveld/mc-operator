@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
-    "start": "node dist/server/server.js"
+    "start": "node start.mjs"
   },
   "dependencies": {
     "@kubernetes/client-node": "^1.4.0",
