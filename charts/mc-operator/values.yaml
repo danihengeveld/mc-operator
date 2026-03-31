@@ -43,3 +43,25 @@ namespace:
 
 # Logging level (Information, Debug, Warning, Error)
 logLevel: Information
+
+# Dashboard configuration (optional monitoring dashboard for Minecraft servers)
+dashboard:
+  enabled: false
+  image:
+    repository: ghcr.io/danihengeveld/mc-operator-dashboard
+    pullPolicy: IfNotPresent
+    tag: ""  # Defaults to chart appVersion
+  replicaCount: 1
+  resources:
+    limits:
+      cpu: 200m
+      memory: 128Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+  service:
+    type: ClusterIP
+    port: 80
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}

@@ -1,0 +1,249 @@
+suite: Dashboard
+templates:
+  - dashboard-deployment.yaml
+  - dashboard-service.yaml
+  - dashboard-serviceaccount.yaml
+  - dashboard-clusterrole.yaml
+  - dashboard-clusterrolebinding.yaml
+release:
+  name: mc-operator
+  namespace: mc-operator-system
+tests:
+  - it: does not render dashboard resources when disabled (default)
+    templates:
+      - dashboard-deployment.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: does not render dashboard service when disabled
+    templates:
+      - dashboard-service.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: does not render dashboard serviceaccount when disabled
+    templates:
+      - dashboard-serviceaccount.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: does not render dashboard clusterrole when disabled
+    templates:
+      - dashboard-clusterrole.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: does not render dashboard clusterrolebinding when disabled
+    templates:
+      - dashboard-clusterrolebinding.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders a Deployment when dashboard is enabled
+    set:
+      dashboard:
+        enabled: true
+    templates:
+      - dashboard-deployment.yaml
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: metadata.namespace
+          value: mc-operator-system
+      - equal:
+          path: metadata.name
+          value: mc-operator-dashboard
+
+  - it: uses chart appVersion as default dashboard image tag
+    set:
+      dashboard:
+        enabled: true
+    templates:
+      - dashboard-deployment.yaml
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.containers[0].image
+          pattern: "ghcr.io/danihengeveld/mc-operator-dashboard:.+"
+
+  - it: applies custom dashboard image settings
+    set:
+      dashboard:
+        enabled: true
+        image:
+          repository: custom-registry/my-dashboard
+          tag: "2.0.0"
+          pullPolicy: Always
+    templates:
+      - dashboard-deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "custom-registry/my-dashboard:2.0.0"
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: Always
+
+  - it: sets dashboard resource limits and requests
+    set:
+      dashboard:
+        enabled: true
+    templates:
+      - dashboard-deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.cpu
+          value: 200m
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.memory
+          value: 128Mi
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.cpu
+          value: 50m
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.memory
+          value: 64Mi
+
+  - it: renders dashboard Service when enabled
+    set:
+      dashboard:
+        enabled: true
+    templates:
+      - dashboard-service.yaml
+    asserts:
+      - isKind:
+          of: Service
+      - equal:
+          path: spec.type
+          value: ClusterIP
+      - equal:
+          path: spec.ports[0].port
+          value: 80
+
+  - it: allows custom dashboard service type and port
+    set:
+      dashboard:
+        enabled: true
+        service:
+          type: LoadBalancer
+          port: 8080
+    templates:
+      - dashboard-service.yaml
+    asserts:
+      - equal:
+          path: spec.type
+          value: LoadBalancer
+      - equal:
+          path: spec.ports[0].port
+          value: 8080
+
+  - it: renders dashboard ServiceAccount when enabled
+    set:
+      dashboard:
+        enabled: true
+    templates:
+      - dashboard-serviceaccount.yaml
+    asserts:
+      - isKind:
+          of: ServiceAccount
+      - equal:
+          path: metadata.name
+          value: mc-operator-dashboard
+
+  - it: renders dashboard ClusterRole with read-only CRD access
+    set:
+      dashboard:
+        enabled: true
+    templates:
+      - dashboard-clusterrole.yaml
+    asserts:
+      - isKind:
+          of: ClusterRole
+      - contains:
+          path: rules
+          content:
+            apiGroups:
+              - mc-operator.dhv.sh
+            resources:
+              - minecraftservers
+              - minecraftserverclusters
+            verbs:
+              - get
+              - list
+              - watch
+
+  - it: renders dashboard ClusterRoleBinding when enabled
+    set:
+      dashboard:
+        enabled: true
+    templates:
+      - dashboard-clusterrolebinding.yaml
+    asserts:
+      - isKind:
+          of: ClusterRoleBinding
+      - equal:
+          path: roleRef.name
+          value: mc-operator-dashboard-role
+
+  - it: sets dashboard security context for non-root execution
+    set:
+      dashboard:
+        enabled: true
+    templates:
+      - dashboard-deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.runAsNonRoot
+          value: true
+      - equal:
+          path: spec.template.spec.securityContext.runAsUser
+          value: 1001
+
+  - it: configures dashboard liveness and readiness probes
+    set:
+      dashboard:
+        enabled: true
+    templates:
+      - dashboard-deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet.path
+          value: /
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet.port
+          value: 3000
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.path
+          value: /
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.port
+          value: 3000
+
+  - it: propagates dashboard nodeSelector
+    set:
+      dashboard:
+        enabled: true
+        nodeSelector:
+          kubernetes.io/os: linux
+    templates:
+      - dashboard-deployment.yaml
+    asserts:
+      - equal:
+          path: spec.template.spec.nodeSelector
+          value:
+            kubernetes.io/os: linux
+
+  - it: omits dashboard nodeSelector when empty
+    set:
+      dashboard:
+        enabled: true
+    templates:
+      - dashboard-deployment.yaml
+    asserts:
+      - isNull:
+          path: spec.template.spec.nodeSelector

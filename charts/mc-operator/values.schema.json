@@ -184,6 +184,100 @@
       "description": "Log verbosity level for the operator",
       "enum": ["Trace", "Debug", "Information", "Warning", "Error", "Critical"],
       "default": "Information"
+    },
+    "dashboard": {
+      "type": "object",
+      "description": "Optional monitoring dashboard for Minecraft servers and clusters",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable the monitoring dashboard",
+          "default": false
+        },
+        "image": {
+          "type": "object",
+          "description": "Dashboard container image configuration",
+          "additionalProperties": false,
+          "properties": {
+            "repository": {
+              "type": "string",
+              "description": "Dashboard container image repository",
+              "default": "ghcr.io/danihengeveld/mc-operator-dashboard"
+            },
+            "tag": {
+              "type": "string",
+              "description": "Dashboard image tag. Defaults to the chart appVersion when empty",
+              "default": ""
+            },
+            "pullPolicy": {
+              "allOf": [{"$ref": "#/definitions/io.k8s.api.core.v1.PullPolicy"}],
+              "default": "IfNotPresent"
+            }
+          }
+        },
+        "replicaCount": {
+          "type": "integer",
+          "description": "Number of dashboard replicas",
+          "minimum": 1,
+          "default": 1
+        },
+        "resources": {
+          "type": "object",
+          "description": "Resource requests and limits for the dashboard pod",
+          "additionalProperties": false,
+          "properties": {
+            "requests": {
+              "allOf": [{"$ref": "#/definitions/io.k8s.api.core.v1.ResourceList"}],
+              "description": "Minimum resources required",
+              "default": {"cpu": "50m", "memory": "64Mi"}
+            },
+            "limits": {
+              "allOf": [{"$ref": "#/definitions/io.k8s.api.core.v1.ResourceList"}],
+              "description": "Maximum resources the dashboard may consume",
+              "default": {"cpu": "200m", "memory": "128Mi"}
+            }
+          }
+        },
+        "service": {
+          "type": "object",
+          "description": "Dashboard Service configuration",
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "type": "string",
+              "description": "Kubernetes Service type for the dashboard",
+              "enum": ["ClusterIP", "NodePort", "LoadBalancer"],
+              "default": "ClusterIP"
+            },
+            "port": {
+              "type": "integer",
+              "description": "Service port for the dashboard",
+              "minimum": 1,
+              "maximum": 65535,
+              "default": 80
+            }
+          }
+        },
+        "nodeSelector": {
+          "type": "object",
+          "description": "Node selector labels for the dashboard pod",
+          "default": {}
+        },
+        "tolerations": {
+          "type": "array",
+          "description": "Tolerations for the dashboard pod",
+          "default": [],
+          "items": {
+            "$ref": "#/definitions/io.k8s.api.core.v1.Toleration"
+          }
+        },
+        "affinity": {
+          "allOf": [{"$ref": "#/definitions/io.k8s.api.core.v1.Affinity"}],
+          "description": "Affinity rules for the dashboard pod",
+          "default": {}
+        }
+      }
     }
   }
 }

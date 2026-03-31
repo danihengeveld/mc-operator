@@ -21,6 +21,7 @@ jobs:
       operator: ${{ steps.filter.outputs.operator }}
       chart: ${{ steps.filter.outputs.chart }}
       docs: ${{ steps.filter.outputs.docs }}
+      dashboard: ${{ steps.filter.outputs.dashboard }}
     steps:
       - uses: actions/checkout@v6
 
@@ -39,6 +40,8 @@ jobs:
               - 'charts/**'
             docs:
               - 'docs/**'
+            dashboard:
+              - 'dashboard/**'
 
   build-and-test:
     name: Build & Test
@@ -123,3 +126,32 @@ jobs:
       - name: Build docs
         working-directory: docs
         run: bun run build
+
+  build-dashboard:
+    name: Build Dashboard
+    needs: changes
+    if: needs.changes.outputs.dashboard == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        working-directory: dashboard
+        run: bun install
+
+      - name: Build dashboard
+        working-directory: dashboard
+        run: bun run build
+
+      - name: Lint Dockerfile
+        uses: hadolint/hadolint-action@v3.3.0
+        with:
+          dockerfile: dashboard/Dockerfile

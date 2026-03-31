@@ -47,5 +47,12 @@ docs/dist/
 docs/.astro/
 docs/package-lock.json
 
+# Dashboard (TanStack Start — Bun-managed)
+# bun.lock IS committed; node_modules and build output are not
+dashboard/node_modules/
+dashboard/dist/
+dashboard/.output/
+dashboard/.vinxi/
+
 # Helm (packaged charts — produced at release time)
 *.tgz

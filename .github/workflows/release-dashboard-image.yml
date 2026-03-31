@@ -1,0 +1,119 @@
+name: Release – Dashboard Image
+
+# Triggered by dashboard-specific version tags: dashboard/v1.2.3
+# This keeps dashboard image releases independent from operator and chart releases.
+on:
+  push:
+    tags:
+      - "dashboard/v*.*.*"
+
+concurrency:
+  group: release-dashboard-image-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}-dashboard
+
+jobs:
+  build-and-push:
+    name: Build & Push Dashboard Image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # to create GitHub Releases and upload assets
+      packages: write
+      id-token: write # Required for writing image attestations (SLSA provenance)
+      attestations: write
+
+    steps:
+      - uses: actions/checkout@v6
+
+      # Strip the "dashboard/v" prefix to get a clean semver string (e.g. "1.2.3")
+      - name: Resolve image version from tag
+        id: version
+        run: |
+          VERSION="${GITHUB_REF_NAME#dashboard/v}"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Dashboard image version: ${VERSION}"
+
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=${{ steps.version.outputs.version }}
+            type=semver,pattern={{major}}.{{minor}},value=v${{ steps.version.outputs.version }}
+            type=semver,pattern={{major}},value=v${{ steps.version.outputs.version }}
+            type=sha,prefix=sha-,format=short
+          labels: |
+            org.opencontainers.image.title=mc-operator-dashboard
+            org.opencontainers.image.description=Monitoring dashboard for mc-operator Minecraft servers
+            org.opencontainers.image.vendor=dhv.sh
+            org.opencontainers.image.version=${{ steps.version.outputs.version }}
+            org.opencontainers.image.documentation=https://mc-operator.dhv.sh
+            org.opencontainers.image.source=https://github.com/danihengeveld/mc-operator
+            org.opencontainers.image.licenses=MIT
+
+      - name: Set up QEMU (multi-arch emulation)
+        uses: docker/setup-qemu-action@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push image
+        id: push
+        uses: docker/build-push-action@v7
+        with:
+          context: ./dashboard
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          provenance: true
+          sbom: true
+
+      - name: Generate image attestation
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: "Dashboard ${{ steps.version.outputs.version }}"
+          generate_release_notes: true
+          body: |
+            ## Dashboard Container Image
+
+            ```
+            ghcr.io/danihengeveld/mc-operator-dashboard:${{ steps.version.outputs.version }}
+            ```
+
+            ### Available tags
+
+            | Tag | Purpose |
+            |-----|---------|
+            | `${{ steps.version.outputs.version }}` | Exact version (recommended) |
+            | `sha-*` | Commit-level traceability |
+
+            ### Verify provenance
+            ```bash
+            gh attestation verify \
+              oci://ghcr.io/danihengeveld/mc-operator-dashboard:${{ steps.version.outputs.version }} \
+              --repo danihengeveld/mc-operator
+            ```
+
+            See the [documentation](https://mc-operator.dhv.sh) for installation instructions.

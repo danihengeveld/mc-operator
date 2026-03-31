@@ -1,0 +1,69 @@
+{{- if .Values.dashboard.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "mc-operator.dashboard.fullname" . }}
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    {{- include "mc-operator.dashboard.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.dashboard.replicaCount }}
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      {{- include "mc-operator.dashboard.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "mc-operator.dashboard.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "mc-operator.dashboard.fullname" . }}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        fsGroup: 1001
+      terminationGracePeriodSeconds: 15
+      containers:
+      - name: dashboard
+        image: "{{ .Values.dashboard.image.repository }}:{{ include "mc-operator.dashboard.imageTag" . }}"
+        imagePullPolicy: {{ .Values.dashboard.image.pullPolicy }}
+        env:
+        - name: HOST
+          value: "0.0.0.0"
+        - name: PORT
+          value: "3000"
+        ports:
+        - name: http
+          containerPort: 3000
+          protocol: TCP
+        resources:
+          {{- toYaml .Values.dashboard.resources | nindent 10 }}
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          initialDelaySeconds: 10
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+      {{- with .Values.dashboard.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.dashboard.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.dashboard.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

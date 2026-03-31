@@ -1,0 +1,34 @@
+{{- if .Values.dashboard.enabled }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "mc-operator.dashboard.fullname" . }}-role
+  labels:
+    {{- include "mc-operator.dashboard.labels" . | nindent 4 }}
+rules:
+# Read-only access to MinecraftServer and MinecraftServerCluster CRDs
+- apiGroups:
+  - mc-operator.dhv.sh
+  resources:
+  - minecraftservers
+  - minecraftserverclusters
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - mc-operator.dhv.sh
+  resources:
+  - minecraftservers/status
+  - minecraftserverclusters/status
+  verbs:
+  - get
+# Read-only access to Services (for endpoint resolution)
+- apiGroups:
+  - ""
+  resources:
+  - services
+  verbs:
+  - get
+  - list
+{{- end }}

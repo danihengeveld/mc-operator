@@ -195,6 +195,27 @@ The following table lists all configurable values with their defaults.
 |-----|------|---------|-------------|
 | `logLevel` | string | `Information` | Log verbosity level. One of `Trace`, `Debug`, `Information`, `Warning`, `Error`, `Critical` |
 
+### Dashboard
+
+The optional monitoring dashboard provides a web UI for viewing all managed Minecraft servers and clusters. When enabled, it deploys a separate container alongside the operator with read-only access to the CRDs.
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `dashboard.enabled` | bool | `false` | Enable the monitoring dashboard |
+| `dashboard.image.repository` | string | `ghcr.io/danihengeveld/mc-operator-dashboard` | Dashboard container image repository |
+| `dashboard.image.tag` | string | `""` | Dashboard image tag. Defaults to the chart `appVersion` |
+| `dashboard.image.pullPolicy` | string | `IfNotPresent` | Dashboard image pull policy |
+| `dashboard.replicaCount` | integer | `1` | Number of dashboard replicas |
+| `dashboard.resources.requests.cpu` | string | `50m` | CPU request for the dashboard pod |
+| `dashboard.resources.requests.memory` | string | `64Mi` | Memory request for the dashboard pod |
+| `dashboard.resources.limits.cpu` | string | `200m` | CPU limit for the dashboard pod |
+| `dashboard.resources.limits.memory` | string | `128Mi` | Memory limit for the dashboard pod |
+| `dashboard.service.type` | string | `ClusterIP` | Kubernetes Service type for the dashboard |
+| `dashboard.service.port` | integer | `80` | Service port for the dashboard |
+| `dashboard.nodeSelector` | object | `{}` | Node selector for the dashboard pod |
+| `dashboard.tolerations` | list | `[]` | Tolerations for the dashboard pod |
+| `dashboard.affinity` | object | `{}` | Affinity rules for the dashboard pod |
+
 ---
 
 ## Webhook TLS
@@ -294,6 +315,17 @@ image:
   repository: ghcr.io/danihengeveld/mc-operator
   tag: "1.2.3"
   pullPolicy: Always
+```
+
+### With dashboard enabled
+
+```yaml
+logLevel: Information
+dashboard:
+  enabled: true
+  service:
+    type: LoadBalancer
+    port: 80
 ```
 
 ---

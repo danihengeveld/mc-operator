@@ -1,10 +1,11 @@
 # Releasing mc-operator
 
-The operator image and Helm chart are **versioned and released independently**. They each have their own tag namespace and release workflow.
+The operator image, dashboard image, and Helm chart are **versioned and released independently**. They each have their own tag namespace and release workflow.
 
 | Artefact | Tag prefix | Example tag |
 |----------|-----------|-------------|
 | Operator image | `operator/v` | `operator/v1.2.3` |
+| Dashboard image | `dashboard/v` | `dashboard/v1.2.3` |
 | Helm chart | `chart/v` | `chart/v1.2.3` |
 
 This separation means a chart bug-fix does not require a new operator image build, and an operator patch release does not force a chart version bump.
@@ -75,6 +76,47 @@ Verify provenance:
 ```bash
 gh attestation verify \
   oci://ghcr.io/danihengeveld/mc-operator:1.2.3 \
+  --repo danihengeveld/mc-operator
+```
+
+---
+
+## Releasing the dashboard image
+
+The dashboard image release pipeline is triggered by pushing a tag that matches `dashboard/v*.*.*`.
+
+```bash
+# 1. Ensure you are on main and CI is green
+git checkout main && git pull
+
+# 2. Create and push the tag
+git tag -a dashboard/v1.2.3 -m "Dashboard release 1.2.3"
+git push origin main dashboard/v1.2.3
+```
+
+GitHub Actions (`release-dashboard-image.yml`) will:
+- Build the multi-arch image (`linux/amd64`, `linux/arm64`)
+- Push to `ghcr.io/danihengeveld/mc-operator-dashboard` with tags:
+  - `1.2.3` — exact version (pin this in production)
+  - `1.2` — minor channel
+  - `1` — major channel
+  - `sha-<short>` — commit-level traceability
+- Generate an SBOM and attach SLSA provenance
+- Create a GitHub Release under the `dashboard/v1.2.3` tag
+
+### Post-release
+
+Verify the image is available:
+
+```bash
+docker pull ghcr.io/danihengeveld/mc-operator-dashboard:1.2.3
+```
+
+Verify provenance:
+
+```bash
+gh attestation verify \
+  oci://ghcr.io/danihengeveld/mc-operator-dashboard:1.2.3 \
   --repo danihengeveld/mc-operator
 ```
 

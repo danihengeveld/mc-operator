@@ -74,6 +74,41 @@ Webhook certificate secret name.
 {{- end }}
 
 {{/*
+Dashboard fullname.
+*/}}
+{{- define "mc-operator.dashboard.fullname" -}}
+{{- printf "%s-dashboard" (include "mc-operator.fullname" .) }}
+{{- end }}
+
+{{/*
+Dashboard labels.
+*/}}
+{{- define "mc-operator.dashboard.labels" -}}
+helm.sh/chart: {{ include "mc-operator.chart" . }}
+{{ include "mc-operator.dashboard.selectorLabels" . }}
+{{- if .Chart.AppVersion }}
+app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+{{- end }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- end }}
+
+{{/*
+Dashboard selector labels.
+*/}}
+{{- define "mc-operator.dashboard.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "mc-operator.name" . }}-dashboard
+app.kubernetes.io/instance: {{ .Release.Name }}
+app.kubernetes.io/component: dashboard
+{{- end }}
+
+{{/*
+Dashboard image tag - defaults to chart appVersion.
+*/}}
+{{- define "mc-operator.dashboard.imageTag" -}}
+{{- .Values.dashboard.image.tag | default .Chart.AppVersion }}
+{{- end }}
+
+{{/*
 Generate webhook TLS certificates.
 Uses lookup to reuse existing certificates on upgrades.
 Returns a dict with ca, cert, and key (all base64-encoded).
