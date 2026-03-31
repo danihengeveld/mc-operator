@@ -132,6 +132,8 @@ jobs:
     needs: changes
     if: needs.changes.outputs.dashboard == 'true'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v6
 
