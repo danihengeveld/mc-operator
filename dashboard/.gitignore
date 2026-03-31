@@ -1,0 +1,7 @@
+node_modules/
+.output/
+.vinxi/
+dist/
+.nitro/
+.cache/
+*.tsbuildinfo
