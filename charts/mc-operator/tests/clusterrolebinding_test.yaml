@@ -1,0 +1,66 @@
+suite: ClusterRoleBinding
+templates:
+  - clusterrolebinding.yaml
+release:
+  name: mc-operator
+  namespace: mc-operator-system
+tests:
+  - it: renders a ClusterRoleBinding
+    asserts:
+      - isKind:
+          of: ClusterRoleBinding
+      - equal:
+          path: metadata.name
+          value: mc-operator-role-binding
+
+  - it: references the correct ClusterRole
+    asserts:
+      - equal:
+          path: roleRef.apiGroup
+          value: rbac.authorization.k8s.io
+      - equal:
+          path: roleRef.kind
+          value: ClusterRole
+      - equal:
+          path: roleRef.name
+          value: mc-operator-role
+
+  - it: binds to the correct ServiceAccount
+    asserts:
+      - equal:
+          path: subjects[0].kind
+          value: ServiceAccount
+      - equal:
+          path: subjects[0].name
+          value: mc-operator
+      - equal:
+          path: subjects[0].namespace
+          value: mc-operator-system
+
+  - it: uses custom serviceAccount name
+    set:
+      serviceAccount:
+        create: true
+        name: custom-sa
+    asserts:
+      - equal:
+          path: subjects[0].name
+          value: custom-sa
+
+  - it: uses custom namespace
+    set:
+      namespace:
+        name: custom-ns
+    asserts:
+      - equal:
+          path: subjects[0].namespace
+          value: custom-ns
+
+  - it: includes common labels
+    asserts:
+      - exists:
+          path: metadata.labels["helm.sh/chart"]
+      - exists:
+          path: metadata.labels["app.kubernetes.io/name"]
+      - exists:
+          path: metadata.labels["app.kubernetes.io/instance"]

@@ -123,12 +123,17 @@ public static class StatefulSetBuilder
             return null;
         }
 
+        // Use ReadWriteMany when pre-pull is enabled so the pre-pull Job can
+        // mount the PVC alongside the running server pod; otherwise the safer
+        // ReadWriteOnce access mode is used.
+        var accessMode = spec.PrePull ? "ReadWriteMany" : "ReadWriteOnce";
+
         var pvc = new V1PersistentVolumeClaim
         {
             Metadata = new V1ObjectMeta { Name = DataVolumeName, },
             Spec = new V1PersistentVolumeClaimSpec
             {
-                AccessModes = new List<string> { "ReadWriteOnce" },
+                AccessModes = new List<string> { accessMode },
                 Resources = new V1VolumeResourceRequirements
                 {
                     Requests = new Dictionary<string, ResourceQuantity>

@@ -339,4 +339,32 @@ public class StatefulSetBuilderTests
 
         await Assert.That(image).IsEqualTo("my-registry/mc-server:custom");
     }
+
+    [Test]
+    public async Task Build_PvcAccessMode_IsReadWriteOnce_WhenPrePullDisabled()
+    {
+        var server = BuildServer(s =>
+        {
+            s.Storage.Enabled = true;
+            s.PrePull = false;
+        });
+        var sts = StatefulSetBuilder.Build(server);
+
+        var pvc = sts.Spec.VolumeClaimTemplates![0];
+        await Assert.That(pvc.Spec.AccessModes).Contains("ReadWriteOnce");
+    }
+
+    [Test]
+    public async Task Build_PvcAccessMode_IsReadWriteMany_WhenPrePullEnabled()
+    {
+        var server = BuildServer(s =>
+        {
+            s.Storage.Enabled = true;
+            s.PrePull = true;
+        });
+        var sts = StatefulSetBuilder.Build(server);
+
+        var pvc = sts.Spec.VolumeClaimTemplates![0];
+        await Assert.That(pvc.Spec.AccessModes).Contains("ReadWriteMany");
+    }
 }

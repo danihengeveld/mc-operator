@@ -1,0 +1,244 @@
+suite: Deployment
+templates:
+  - deployment.yaml
+release:
+  name: mc-operator
+  namespace: mc-operator-system
+tests:
+  - it: renders a Deployment with default values
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: metadata.namespace
+          value: mc-operator-system
+
+  - it: uses chart appVersion as default image tag
+    asserts:
+      - matchRegex:
+          path: spec.template.spec.containers[0].image
+          pattern: "ghcr.io/danihengeveld/mc-operator:.+"
+
+  - it: applies custom image settings
+    set:
+      image:
+        repository: custom-registry/my-operator
+        tag: "1.2.3"
+        pullPolicy: Always
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "custom-registry/my-operator:1.2.3"
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: Always
+
+  - it: propagates replicaCount
+    set:
+      replicaCount: 3
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 3
+
+  - it: sets resource limits and requests
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.cpu
+          value: 200m
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.memory
+          value: 128Mi
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.cpu
+          value: 100m
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.memory
+          value: 64Mi
+
+  - it: propagates custom resource values
+    set:
+      resources:
+        limits:
+          cpu: "1"
+          memory: 512Mi
+        requests:
+          cpu: 500m
+          memory: 256Mi
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.cpu
+          value: "1"
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.memory
+          value: 512Mi
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.cpu
+          value: 500m
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.memory
+          value: 256Mi
+
+  - it: propagates nodeSelector
+    set:
+      nodeSelector:
+        kubernetes.io/os: linux
+        node-role: operator
+    asserts:
+      - equal:
+          path: spec.template.spec.nodeSelector
+          value:
+            kubernetes.io/os: linux
+            node-role: operator
+
+  - it: omits nodeSelector when empty
+    asserts:
+      - isNull:
+          path: spec.template.spec.nodeSelector
+
+  - it: propagates tolerations
+    set:
+      tolerations:
+        - key: "dedicated"
+          operator: "Equal"
+          value: "operator"
+          effect: "NoSchedule"
+    asserts:
+      - equal:
+          path: spec.template.spec.tolerations[0].key
+          value: dedicated
+      - equal:
+          path: spec.template.spec.tolerations[0].effect
+          value: NoSchedule
+
+  - it: omits tolerations when empty
+    asserts:
+      - isNull:
+          path: spec.template.spec.tolerations
+
+  - it: propagates affinity
+    set:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/os
+                    operator: In
+                    values:
+                      - linux
+    asserts:
+      - isNotNull:
+          path: spec.template.spec.affinity.nodeAffinity
+
+  - it: omits affinity when empty
+    asserts:
+      - isNull:
+          path: spec.template.spec.affinity
+
+  - it: propagates imagePullSecrets
+    set:
+      imagePullSecrets:
+        - name: my-registry-secret
+    asserts:
+      - equal:
+          path: spec.template.spec.imagePullSecrets[0].name
+          value: my-registry-secret
+
+  - it: omits imagePullSecrets when empty
+    asserts:
+      - isNull:
+          path: spec.template.spec.imagePullSecrets
+
+  - it: propagates logLevel to environment variable
+    set:
+      logLevel: Debug
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: Logging__LogLevel__Default
+            value: Debug
+
+  - it: uses correct serviceAccount name
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: mc-operator
+
+  - it: uses custom serviceAccount name
+    set:
+      serviceAccount:
+        create: true
+        name: custom-sa
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: custom-sa
+
+  - it: sets security context for non-root execution
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.runAsNonRoot
+          value: true
+      - equal:
+          path: spec.template.spec.securityContext.runAsUser
+          value: 1001
+      - equal:
+          path: spec.template.spec.securityContext.fsGroup
+          value: 1001
+
+  - it: mounts webhook certs volume
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: webhook-certs
+            mountPath: /certs
+            readOnly: true
+
+  - it: exposes http and https ports
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].ports
+          content:
+            name: http
+            containerPort: 8080
+            protocol: TCP
+      - contains:
+          path: spec.template.spec.containers[0].ports
+          content:
+            name: https
+            containerPort: 5001
+            protocol: TCP
+
+  - it: configures liveness and readiness probes
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet.path
+          value: /healthz
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet.port
+          value: 8080
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.path
+          value: /readyz
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.port
+          value: 8080
+
+  - it: applies fullnameOverride
+    set:
+      fullnameOverride: my-custom-operator
+    asserts:
+      - equal:
+          path: metadata.name
+          value: my-custom-operator
+
+  - it: applies nameOverride
+    set:
+      nameOverride: short-name
+    asserts:
+      - equal:
+          path: metadata.name
+          value: mc-operator-short-name

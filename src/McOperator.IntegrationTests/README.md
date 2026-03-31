@@ -75,7 +75,8 @@ McOperator.IntegrationTests/
 │   ├── HappyPathTests.cs      # Create valid CR → verify child resources
 │   ├── UpdateFlowTests.cs     # Modify CR → verify reconciliation updates
 │   ├── ValidationTests.cs     # Invalid CRs rejected by CRD schema
-│   └── StatusConditionTests.cs # Status/conditions reflect actual state
+│   ├── StatusConditionTests.cs # Status/conditions reflect actual state
+│   └── PrePullTests.cs        # Image pre-pull and jar download during version upgrades
 └── README.md
 ```
 

@@ -30,6 +30,22 @@ rules:
   - update
   - patch
 - apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - get
+# Pre-pull Jobs: created during version upgrades to pull new images and
+# pre-download the Minecraft server jar before the rolling update begins.
+- apiGroups:
+  - batch
+  resources:
+  - jobs
+  verbs:
+  - create
+  - get
+  - delete
+- apiGroups:
   - coordination.k8s.io
   resources:
   - leases

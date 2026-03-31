@@ -19,6 +19,8 @@ namespace McOperator.Controllers;
 [GenericRbac(Groups = ["apps"], Resources = ["statefulsets"], Verbs = RbacVerb.All)]
 [GenericRbac(Groups = [""], Resources = ["services", "configmaps", "persistentvolumeclaims"], Verbs = RbacVerb.All)]
 [GenericRbac(Groups = [""], Resources = ["events"], Verbs = RbacVerb.Create | RbacVerb.Patch)]
+[GenericRbac(Groups = [""], Resources = ["pods"], Verbs = RbacVerb.Get)]
+[GenericRbac(Groups = ["batch"], Resources = ["jobs"], Verbs = RbacVerb.Get | RbacVerb.Create | RbacVerb.Delete)]
 [GenericRbac(Groups = ["coordination.k8s.io"], Resources = ["leases"], Verbs = RbacVerb.All)]
 public class MinecraftServerController : IEntityController<MinecraftServer>
 {
@@ -56,10 +58,23 @@ public class MinecraftServerController : IEntityController<MinecraftServer>
             // 2. Reconcile Service
             await ReconcileService(server, cancellationToken);
 
-            // 3. Reconcile StatefulSet
+            // 3. Pre-pull the new image on the server's node before applying the
+            //    StatefulSet update so that pod restart time is minimised.
+            var desiredImage = StatefulSetBuilder.ResolveImage(server.Spec);
+            if (server.Spec.PrePull && !await EnsureImagePrePulled(server, desiredImage, cancellationToken))
+            {
+                await UpdatePhase(
+                    server,
+                    MinecraftServerPhase.Provisioning,
+                    $"Pre-pulling image: {desiredImage}",
+                    cancellationToken);
+                return ReconciliationResult<MinecraftServer>.Success(server, requeueAfter: TimeSpan.FromSeconds(30));
+            }
+
+            // 4. Reconcile StatefulSet
             var sts = await ReconcileStatefulSet(server, cancellationToken);
 
-            // 4. Update status based on StatefulSet state
+            // 5. Update status based on StatefulSet state
             await UpdateStatus(server, sts, cancellationToken);
 
             return ReconciliationResult<MinecraftServer>.Success(server, requeueAfter: TimeSpan.FromMinutes(5));
@@ -317,5 +332,108 @@ public class MinecraftServerController : IEntityController<MinecraftServer>
                 Message = phase == MinecraftServerPhase.Failed ? message : "No issues",
             }
         ];
+    }
+
+    /// <summary>
+    /// Ensures the desired container image is pre-pulled on the node running the
+    /// current server pod before the StatefulSet rolling update is applied.
+    /// </summary>
+    /// <returns>
+    /// <c>true</c> when no pre-pull is needed or the pre-pull has finished
+    /// (caller may proceed with the StatefulSet update).
+    /// <c>false</c> when a pre-pull Job has been created or is still running
+    /// (caller should requeue and check again later).
+    /// </returns>
+    private async Task<bool> EnsureImagePrePulled(
+        MinecraftServer server,
+        string desiredImage,
+        CancellationToken cancellationToken)
+    {
+        // Pre-pull is only relevant when the image is actually changing on an
+        // existing (non-paused) server deployment.
+        if (string.IsNullOrEmpty(server.Status.CurrentImage) ||
+            server.Status.CurrentImage == desiredImage ||
+            server.Spec.Replicas == 0)
+        {
+            return true;
+        }
+
+        var jobName = PrePullJobBuilder.JobName(server);
+        var ns = server.Namespace();
+
+        var existingJob = await _client.GetAsync<V1Job>(jobName, ns, cancellationToken);
+
+        if (existingJob is not null)
+        {
+            // If the user changed the image again while a pre-pull was already
+            // running, discard the stale Job and start fresh.
+            var containers = existingJob.Spec?.Template?.Spec?.Containers;
+            var jobImage = containers?.Count > 0 ? containers[0].Image : null;
+            if (jobImage != desiredImage)
+            {
+                _logger.LogInformation(
+                    "Image changed during pre-pull, recreating Job {Name} for image {Image}",
+                    jobName, desiredImage);
+                await _client.DeleteAsync<V1Job>(existingJob, cancellationToken);
+                existingJob = null;
+            }
+        }
+
+        if (existingJob is null)
+        {
+            var targetNode = await GetCurrentPodNode(server, cancellationToken);
+            var job = PrePullJobBuilder.Build(server, desiredImage, targetNode);
+
+            _logger.LogInformation(
+                "Creating pre-pull Job {Name} for image {Image} on node {Node}",
+                jobName, desiredImage, targetNode ?? "<any>");
+
+            await _client.CreateAsync(job, cancellationToken);
+            return false;
+        }
+
+        var conditions = existingJob.Status?.Conditions ?? [];
+
+        if (conditions.Any(c => c.Type == "Complete" && c.Status == "True"))
+        {
+            _logger.LogInformation(
+                "Pre-pull Job {Name} completed successfully, proceeding with upgrade", jobName);
+            await _client.DeleteAsync<V1Job>(existingJob, cancellationToken);
+            return true;
+        }
+
+        if (conditions.Any(c => c.Type == "Failed" && c.Status == "True"))
+        {
+            _logger.LogWarning(
+                "Pre-pull Job {Name} failed (image pull may not be cached); proceeding with upgrade anyway",
+                jobName);
+            await _client.DeleteAsync<V1Job>(existingJob, cancellationToken);
+            return true;
+        }
+
+        _logger.LogInformation("Waiting for pre-pull Job {Name} to complete…", jobName);
+        return false;
+    }
+
+    /// <summary>
+    /// Returns the Kubernetes node name of the StatefulSet pod (pod ordinal 0)
+    /// for the given server, or <c>null</c> if the pod cannot be found.
+    /// </summary>
+    private async Task<string?> GetCurrentPodNode(MinecraftServer server, CancellationToken cancellationToken)
+    {
+        try
+        {
+            // StatefulSet pods are named <statefulset-name>-<ordinal>.
+            var podName = $"{server.Name()}-0";
+            var pod = await _client.GetAsync<V1Pod>(podName, server.Namespace(), cancellationToken);
+            return pod?.Spec?.NodeName;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex,
+                "Could not determine node for MinecraftServer {Namespace}/{Name}; pre-pull will target any node",
+                server.Namespace(), server.Name());
+            return null;
+        }
     }
 }

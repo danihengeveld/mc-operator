@@ -1,0 +1,146 @@
+suite: Webhook configurations
+templates:
+  - validatingwebhookconfiguration.yaml
+  - mutatingwebhookconfiguration.yaml
+  - webhook-service.yaml
+  - webhook-configmap.yaml
+  - webhook-certs.yaml
+release:
+  name: mc-operator
+  namespace: mc-operator-system
+tests:
+  # ValidatingWebhookConfiguration
+  - it: renders ValidatingWebhookConfiguration
+    template: validatingwebhookconfiguration.yaml
+    asserts:
+      - isKind:
+          of: ValidatingWebhookConfiguration
+      - equal:
+          path: metadata.name
+          value: mc-operator-validators
+
+  - it: configures MinecraftServer validation webhook
+    template: validatingwebhookconfiguration.yaml
+    asserts:
+      - equal:
+          path: webhooks[0].name
+          value: validate.minecraftserver.mc-operator.dhv.sh.v1alpha1
+      - equal:
+          path: webhooks[0].rules[0].apiGroups[0]
+          value: mc-operator.dhv.sh
+      - equal:
+          path: webhooks[0].rules[0].resources[0]
+          value: minecraftservers
+      - equal:
+          path: webhooks[0].sideEffects
+          value: None
+      - equal:
+          path: webhooks[0].failurePolicy
+          value: Fail
+
+  - it: configures MinecraftServerCluster validation webhook
+    template: validatingwebhookconfiguration.yaml
+    asserts:
+      - equal:
+          path: webhooks[1].name
+          value: validate.minecraftservercluster.mc-operator.dhv.sh.v1alpha1
+      - equal:
+          path: webhooks[1].rules[0].resources[0]
+          value: minecraftserverclusters
+
+  - it: points validation webhooks to the correct service
+    template: validatingwebhookconfiguration.yaml
+    asserts:
+      - equal:
+          path: webhooks[0].clientConfig.service.name
+          value: mc-operator
+      - equal:
+          path: webhooks[0].clientConfig.service.namespace
+          value: mc-operator-system
+      - equal:
+          path: webhooks[0].clientConfig.service.port
+          value: 443
+
+  # MutatingWebhookConfiguration
+  - it: renders MutatingWebhookConfiguration
+    template: mutatingwebhookconfiguration.yaml
+    asserts:
+      - isKind:
+          of: MutatingWebhookConfiguration
+      - equal:
+          path: metadata.name
+          value: mc-operator-mutators
+
+  - it: configures MinecraftServer mutation webhook
+    template: mutatingwebhookconfiguration.yaml
+    asserts:
+      - equal:
+          path: webhooks[0].name
+          value: mutate.minecraftserver.mc-operator.dhv.sh.v1alpha1
+      - equal:
+          path: webhooks[0].clientConfig.service.path
+          value: /mutate/minecraftserver
+
+  - it: configures MinecraftServerCluster mutation webhook
+    template: mutatingwebhookconfiguration.yaml
+    asserts:
+      - equal:
+          path: webhooks[1].name
+          value: mutate.minecraftservercluster.mc-operator.dhv.sh.v1alpha1
+      - equal:
+          path: webhooks[1].clientConfig.service.path
+          value: /mutate/minecraftservercluster
+
+  # Webhook Service
+  - it: renders the webhook Service
+    template: webhook-service.yaml
+    asserts:
+      - isKind:
+          of: Service
+      - equal:
+          path: metadata.name
+          value: mc-operator
+      - equal:
+          path: metadata.namespace
+          value: mc-operator-system
+      - equal:
+          path: spec.ports[0].port
+          value: 443
+      - equal:
+          path: spec.ports[0].targetPort
+          value: https
+
+  # Webhook ConfigMap
+  - it: renders the webhook ConfigMap
+    template: webhook-configmap.yaml
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - equal:
+          path: data.KESTREL__ENDPOINTS__HTTP__URL
+          value: "http://0.0.0.0:8080"
+      - equal:
+          path: data.KESTREL__ENDPOINTS__HTTPS__URL
+          value: "https://0.0.0.0:5001"
+      - equal:
+          path: data.KESTREL__ENDPOINTS__HTTPS__CERTIFICATE__PATH
+          value: "/certs/tls.crt"
+      - equal:
+          path: data.KESTREL__ENDPOINTS__HTTPS__CERTIFICATE__KEYPATH
+          value: "/certs/tls.key"
+
+  # Webhook Certs Secret
+  - it: renders the webhook certs Secret
+    template: webhook-certs.yaml
+    asserts:
+      - isKind:
+          of: Secret
+      - equal:
+          path: type
+          value: kubernetes.io/tls
+      - exists:
+          path: data["ca.crt"]
+      - exists:
+          path: data["tls.crt"]
+      - exists:
+          path: data["tls.key"]
