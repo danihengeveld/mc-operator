@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
-    "start": "node start.mjs"
+    "start": "bun run server.ts"
   },
   "dependencies": {
     "@kubernetes/client-node": "^1.4.0",

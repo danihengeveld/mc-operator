@@ -1,3 +1,4 @@
+import { KubeConfig, CustomObjectsApi } from "@kubernetes/client-node";
 import { createServerFn } from "@tanstack/react-start";
 import type { ServerInfo } from "~/components/server-card";
 import type { ClusterInfo } from "~/components/cluster-card";
@@ -44,56 +45,26 @@ interface KubeResourceList<T> {
 const API_GROUP = "mc-operator.dhv.sh";
 const API_VERSION = "v1alpha1";
 
-function getKubeApiBase(): string {
-  // In-cluster: use the service account token
-  if (process.env.KUBERNETES_SERVICE_HOST) {
-    const host = process.env.KUBERNETES_SERVICE_HOST;
-    const port = process.env.KUBERNETES_SERVICE_PORT ?? "443";
-    return `https://${host}:${port}`;
+let cachedApi: CustomObjectsApi | undefined;
+
+function getCustomObjectsApi(): CustomObjectsApi {
+  if (!cachedApi) {
+    const kc = new KubeConfig();
+    kc.loadDefault();
+    cachedApi = kc.makeApiClient(CustomObjectsApi);
   }
-  // Out-of-cluster: use kubectl proxy or configured API server
-  return process.env.KUBE_API_URL ?? "http://localhost:8001";
-}
-
-async function kubeRequest<T>(path: string): Promise<T> {
-  const base = getKubeApiBase();
-  const url = `${base}${path}`;
-
-  const headers: Record<string, string> = {
-    Accept: "application/json",
-  };
-
-  // In-cluster: use the service account token
-  if (process.env.KUBERNETES_SERVICE_HOST) {
-    try {
-      const { readFileSync } = await import("node:fs");
-      const token = readFileSync(
-        "/var/run/secrets/kubernetes.io/serviceaccount/token",
-        "utf-8",
-      ).trim();
-      headers["Authorization"] = `Bearer ${token}`;
-    } catch {
-      // Token not available — will proceed without auth
-    }
-  }
-
-  const response = await fetch(url, { headers });
-
-  if (!response.ok) {
-    throw new Error(
-      `Kubernetes API error: ${response.status} ${response.statusText}`,
-    );
-  }
-
-  return response.json() as Promise<T>;
+  return cachedApi;
 }
 
 export const fetchServers = createServerFn({ method: "GET" }).handler(
   async (): Promise<ServerInfo[]> => {
     try {
-      const list = await kubeRequest<
-        KubeResourceList<MinecraftServerResource>
-      >(`/apis/${API_GROUP}/${API_VERSION}/minecraftservers`);
+      const api = getCustomObjectsApi();
+      const list = (await api.listClusterCustomObject({
+        group: API_GROUP,
+        version: API_VERSION,
+        plural: "minecraftservers",
+      })) as KubeResourceList<MinecraftServerResource>;
 
       return list.items.map((item) => ({
         name: item.metadata.name,
@@ -123,9 +94,12 @@ export const fetchServers = createServerFn({ method: "GET" }).handler(
 export const fetchClusters = createServerFn({ method: "GET" }).handler(
   async (): Promise<ClusterInfo[]> => {
     try {
-      const list = await kubeRequest<
-        KubeResourceList<MinecraftServerClusterResource>
-      >(`/apis/${API_GROUP}/${API_VERSION}/minecraftserverclusters`);
+      const api = getCustomObjectsApi();
+      const list = (await api.listClusterCustomObject({
+        group: API_GROUP,
+        version: API_VERSION,
+        plural: "minecraftserverclusters",
+      })) as KubeResourceList<MinecraftServerClusterResource>;
 
       return list.items.map((item) => ({
         name: item.metadata.name,
