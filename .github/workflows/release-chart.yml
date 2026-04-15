@@ -81,7 +81,7 @@ jobs:
         run: helm registry logout ghcr.io
 
       - name: Install ORAS
-        uses: oras-project/setup-oras@v1
+        uses: oras-project/setup-oras@v2
 
       - name: Push Artifact Hub repository metadata
         env:
@@ -104,7 +104,7 @@ jobs:
       # Create a GitHub Release specific to the chart. This is separate from the
       # operator image release so each can have its own changelog and install notes.
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ github.ref_name }}
           name: "Helm Chart ${{ steps.version.outputs.version }}"
