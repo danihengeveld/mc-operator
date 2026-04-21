@@ -15,15 +15,15 @@
       },
       "TUnit": {
         "type": "Direct",
-        "requested": "[1.33.0, )",
-        "resolved": "1.33.0",
-        "contentHash": "Ub/pwSJHsDzFL7Ebi2g/qr+QadNhyGTbBhST+yUUXzrB8VqTPOZiMZT7nT4BWR6WHWHA/9nL3Fv8Sc9OyLe2Kg==",
+        "requested": "[1.37.0, )",
+        "resolved": "1.37.0",
+        "contentHash": "iCXP14ABZePAbeGtaFg7nw7ObBEKKWfHUWeH81RRk943ZfK1qUtB6Ee8DnUsG2DsygiKzTz8JM62EPCkgm6nPQ==",
         "dependencies": {
           "Microsoft.Testing.Extensions.CodeCoverage": "18.6.2",
           "Microsoft.Testing.Extensions.Telemetry": "2.2.1",
           "Microsoft.Testing.Extensions.TrxReport": "2.2.1",
-          "TUnit.Assertions": "1.33.0",
-          "TUnit.Engine": "1.33.0"
+          "TUnit.Assertions": "1.37.0",
+          "TUnit.Engine": "1.37.0"
         }
       },
       "EnumerableAsyncProcessor": {
@@ -65,8 +65,8 @@
       },
       "KubeOps.Abstractions": {
         "type": "Transitive",
-        "resolved": "10.3.2",
-        "contentHash": "JNToEMQhz0ue7CKfgAbry93Ffvn8fpdXgtaQrvG6dDeGqLhmHL/kCaDWvfDEH9WFoXxTAVzP+zZZnlZCx3Rp0A==",
+        "resolved": "10.3.3",
+        "contentHash": "izD7FXM6I2IkRfArrJMekudmkpousQyFt671/DgxR0kBWf9R/ric1EybTje3kyyIxLZOwZXz5SwaI3Lt8/AFog==",
         "dependencies": {
           "JsonPatch.Net": "4.0.1",
           "KubernetesClient": "19.0.2",
@@ -475,24 +475,24 @@
       },
       "TUnit.Assertions": {
         "type": "Transitive",
-        "resolved": "1.33.0",
-        "contentHash": "RW1XPXo2DDOfj14QblXstgq+HtH1qtGM1z0k59YajTU4n02eBxQqROPPyM17qAcBU6r+MiwuPSPZlJGEKn4PJQ=="
+        "resolved": "1.37.0",
+        "contentHash": "W+qjectTC4EodTycfhZdKp46F5M7mT8Me5R8V6rhR9XbkPQZrXsHuf8eft7M0Nrgw3SoyGjm4gEbru49BWFmvQ=="
       },
       "TUnit.Core": {
         "type": "Transitive",
-        "resolved": "1.33.0",
-        "contentHash": "m8wxehfDvUqLtcRdKKzh+hnbtukSLd5A8/LfhDojzB03cEEJjcA1/NCUUEhikp0HTRHDIccB9wldbFSq0PUWlA=="
+        "resolved": "1.37.0",
+        "contentHash": "q10Ah0mjARlWEqU5GKf5/7Q36rJcNqOPTyElSN9Z2aXT9HY1AP/5muGSICMbM25xAFUoa4T1j5XZDtCXkRS5ZQ=="
       },
       "TUnit.Engine": {
         "type": "Transitive",
-        "resolved": "1.33.0",
-        "contentHash": "xCU7IYUoQjzBstG+EgdN6V4SyOXhXvg/bC6+KNADaOt+GXm7Vx0xeyvWvlU7bk8ShGdWwyMqOXDuAF058Tsiug==",
+        "resolved": "1.37.0",
+        "contentHash": "yGiya4S4LExqa1aKhi7vljMDOO6t8Jw6irrEjbPrlUJ3lLX9epFkLdM69D/C2jlhigk+saomnBN4W3t9uH7PvA==",
         "dependencies": {
           "EnumerableAsyncProcessor": "3.8.4",
           "Microsoft.Testing.Extensions.TrxReport.Abstractions": "2.2.1",
           "Microsoft.Testing.Platform": "2.2.1",
           "Microsoft.Testing.Platform.MSBuild": "2.2.1",
-          "TUnit.Core": "1.33.0"
+          "TUnit.Core": "1.37.0"
         }
       },
       "YamlDotNet": {
@@ -511,52 +511,52 @@
       "mcoperator": {
         "type": "Project",
         "dependencies": {
-          "KubeOps.KubernetesClient": "[10.3.2, )",
-          "KubeOps.Operator": "[10.3.2, )",
-          "KubeOps.Operator.Web": "[10.3.2, )",
-          "KubeOps.Transpiler": "[10.3.2, )"
+          "KubeOps.KubernetesClient": "[10.3.3, )",
+          "KubeOps.Operator": "[10.3.3, )",
+          "KubeOps.Operator.Web": "[10.3.3, )",
+          "KubeOps.Transpiler": "[10.3.3, )"
         }
       },
       "KubeOps.KubernetesClient": {
         "type": "CentralTransitive",
-        "requested": "[10.3.2, )",
-        "resolved": "10.3.2",
-        "contentHash": "BIBjwpnI0xTgRyLwfNnUTwgzEo3I+ZCqVKQp3maBM//0WjgpAF0EJwUWl2CkSXbz1eL3EIh8cuciHJkF81Iwmg==",
+        "requested": "[10.3.3, )",
+        "resolved": "10.3.3",
+        "contentHash": "VKAdyjouaMAAuHM/ToIqhf6vFqt61H/qRIuwrZSKBjP/fSahbb0BCuvVhZbktu4nHH2nJ6NxYmeyImzoUsuKRw==",
         "dependencies": {
-          "KubeOps.Abstractions": "10.3.2",
-          "KubeOps.Transpiler": "10.3.2"
+          "KubeOps.Abstractions": "10.3.3",
+          "KubeOps.Transpiler": "10.3.3"
         }
       },
       "KubeOps.Operator": {
         "type": "CentralTransitive",
-        "requested": "[10.3.2, )",
-        "resolved": "10.3.2",
-        "contentHash": "/3qyh/rQF8c0cyIZiqXquDFUO/TFALy+JWuvn2hd1OIWEzvReFVYJV7G0SsyyVGGbTDHpi+r1rROO1rlhUKh1w==",
+        "requested": "[10.3.3, )",
+        "resolved": "10.3.3",
+        "contentHash": "EJ5DM/w5n7gSvGCECcNf1fpwnfWxIldFVg7S270BHlMZHoV0++quCDuhXlx8Zdwk4sCxWNAXtfBmdqPhH89uGw==",
         "dependencies": {
-          "KubeOps.Abstractions": "10.3.2",
-          "KubeOps.KubernetesClient": "10.3.2",
-          "KubeOps.Transpiler": "10.3.2",
+          "KubeOps.Abstractions": "10.3.3",
+          "KubeOps.KubernetesClient": "10.3.3",
+          "KubeOps.Transpiler": "10.3.3",
           "Microsoft.Extensions.Hosting": "10.0.5"
         }
       },
       "KubeOps.Operator.Web": {
         "type": "CentralTransitive",
-        "requested": "[10.3.2, )",
-        "resolved": "10.3.2",
-        "contentHash": "eGLmOcnupPQ8XVOnds0X3pgJtnmFSGWkMjG1nXbqekk/MLJZhzTKxEaqS17chziUY1DSkWfh3noVkkwV9iZ4mQ==",
+        "requested": "[10.3.3, )",
+        "resolved": "10.3.3",
+        "contentHash": "ySHgtMM4vU7ZFgrlqB10fcXrWbJYwKypVr4dAR1VkEFi9+7ZXn1EAgmmbJM3xCOHO8PRtUYMtATJT1bgbB9Vhg==",
         "dependencies": {
-          "KubeOps.Abstractions": "10.3.2",
-          "KubeOps.Operator": "10.3.2",
+          "KubeOps.Abstractions": "10.3.3",
+          "KubeOps.Operator": "10.3.3",
           "Localtunnel": "2.0.0"
         }
       },
       "KubeOps.Transpiler": {
         "type": "CentralTransitive",
-        "requested": "[10.3.2, )",
-        "resolved": "10.3.2",
-        "contentHash": "HRryWqFuKMsYuGZm5Uv242oDugH3OhJJA36HpkwmYcuA9s9TwE+V0cPoLBqNcuwTQ/wFVRrB+II3DqO1AEPaCg==",
+        "requested": "[10.3.3, )",
+        "resolved": "10.3.3",
+        "contentHash": "y+vNOrsNmSeADJObeVD3zYl9uGJ9fOU8xh6Vm1JwJjMxy+uEVr13aQOy2xzHUG3WCBBm1Z4jREQ5ECYCxT1s+A==",
         "dependencies": {
-          "KubeOps.Abstractions": "10.3.2",
+          "KubeOps.Abstractions": "10.3.3",
           "System.Reflection.MetadataLoadContext": "10.0.5"
         }
       },
