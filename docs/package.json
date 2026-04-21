@@ -17,10 +17,10 @@
     "@astrojs/cloudflare": "^13.1.10",
     "@astrojs/starlight": "^0.38.3",
     "astro": "^6.1.8",
-    "wrangler": "^4.83.0"
+    "wrangler": "^4.84.0"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.4",
-    "typescript": "^6.0.2"
+    "typescript": "^6.0.3"
   }
 }
