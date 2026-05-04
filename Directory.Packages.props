@@ -6,10 +6,10 @@
 
   <ItemGroup>
     <!-- KubeOps operator packages -->
-    <PackageVersion Include="KubeOps.Operator" Version="10.3.4" />
-    <PackageVersion Include="KubeOps.Operator.Web" Version="10.3.4" />
-    <PackageVersion Include="KubeOps.KubernetesClient" Version="10.3.4" />
-    <PackageVersion Include="KubeOps.Transpiler" Version="10.3.4" />
+    <PackageVersion Include="KubeOps.Operator" Version="10.4.0" />
+    <PackageVersion Include="KubeOps.Operator.Web" Version="10.4.0" />
+    <PackageVersion Include="KubeOps.KubernetesClient" Version="10.4.0" />
+    <PackageVersion Include="KubeOps.Transpiler" Version="10.4.0" />
 
     <!-- Test packages -->
     <PackageVersion Include="TUnit" Version="1.43.11" />
