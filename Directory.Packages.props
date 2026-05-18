@@ -19,6 +19,6 @@
     <PackageVersion Include="Testcontainers.K3s" Version="4.11.0" />
     <PackageVersion Include="KubernetesClient" Version="19.0.2" />
 
-    <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.203" />
+    <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.300" />
   </ItemGroup>
 </Project>
