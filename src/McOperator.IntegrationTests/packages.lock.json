@@ -102,8 +102,8 @@
       },
       "KubeOps.Abstractions": {
         "type": "Transitive",
-        "resolved": "10.4.0",
-        "contentHash": "30hX7VnPgXs0lu2hWwSKHuPhJufSbjuoH2KNhcaJQJPkZVRuGdwQPt/l3ITui/ZbnlAPv2+fggcZeLgmkCNY3Q==",
+        "resolved": "11.0.0",
+        "contentHash": "PVl63Zizy3dMCoO9WvmEFESYfeneSO2RIBAn+oRsI1iy+kYzkivn4omSnjcUVou9IWwq0x2EiK7o1cj79akSjg==",
         "dependencies": {
           "JsonPatch.Net": "4.0.1",
           "KubernetesClient": "19.0.2",
@@ -212,8 +212,8 @@
       },
       "System.Reflection.MetadataLoadContext": {
         "type": "Transitive",
-        "resolved": "10.0.7",
-        "contentHash": "XDkKntYPUaANhLVdo7AHbrJ+QbUAY5u/T7lG5rHSx5kLxeHceoc3JcIMVAc/vZT+3rbwFYlrdnikxdi6G+2nvA=="
+        "resolved": "10.0.8",
+        "contentHash": "w9sjhVDe4AKkyswUctVK3oCmZHaA7g+ZUG/xDmzgbsOGxmeRQA6lCQeAh6r75K0lcsLlfBzZXmsNblndyNJhxw=="
       },
       "Testcontainers": {
         "type": "Transitive",
@@ -261,52 +261,52 @@
       "mcoperator": {
         "type": "Project",
         "dependencies": {
-          "KubeOps.KubernetesClient": "[10.4.0, )",
-          "KubeOps.Operator": "[10.4.0, )",
-          "KubeOps.Operator.Web": "[10.4.0, )",
-          "KubeOps.Transpiler": "[10.4.0, )"
+          "KubeOps.KubernetesClient": "[11.0.0, )",
+          "KubeOps.Operator": "[11.0.0, )",
+          "KubeOps.Operator.Web": "[11.0.0, )",
+          "KubeOps.Transpiler": "[11.0.0, )"
         }
       },
       "KubeOps.KubernetesClient": {
         "type": "CentralTransitive",
-        "requested": "[10.4.0, )",
-        "resolved": "10.4.0",
-        "contentHash": "dr/YcG4N7t7bYyiHtrG4hlaJEnYTCVSNYwjbD/slRo5k12926ONw5jloADq9V2oMZEMD2XOR8D7omNNsU2tbiA==",
+        "requested": "[11.0.0, )",
+        "resolved": "11.0.0",
+        "contentHash": "F35ungFu3wtRx26d7at5K4FCpwsALxMX+HZ0OjkwH9QUfcKR1ZPhUnVE2P7YS+d7czA2sBpJTKWj5paD5Mp5/Q==",
         "dependencies": {
-          "KubeOps.Abstractions": "10.4.0",
-          "KubeOps.Transpiler": "10.4.0"
+          "KubeOps.Abstractions": "11.0.0",
+          "KubeOps.Transpiler": "11.0.0"
         }
       },
       "KubeOps.Operator": {
         "type": "CentralTransitive",
-        "requested": "[10.4.0, )",
-        "resolved": "10.4.0",
-        "contentHash": "bXRiNzT8MIanFkB1uly89VzyxmzlRvQVs0XhYmpQn6W72i0i8lEvnppZTCRd+WChd35Tnd08oxYZfig//2ROvQ==",
+        "requested": "[11.0.0, )",
+        "resolved": "11.0.0",
+        "contentHash": "0BaWPO/xpR+QXbzsJC3ibH3bMSzNlJJlifiaB2D8I0n90vRsMqON9I/d3vAhNeuhj36HvwPY/11ceq9svPETTA==",
         "dependencies": {
-          "KubeOps.Abstractions": "10.4.0",
-          "KubeOps.KubernetesClient": "10.4.0",
-          "KubeOps.Transpiler": "10.4.0"
+          "KubeOps.Abstractions": "11.0.0",
+          "KubeOps.KubernetesClient": "11.0.0",
+          "KubeOps.Transpiler": "11.0.0"
         }
       },
       "KubeOps.Operator.Web": {
         "type": "CentralTransitive",
-        "requested": "[10.4.0, )",
-        "resolved": "10.4.0",
-        "contentHash": "m48qtXux0fI/ZYNv6nK4r+C7cl7i8bFHh/glmHlMx60IJFjre+IE5QXy5KkEfzA2KuPeqQFfI3V4TYP6OcmxPg==",
+        "requested": "[11.0.0, )",
+        "resolved": "11.0.0",
+        "contentHash": "FwoLYHdDFD3GFGOM8Lmw+qHKxWLb2+2kqcd0lkqUKTjYTYp0JVk2HXuZsa8tnzx/h6bRMgbS6D2005LrCq1DuA==",
         "dependencies": {
-          "KubeOps.Abstractions": "10.4.0",
-          "KubeOps.Operator": "10.4.0",
+          "KubeOps.Abstractions": "11.0.0",
+          "KubeOps.Operator": "11.0.0",
           "Localtunnel": "2.0.0"
         }
       },
       "KubeOps.Transpiler": {
         "type": "CentralTransitive",
-        "requested": "[10.4.0, )",
-        "resolved": "10.4.0",
-        "contentHash": "n4nVBI842beP4I/lbP9BkH4cdB/zId34jkph/kp9wacHYLTyU6utR+IBwmrGp04lB/X/W80VNGDoVjMEHH9XzQ==",
+        "requested": "[11.0.0, )",
+        "resolved": "11.0.0",
+        "contentHash": "Yf02bpFKh8ZhCHX3n3C0ceNKnW8TmYlIbBQD1faIrHoBbw02iq57dxID3o+Oq536XQhFysSpVIHnE99R9aroUw==",
         "dependencies": {
-          "KubeOps.Abstractions": "10.4.0",
-          "System.Reflection.MetadataLoadContext": "10.0.7"
+          "KubeOps.Abstractions": "11.0.0",
+          "System.Reflection.MetadataLoadContext": "10.0.8"
         }
       }
     }
