@@ -12,7 +12,7 @@
     <PackageVersion Include="KubeOps.Transpiler" Version="11.1.0" />
 
     <!-- Test packages -->
-    <PackageVersion Include="TUnit" Version="1.45.29" />
+    <PackageVersion Include="TUnit" Version="1.48.6" />
     <PackageVersion Include="TUnit.Mocks" Version="1.19.74" />
 
     <!-- Integration test packages -->
