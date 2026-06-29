@@ -27,7 +27,7 @@ jobs:
       attestations: write
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       # Strip the "operator/v" prefix to get a clean semver string (e.g. "1.2.3")
       - name: Resolve image version from tag
