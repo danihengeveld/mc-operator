@@ -14,9 +14,9 @@
     "generate-types": "wrangler types"
   },
   "dependencies": {
-    "@astrojs/cloudflare": "^13.6.1",
-    "@astrojs/starlight": "^0.39.3",
-    "astro": "^6.4.4",
+    "@astrojs/cloudflare": "^14.1.0",
+    "@astrojs/starlight": "^0.41.2",
+    "astro": "^7.0.5",
     "wrangler": "^4.105.0"
   },
   "devDependencies": {
