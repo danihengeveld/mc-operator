@@ -146,8 +146,8 @@
       },
       "KubeOps.Abstractions": {
         "type": "Transitive",
-        "resolved": "11.4.0",
-        "contentHash": "LO3R88iI1POiwK79KEFtbPtMVfLVcjasDCG4mimjIfXtZWsL+wLJR3ikEApShOiJNAcJ8zOcOE30KU26Mp+mdw==",
+        "resolved": "13.0.0",
+        "contentHash": "umzswkEVf5DFpnDvk2H7r2DUbVM0Ty7DVrE49q3GKaDzwv+Xv/J0d7Jxc3dbIFT94He3QFWCm/NtgF/eg2INfQ==",
         "dependencies": {
           "JsonPatch.Net": "4.0.1",
           "KubernetesClient": "19.0.2",
@@ -334,52 +334,52 @@
       "mcoperator": {
         "type": "Project",
         "dependencies": {
-          "KubeOps.KubernetesClient": "[11.4.0, )",
-          "KubeOps.Operator": "[11.4.0, )",
-          "KubeOps.Operator.Web": "[11.4.0, )",
-          "KubeOps.Transpiler": "[11.4.0, )"
+          "KubeOps.KubernetesClient": "[13.0.0, )",
+          "KubeOps.Operator": "[13.0.0, )",
+          "KubeOps.Operator.Web": "[13.0.0, )",
+          "KubeOps.Transpiler": "[13.0.0, )"
         }
       },
       "KubeOps.KubernetesClient": {
         "type": "CentralTransitive",
-        "requested": "[11.4.0, )",
-        "resolved": "11.4.0",
-        "contentHash": "tHuuCoECHUOueklVyISE+MYBkGURC2AUrFYydOHvAqQJqLjhLmknhyr90Vd1ESwpw3LDrHaCsHtGFCbLvIJGlw==",
+        "requested": "[13.0.0, )",
+        "resolved": "13.0.0",
+        "contentHash": "eHIY8Krf65l9TBCdcOhmeMbTmVwuqbwkAbNRlTKp2qJI4Y3zgKhBQhQ/ofITtKNaUEqpWDonJnuRX8j6G7VzJw==",
         "dependencies": {
-          "KubeOps.Abstractions": "11.4.0",
-          "KubeOps.Transpiler": "11.4.0"
+          "KubeOps.Abstractions": "13.0.0",
+          "KubeOps.Transpiler": "13.0.0"
         }
       },
       "KubeOps.Operator": {
         "type": "CentralTransitive",
-        "requested": "[11.4.0, )",
-        "resolved": "11.4.0",
-        "contentHash": "ervYW6Jjo+odDpcjuQ+DCOH3ydL/iNCKuRjkUWhwzjjpYNwq+vTcOBccs4SO1J4jt9l6npcl5oCjc1NUf5u6Dg==",
+        "requested": "[13.0.0, )",
+        "resolved": "13.0.0",
+        "contentHash": "wcprHXpcNeLz+ZgtMsdbQbbVpM5NsKBk3yTXcjcNNOQ6gLHlLCZVmTNJDac7JirDItjTNqCRfwS9E3Xg/WJN8Q==",
         "dependencies": {
-          "KubeOps.Abstractions": "11.4.0",
-          "KubeOps.KubernetesClient": "11.4.0",
-          "KubeOps.Transpiler": "11.4.0"
+          "KubeOps.Abstractions": "13.0.0",
+          "KubeOps.KubernetesClient": "13.0.0",
+          "KubeOps.Transpiler": "13.0.0"
         }
       },
       "KubeOps.Operator.Web": {
         "type": "CentralTransitive",
-        "requested": "[11.4.0, )",
-        "resolved": "11.4.0",
-        "contentHash": "MobMq2MkmQfljkJ8HcW++tz/L9hODDIGHEc1zYQ5Z9+HDb/H3ooohB3/whDE4W6UHWKASyG/kEGVxWyNu+2Eqw==",
+        "requested": "[13.0.0, )",
+        "resolved": "13.0.0",
+        "contentHash": "aqyZZfIfmfYwLNgaTMcYLNMH46igtPf8Utb1XjIN1tPR4mvxF/eDWfcTWo1rGGygCmJvvWhjeVqTbitC0544Ig==",
         "dependencies": {
-          "KubeOps.Abstractions": "11.4.0",
-          "KubeOps.Operator": "11.4.0",
+          "KubeOps.Abstractions": "13.0.0",
+          "KubeOps.Operator": "13.0.0",
           "Localtunnel": "2.0.0",
           "OpenTelemetry.Exporter.Prometheus.AspNetCore": "1.16.0-beta.1"
         }
       },
       "KubeOps.Transpiler": {
         "type": "CentralTransitive",
-        "requested": "[11.4.0, )",
-        "resolved": "11.4.0",
-        "contentHash": "t5eh8khaQUGLfqmQxcSxMkpv+gqgMwnoWPXKDPNfVX94FnrV63MqhQ4RSZPW9DyAQRP6V7LfNi36uCyPd1vgCg==",
+        "requested": "[13.0.0, )",
+        "resolved": "13.0.0",
+        "contentHash": "vI+w1VZh+Cd7/DLxYjalzJ0Y/vEjDi/RMkq+2La6nNNFPPI+BI0pChABMqePnYSLVR0tT4T/8hgHFaslS8G7Zw==",
         "dependencies": {
-          "KubeOps.Abstractions": "11.4.0",
+          "KubeOps.Abstractions": "13.0.0",
           "System.Reflection.MetadataLoadContext": "10.0.9"
         }
       }
