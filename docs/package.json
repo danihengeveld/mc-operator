@@ -14,13 +14,13 @@
     "generate-types": "wrangler types"
   },
   "dependencies": {
-    "@astrojs/cloudflare": "^13.6.1",
-    "@astrojs/starlight": "^0.39.3",
-    "astro": "^6.4.4",
+    "@astrojs/cloudflare": "^14.1.7",
+    "@astrojs/starlight": "^0.41.6",
+    "astro": "^7.1.6",
     "wrangler": "^4.107.0"
   },
   "devDependencies": {
-    "@astrojs/check": "^0.9.9",
+    "@astrojs/check": "^0.9.10",
     "typescript": "^6.0.3"
   }
 }
