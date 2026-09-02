@@ -74,7 +74,7 @@ jobs:
         run: dotnet run --project src/McOperator.IntegrationTests/McOperator.IntegrationTests.csproj -c Release
 
       - name: Lint Dockerfile
-        uses: hadolint/hadolint-action@v3.3.0
+        uses: hadolint/hadolint-action@v3.4.0
         with:
           dockerfile: Dockerfile
 
