@@ -25,11 +25,11 @@
       },
       "Testcontainers.K3s": {
         "type": "Direct",
-        "requested": "[4.14.0, )",
-        "resolved": "4.14.0",
-        "contentHash": "ENo2WlTpw1GVbb+oxr9mi83CvvieYjlztD2iFimCgoPK/OO83lmDn5nVgpKvw2NaPx8xA0tkTcklhn+IURKlbg==",
+        "requested": "[4.15.0, )",
+        "resolved": "4.15.0",
+        "contentHash": "RD5oZX8AoBR/Oz8oOT1NYVlKw7tm9GXkNKMHKwNjkDlfMib5MswXORxDyXsUflu8AVmCKPuy9pde86A7q3RL3A==",
         "dependencies": {
-          "Testcontainers": "4.14.0"
+          "Testcontainers": "4.15.0"
         }
       },
       "TUnit": {
@@ -285,8 +285,8 @@
       },
       "Testcontainers": {
         "type": "Transitive",
-        "resolved": "4.14.0",
-        "contentHash": "ojuBi91xcMsR6vnFuNsQDWU9tlZlrtmqy95VPNWVVnh24GiwFL/WMnVmb6bRv8LqovtnKPJN9cpmH1k02Z4ZoA==",
+        "resolved": "4.15.0",
+        "contentHash": "8tCZKMm++C/9dHIr8lsE1iDBIBmthbo2XlGFDr4gorT1vgZrJwU36fNkCGuX7h7V39rpQoTK/aG+FhJz3jhY3A==",
         "dependencies": {
           "Docker.DotNet.Enhanced": "4.3.3",
           "Docker.DotNet.Enhanced.X509": "4.3.3",
