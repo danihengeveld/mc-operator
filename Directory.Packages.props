@@ -17,7 +17,7 @@
 
     <!-- Integration test packages -->
     <PackageVersion Include="Testcontainers.K3s" Version="4.14.0" />
-    <PackageVersion Include="KubernetesClient" Version="19.0.2" />
+    <PackageVersion Include="KubernetesClient" Version="21.0.8" />
 
     <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.400" />
   </ItemGroup>
