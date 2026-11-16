@@ -4,45 +4,45 @@
     "net10.0": {
       "KubeOps.KubernetesClient": {
         "type": "Direct",
-        "requested": "[13.1.0, )",
-        "resolved": "13.1.0",
-        "contentHash": "yl6FlpIE41LZzROdh4hWuIDk6HeMN1Q8KnZ3WljKVKQWW7/hRIX+GhXeCt2TeJ6xrogqZgF1mivjTXxcZQlj5g==",
+        "requested": "[13.3.6, )",
+        "resolved": "13.3.6",
+        "contentHash": "TvbcZkDUmjtV+coYgDTEqGGDAruIhur/d18gKGQWEQSQpDWCtJcRTPXW/Z2yIN8bvnj9Y1hpbg2GNkaUqKHNlA==",
         "dependencies": {
-          "KubeOps.Abstractions": "13.1.0",
-          "KubeOps.Transpiler": "13.1.0"
+          "KubeOps.Abstractions": "13.3.6",
+          "KubeOps.Transpiler": "13.3.6"
         }
       },
       "KubeOps.Operator": {
         "type": "Direct",
-        "requested": "[13.1.0, )",
-        "resolved": "13.1.0",
-        "contentHash": "Zl0Wdk0TVtSAd26dPfh1ga22PIDbBrz7/vxAPvhrBrxcOoabDtpFsZdebNJGtXKxn4VPy/Z+mOTdY4wCH/ZQpg==",
+        "requested": "[13.3.6, )",
+        "resolved": "13.3.6",
+        "contentHash": "5l1RrKZc3/lCU4AKdcvQ7cQ9ChmhvwsYYX7QQLhutSzWSTm6qCC3Js1DOCPDBTKaCsrpgq+DWn9NM9m6lCRQxQ==",
         "dependencies": {
-          "KubeOps.Abstractions": "13.1.0",
-          "KubeOps.KubernetesClient": "13.1.0",
-          "KubeOps.Transpiler": "13.1.0"
+          "KubeOps.Abstractions": "13.3.6",
+          "KubeOps.KubernetesClient": "13.3.6",
+          "KubeOps.Transpiler": "13.3.6"
         }
       },
       "KubeOps.Operator.Web": {
         "type": "Direct",
-        "requested": "[13.1.0, )",
-        "resolved": "13.1.0",
-        "contentHash": "aQTAS/mxWDWGIc7DGf/3mkP6uhn50435UIMAxhc+Cwgmp6Tw6zVxiC0oN8c6dK0UpYI0MLeZyUNZFgEh2F/ekg==",
+        "requested": "[13.3.6, )",
+        "resolved": "13.3.6",
+        "contentHash": "JWbBcDuOGeXWl9EZ4k5KbHnQtMBjIYqzXJa/vZQsuLJk++r9d/AxILQCtQtIxSsRbdOX1vylnh00/9W3DSOkKA==",
         "dependencies": {
-          "KubeOps.Abstractions": "13.1.0",
-          "KubeOps.Operator": "13.1.0",
+          "KubeOps.Abstractions": "13.3.6",
+          "KubeOps.Operator": "13.3.6",
           "Localtunnel": "2.0.0",
-          "OpenTelemetry.Exporter.Prometheus.AspNetCore": "1.17.0-beta.1"
+          "OpenTelemetry.Exporter.Prometheus.AspNetCore": "1.20.1-beta.1"
         }
       },
       "KubeOps.Transpiler": {
         "type": "Direct",
-        "requested": "[13.1.0, )",
-        "resolved": "13.1.0",
-        "contentHash": "HR0KsSOcIJELWDEaA6Z4MWTtZiDi2M2Z5VEXn/oxY2rVWllfE7it+5/Q3bTDOvVM8DG8giDwAniniVvEi1/YZg==",
+        "requested": "[13.3.6, )",
+        "resolved": "13.3.6",
+        "contentHash": "mX5oVoF+5/1sg3+mgnvA5roE0mF6HC5CM1vRlyZO99vuWOwBjrO6VrjNYQ67L5apTkSbnAY8+xbo55yERa+jHA==",
         "dependencies": {
-          "KubeOps.Abstractions": "13.1.0",
-          "System.Reflection.MetadataLoadContext": "10.0.10"
+          "KubeOps.Abstractions": "13.3.6",
+          "System.Reflection.MetadataLoadContext": "10.0.14"
         }
       },
       "Microsoft.SourceLink.GitHub": {
@@ -90,12 +90,12 @@
       },
       "KubeOps.Abstractions": {
         "type": "Transitive",
-        "resolved": "13.1.0",
-        "contentHash": "WvPxJjhbqo6Y59mcaASN/dAFoyr4rX+bZhKbqNk+vcNgV06xuB+d0lM+4DZKo+hBc8bASwrNpLPx51JndRx8lg==",
+        "resolved": "13.3.6",
+        "contentHash": "Y7sgzydUtDuHjs6ZnpR3vyP7UHqGG8YwXEXQ6W9ILBD8fV95DGJS54ORarsQEHwTqn2ZpMq9zkS9Ii65+BdKsQ==",
         "dependencies": {
           "JsonPatch.Net": "4.0.1",
-          "KubernetesClient": "19.0.2",
-          "ZiggyCreatures.FusionCache": "2.6.0"
+          "KubernetesClient": "21.0.8",
+          "ZiggyCreatures.FusionCache": "2.9.0"
         }
       },
       "Localtunnel": {
@@ -118,31 +118,31 @@
       },
       "OpenTelemetry": {
         "type": "Transitive",
-        "resolved": "1.17.0",
-        "contentHash": "rMLOTftlMlTm7+MSrvXDHnJRjVkROFNKXHZrYjOsX+LankaFG7QSflx7qRRGjoqZoirohnxmJQ7GEb9occO4Gg==",
+        "resolved": "1.20.1",
+        "contentHash": "+XDw3fYbiv1a40aFnDJSQleeuUJciXuhoIA19XmcGhT47Hy/xZRqk8NCjHUDKrg72Ixjthicecp8ygBDNeH/Jw==",
         "dependencies": {
-          "OpenTelemetry.Api.ProviderBuilderExtensions": "1.17.0"
+          "OpenTelemetry.Api.ProviderBuilderExtensions": "1.20.1"
         }
       },
       "OpenTelemetry.Api": {
         "type": "Transitive",
-        "resolved": "1.17.0",
-        "contentHash": "mSBxzomZgHIJu9CyVNqyDu/n2JHEtqVgfcCD1Br0cV5iLYogjZOMqhlVLt99PEp+0KGBNUR3GXgeOdN2GR3F9g=="
+        "resolved": "1.20.1",
+        "contentHash": "QO9hlwadOdJGR4vDpJyDnl9B62v7epIBSTIHUA4C+bCtrRaB4TWmYSnu3QVOIe7caH8dt7NaHRei6zebESJJyw=="
       },
       "OpenTelemetry.Api.ProviderBuilderExtensions": {
         "type": "Transitive",
-        "resolved": "1.17.0",
-        "contentHash": "Xgc3Qf9B9TFMFpx6exTdGqMWuYIT2miNzkdMPutVvT9YuMFaEovXWke1Gb6z8NxYaQbbGF38vYLuSg1JCeui5Q==",
+        "resolved": "1.20.1",
+        "contentHash": "eDzDY/jTBqRytkYECmVKF7ZP5sKmCIqv1SSnA5BSWltIIvc3931TOMRyCW1qCGNIgmtldtJhISnsmFNxOCfauQ==",
         "dependencies": {
-          "OpenTelemetry.Api": "1.17.0"
+          "OpenTelemetry.Api": "1.20.1"
         }
       },
       "OpenTelemetry.Exporter.Prometheus.AspNetCore": {
         "type": "Transitive",
-        "resolved": "1.17.0-beta.1",
-        "contentHash": "eecXu43HkY7LFJDutrQ6kpwvUOMDeqLMtU+UeN225ckXw33qN/StTcdW6mTHH1jDSYdFM29vvDXB3jnFwPHkXg==",
+        "resolved": "1.20.1-beta.1",
+        "contentHash": "0aF8pv2B0EnQ0+WLYa4eOESTYoykeAUGd/8gTZxAd4cq17xbkatGKXM6R3t9fXqafTFaR8i2W+G8sFR8DMPeow==",
         "dependencies": {
-          "OpenTelemetry": "[1.17.0, 2.0.0)"
+          "OpenTelemetry": "[1.20.1, 2.0.0)"
         }
       },
       "System.IO.Hashing": {
@@ -152,8 +152,8 @@
       },
       "System.Reflection.MetadataLoadContext": {
         "type": "Transitive",
-        "resolved": "10.0.10",
-        "contentHash": "7f8JfUA85nD2yOrTX9fhuHPp8P01qqnbGTtRiMK6rwNhS1jNLqoCJfdzLMOIZY8b9sBoAX3eOH04k1fWeCgOYQ=="
+        "resolved": "10.0.14",
+        "contentHash": "TBqKGTYnKq/glgpGAM8iOSpSNlO++ZLbdOHHvxO/+QpvBYNfcP8dCi7m/da1tbG5zwmthf9+UHpjVq664HNnAg=="
       },
       "YamlDotNet": {
         "type": "Transitive",
@@ -162,8 +162,8 @@
       },
       "ZiggyCreatures.FusionCache": {
         "type": "Transitive",
-        "resolved": "2.6.0",
-        "contentHash": "BCe+/SkwQZfaMpq2ZGDZB2pyx6BdGnP+zxqjMM/5K+4PBuH6hljZeIqH4KVzQ26khSbPsQ7IiYZl0Fve4OZOog=="
+        "resolved": "2.9.0",
+        "contentHash": "m2z6LlE4yckDkE95Vha2NH/gPD+iM9PnCUMfe1nfkC+xaiq48S80HI7olnSblVOAHx5OP+VN9vhQoTdZAPZp0g=="
       },
       "KubernetesClient": {
         "type": "CentralTransitive",
